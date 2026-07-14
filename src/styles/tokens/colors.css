@@ -4,7 +4,14 @@
   --solid-white: #ffffff;
 
   /* Neutral */
+  --neutral-100: #f5f5f5;
+  --neutral-200: #e6e6e6;
+  --neutral-250: #e0e0e0;
   --neutral-300: #d4d4d4;
   --neutral-400: #a3a3a3;
   --neutral-700: #404040;
+
+  /* Functional */
+  --blue-500: #3366f2;
+  --red-500: #e53333;
 }

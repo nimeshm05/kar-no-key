@@ -1,5 +1,6 @@
 import TypewriterIllustration from "@/components/TypewriterIllustration/TypewriterIllustration";
 import Button from "@/components/Button/Button";
+import InputField from "@/components/InputField/InputField";
 import "./page.css";
 
 export default function Home() {
@@ -16,7 +17,10 @@ export default function Home() {
           <p className="landing-tagline text-body">race your frens, one lyric at a time :)</p>
         </div>
       </div>
-      <Button href="/name">get started</Button>
+      <div className="landing-form">
+        <InputField placeholder="Your name" align="center" aria-label="Your name" />
+        <Button type="button">get started</Button>
+      </div>
     </main>
   );
 }

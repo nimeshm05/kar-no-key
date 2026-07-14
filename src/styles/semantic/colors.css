@@ -6,4 +6,11 @@
   --color-text-placeholder: var(--neutral-300);
   --color-button-background: var(--solid-black);
   --color-button-foreground: var(--solid-white);
+  --color-input-border: var(--neutral-300);
+  --color-input-border-focus: var(--solid-black);
+  --color-input-border-error: var(--red-500);
+  --color-input-background: var(--solid-white);
+  --color-input-background-disabled: var(--neutral-100);
+  --color-input-border-disabled: var(--neutral-200);
+  --color-input-text-disabled: var(--neutral-250);
 }

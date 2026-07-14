@@ -39,3 +39,15 @@
 .landing-tagline {
   color: var(--color-text-muted);
 }
+
+.landing-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-text);
+  width: 248px;
+}
+
+.landing-form .primary-button {
+  width: 100%;
+}

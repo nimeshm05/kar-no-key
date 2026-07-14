@@ -1,0 +1,20 @@
+.text-heading-1 {
+  font-family: var(--family-mono);
+  font-size: var(--size-32);
+  font-weight: var(--weight-semibold);
+  line-height: var(--line-32);
+}
+
+.text-body {
+  font-family: var(--family-mono);
+  font-size: var(--size-18);
+  font-weight: var(--weight-medium);
+  line-height: var(--line-18);
+}
+
+.text-button-label {
+  font-family: var(--family-mono);
+  font-size: var(--size-16);
+  font-weight: var(--weight-medium);
+  line-height: var(--line-16);
+}

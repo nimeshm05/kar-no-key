@@ -1,0 +1,23 @@
+:root {
+  --family-primary: var(--font-geist-sans);
+  --family-mono: var(--font-geist-mono);
+
+  --size-12: 12px;
+  --size-16: 16px;
+  --size-18: 18px;
+  --size-20: 20px;
+  --size-24: 24px;
+  --size-32: 32px;
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  --line-12: 16px;
+  --line-16: 24px;
+  --line-18: 26px;
+  --line-20: 28px;
+  --line-24: 32px;
+  --line-32: 40px;
+}

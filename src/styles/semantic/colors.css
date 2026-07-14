@@ -1,0 +1,9 @@
+:root {
+  --color-background: var(--solid-white);
+  --color-foreground: var(--solid-black);
+  --color-text-primary: var(--solid-black);
+  --color-text-muted: var(--neutral-400);
+  --color-text-placeholder: var(--neutral-300);
+  --color-button-background: var(--solid-black);
+  --color-button-foreground: var(--solid-white);
+}

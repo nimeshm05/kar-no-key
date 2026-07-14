@@ -1,0 +1,22 @@
+.primary-button {
+  background: var(--color-button-background);
+  color: var(--color-button-foreground);
+  padding: var(--size-16);
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.primary-button:hover {
+  opacity: 0.85;
+  transform: translateY(-1px);
+}
+
+.primary-button:active {
+  opacity: 1;
+  transform: translateY(0);
+}

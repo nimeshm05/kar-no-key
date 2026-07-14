@@ -1,0 +1,26 @@
+.music-note-decorations {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.music-note-decoration {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.music-note-decoration-svg {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.music-note-decoration-path {
+  stroke: var(--neutral-300);
+  fill: none;
+  stroke-linecap: round;
+}

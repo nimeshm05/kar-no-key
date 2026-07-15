@@ -1,3 +1,7 @@
+.landing-flow {
+  min-height: 100svh;
+}
+
 .landing-page {
   min-height: 100svh;
   display: flex;
@@ -48,6 +52,12 @@
   width: 248px;
 }
 
-.landing-form .primary-button {
+.landing-form .button {
   width: 100%;
+}
+
+.landing-form__error {
+  color: var(--color-text-error);
+  margin: 0;
+  text-align: center;
 }

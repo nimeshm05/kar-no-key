@@ -6,7 +6,9 @@ type ButtonProps = {
   href?: string;
   onClick?: () => void;
   type?: "button" | "submit" | "reset";
+  variant?: "primary" | "secondary";
   className?: string;
+  disabled?: boolean;
 };
 
 export default function Button({
@@ -14,9 +16,11 @@ export default function Button({
   href,
   onClick,
   type = "button",
+  variant = "primary",
   className,
+  disabled = false,
 }: ButtonProps) {
-  const classes = ["primary-button", "text-button-label", className]
+  const classes = ["button", `button--${variant}`, "text-button-label", className]
     .filter(Boolean)
     .join(" ");
 
@@ -29,7 +33,7 @@ export default function Button({
   }
 
   return (
-    <button type={type} className={classes} onClick={onClick}>
+    <button type={type} className={classes} onClick={onClick} disabled={disabled}>
       {children}
     </button>
   );

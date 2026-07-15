@@ -6,9 +6,18 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "supabase:start": "supabase start",
+    "supabase:stop": "supabase stop",
+    "supabase:reset": "supabase db reset",
+    "supabase:functions": "supabase functions serve",
+    "test:lobby-code": "node supabase/functions/_shared/lobby-code.node.test.mjs",
+    "test:display-name": "node supabase/functions/_shared/display-name.node.test.mjs",
+    "test:format-lobby-code": "node src/lib/lobby/formatLobbyCode.test.mjs",
+    "supabase:deploy": "bash scripts/deploy-hosted-supabase.sh"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.110.5",
     "motion": "^12.42.2",
     "next": "16.2.10",
     "react": "19.2.4",
@@ -20,6 +29,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.10",
+    "supabase": "^2.109.1",
     "typescript": "^5"
   }
 }

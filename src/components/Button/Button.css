@@ -1,6 +1,4 @@
-.primary-button {
-  background: var(--color-button-background);
-  color: var(--color-button-foreground);
+.button {
   padding: var(--size-16);
   border: none;
   cursor: pointer;
@@ -8,15 +6,59 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: opacity 0.15s ease, transform 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease, opacity 0.15s ease;
 }
 
-.primary-button:hover {
-  opacity: 0.85;
-  transform: translateY(-1px);
+.button--primary {
+  background: var(--color-button-background);
+  color: var(--color-button-foreground);
 }
 
-.primary-button:active {
-  opacity: 1;
-  transform: translateY(0);
+.button--primary:hover:not(:disabled) {
+  background: var(--color-button-background-hover);
+  color: var(--color-button-foreground);
+}
+
+.button--primary:active:not(:disabled) {
+  background: var(--color-button-background-active);
+  color: var(--color-button-foreground);
+}
+
+.button--primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.button--primary:disabled:hover,
+.button--primary:disabled:active {
+  background: var(--color-button-background);
+  color: var(--color-button-foreground);
+  opacity: 0.5;
+}
+
+.button--secondary {
+  background: var(--color-button-secondary-background);
+  color: var(--color-button-secondary-foreground);
+}
+
+.button--secondary:hover:not(:disabled) {
+  background: var(--color-button-secondary-background-hover);
+  color: var(--color-button-secondary-foreground-hover);
+}
+
+.button--secondary:active:not(:disabled) {
+  background: var(--color-button-secondary-background-active);
+  color: var(--color-button-secondary-foreground);
+}
+
+.button--secondary:disabled {
+  background: var(--color-button-secondary-background);
+  color: var(--color-button-secondary-foreground-disabled);
+  cursor: not-allowed;
+}
+
+.button--secondary:disabled:hover,
+.button--secondary:disabled:active {
+  background: var(--color-button-secondary-background);
+  color: var(--color-button-secondary-foreground-disabled);
 }

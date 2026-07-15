@@ -1,0 +1,150 @@
+.lobby-screen {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-background);
+}
+
+.lobby-screen__body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 60px 40px;
+}
+
+.lobby-screen__anchor {
+  position: relative;
+  width: 292px;
+}
+
+.lobby-screen__main {
+  display: flex;
+  flex-direction: column;
+  gap: 60px;
+  width: 100%;
+}
+
+.lobby-screen__hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  width: 100%;
+  text-align: center;
+}
+
+.lobby-screen__code {
+  color: var(--color-text-primary);
+  margin: 0;
+  width: 100%;
+}
+
+.lobby-screen__instructions {
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.lobby-screen__start-button {
+  width: 100%;
+}
+
+.lobby-screen__divider {
+  width: 100%;
+  margin: 0;
+  border: none;
+  border-top: 1px solid var(--neutral-300);
+}
+
+.lobby-screen__join {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  width: 100%;
+}
+
+.lobby-screen__join-label {
+  color: var(--color-text-muted);
+  margin: 0;
+  text-align: center;
+}
+
+.lobby-screen__join-button {
+  width: 100%;
+}
+
+.lobby-screen__roster {
+  position: absolute;
+  left: calc(100% + 316px);
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 248px;
+}
+
+.lobby-screen__roster-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  color: var(--color-text-primary);
+}
+
+.lobby-screen__roster-error {
+  color: var(--color-text-error);
+  margin: 0;
+}
+
+.lobby-screen__roster-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lobby-screen__roster-player {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 248px;
+  color: var(--color-text-muted);
+}
+
+.lobby-screen__roster-name {
+  flex: 1;
+  min-width: 0;
+}
+
+.lobby-screen__roster-role {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.lobby-screen--modal-open .lobby-screen__body,
+.lobby-screen--modal-open .navbar {
+  pointer-events: none;
+}
+
+@media (max-width: 720px) {
+  .lobby-screen__body {
+    padding: 40px var(--size-20);
+  }
+
+  .lobby-screen__anchor {
+    width: 100%;
+    max-width: 292px;
+  }
+
+  .lobby-screen__roster {
+    position: static;
+    left: auto;
+    top: auto;
+    width: 100%;
+    margin-top: 40px;
+  }
+}

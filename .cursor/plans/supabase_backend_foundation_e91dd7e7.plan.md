@@ -4,25 +4,25 @@ overview: A phased Supabase backend plan for the anonymous multiplayer typing ga
 todos:
   - id: supabase-init
     content: "Initialize Supabase project: CLI setup, config.toml, .env.local.example, install @supabase/supabase-js"
-    status: pending
+    status: completed
   - id: schema-migration
     content: "Create 001_initial_schema.sql: lobby_status enum, lobbies table (code unique + format check), players table stub, RLS deny-all"
-    status: pending
+    status: completed
   - id: shared-lobby-code
     content: "Implement supabase/functions/_shared/lobby-code.ts: generateLobbyCode, format validation, uniqueness check, collision retry"
-    status: pending
+    status: completed
   - id: edge-validate-code
     content: "Build validate-lobby-code Edge Function: normalize, format-check, DB existence lookup"
-    status: pending
+    status: completed
   - id: edge-generate-code
     content: "Build generate-lobby-code Edge Function: return unique code (no lobby row insert yet)"
-    status: pending
+    status: completed
   - id: client-helpers
     content: Add src/lib/supabase/client.ts and functions.ts wrappers for invoking Edge Functions from Next.js
-    status: pending
+    status: completed
   - id: test-code-logic
     content: "Test locally: format edge cases, collision retry, function responses via supabase functions serve"
-    status: pending
+    status: completed
 isProject: false
 ---
 

@@ -1,0 +1,29 @@
+.navbar {
+  display: flex;
+  align-items: center;
+  height: 92px;
+  padding: 0 40px;
+  width: 100%;
+}
+
+.navbar__section {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.navbar__section--center {
+  justify-content: center;
+}
+
+.navbar__section--end {
+  justify-content: flex-end;
+}
+
+.navbar__greeting {
+  margin: 0;
+  color: var(--color-text-muted);
+  text-align: center;
+  white-space: nowrap;
+}

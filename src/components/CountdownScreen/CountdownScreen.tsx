@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import AnimatedEllipsis from "@/components/AnimatedEllipsis/AnimatedEllipsis";
 import Button from "@/components/Button/Button";
 import LobbyRoster from "@/components/LobbyRoster/LobbyRoster";
 import MusicNoteDecorations from "@/components/MusicNoteDecorations/MusicNoteDecorations";
@@ -146,7 +147,11 @@ export default function CountdownScreen({
                   onClick={onStartCountdown}
                   disabled={isStarting}
                 >
-                  {isStarting ? "starting..." : "start countdown"}
+                  {isStarting ? (
+                    <AnimatedEllipsis label="starting" />
+                  ) : (
+                    "start countdown"
+                  )}
                 </Button>
                 {startError ? (
                   <p className="countdown-screen__error text-body" role="alert">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import AnimatedEllipsis from "@/components/AnimatedEllipsis/AnimatedEllipsis";
 import Button from "@/components/Button/Button";
 import InputField from "@/components/InputField/InputField";
 import LobbyRoster from "@/components/LobbyRoster/LobbyRoster";
@@ -96,7 +97,10 @@ export default function SearchScreen({
   }
 
   const displaySongs = hasSearched ? songs : recommendedSongs;
-  const isGridLoading = hasSearched ? isSearching : isLoadingRecommendations;
+  const showSearchLoading = isSearching;
+  const showRecommendationsLoading = !hasSearched && isLoadingRecommendations;
+  const showSongGrid =
+    !showSearchLoading && !showRecommendationsLoading && displaySongs.length > 0;
 
   return (
     <main className="search-screen">
@@ -115,8 +119,8 @@ export default function SearchScreen({
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
                     onKeyDown={handleQueryKeyDown}
-                    placeholder="search for artists or songs"
-                    aria-label="Search for artists or songs"
+                    placeholder="artists or songs"
+                    aria-label="artists or songs"
                     className="search-screen__search-input"
                     disabled={isSearching}
                   />
@@ -127,7 +131,7 @@ export default function SearchScreen({
                     onClick={() => void handleSearch()}
                     disabled={isSearching}
                   >
-                    {isSearching ? "searching..." : "search"}
+                    search
                   </Button>
                 </div>
               </div>
@@ -144,19 +148,31 @@ export default function SearchScreen({
                 </p>
               ) : null}
 
-              {isGridLoading ? (
-                <p className="search-screen__message text-body">
-                  {hasSearched ? "searching..." : "loading recommendations..."}
-                </p>
+              {showSearchLoading ? (
+                <AnimatedEllipsis
+                  label="searching"
+                  className="search-screen__loading-status"
+                  live
+                  as="p"
+                />
               ) : null}
 
-              {!searchError && hasSearched && songs.length === 0 ? (
+              {showRecommendationsLoading ? (
+                <AnimatedEllipsis
+                  label="loading recommendations"
+                  className="search-screen__message text-body"
+                  live
+                  as="p"
+                />
+              ) : null}
+
+              {!searchError && hasSearched && !showSearchLoading && songs.length === 0 ? (
                 <p className="search-screen__message text-body">
                   no songs found. try a different search.
                 </p>
               ) : null}
 
-              {!isGridLoading && displaySongs.length > 0 ? (
+              {showSongGrid ? (
                 <div className="search-screen__results">
                   {displaySongs.map((song) => (
                     <SongCard
@@ -180,7 +196,11 @@ export default function SearchScreen({
                     onClick={handleConfirm}
                     disabled={isConfirming}
                   >
-                    {isConfirming ? "confirming..." : "confirm selection"}
+                    {isConfirming ? (
+                      <AnimatedEllipsis label="confirming" />
+                    ) : (
+                      "confirm selection"
+                    )}
                   </Button>
                   {confirmError ? (
                     <p className="search-screen__message text-body" role="alert">

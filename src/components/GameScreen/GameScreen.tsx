@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import AnimatedEllipsis from "@/components/AnimatedEllipsis/AnimatedEllipsis";
 import Button from "@/components/Button/Button";
 import LobbyRoster from "@/components/LobbyRoster/LobbyRoster";
 import MusicNoteDecorations from "@/components/MusicNoteDecorations/MusicNoteDecorations";
@@ -151,9 +152,12 @@ export default function GameScreen({
                 isLocked={isPhraseLocked}
               />
             ) : (
-              <p className="game-screen__waiting text-body">
-                get ready...
-              </p>
+              <AnimatedEllipsis
+                label="get ready"
+                className="game-screen__waiting text-body"
+                live
+                as="p"
+              />
             )}
           </section>
 

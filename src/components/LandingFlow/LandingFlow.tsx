@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import AnimatedEllipsis from "@/components/AnimatedEllipsis/AnimatedEllipsis";
 import TypewriterIllustration from "@/components/TypewriterIllustration/TypewriterIllustration";
 import Button from "@/components/Button/Button";
 import InputField from "@/components/InputField/InputField";
@@ -382,7 +383,7 @@ export default function LandingFlow() {
                 onClick={handleGetStarted}
                 disabled={isLoading}
               >
-                {isLoading ? "creating..." : "get started"}
+                {isLoading ? <AnimatedEllipsis label="creating" /> : "get started"}
               </Button>
               {error ? (
                 <p className="landing-form__error text-body" role="alert">

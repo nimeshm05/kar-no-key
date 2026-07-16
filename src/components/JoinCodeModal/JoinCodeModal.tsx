@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import AnimatedEllipsis from "@/components/AnimatedEllipsis/AnimatedEllipsis";
 import Button from "@/components/Button/Button";
 import InputField from "@/components/InputField/InputField";
 import { isLobbyCodeMinLength } from "@/lib/lobby/lobbyCode";
@@ -121,7 +122,12 @@ export default function JoinCodeModal({
         ) : null}
 
         {phase === "joining" ? (
-          <p className="join-code-modal__message">wait...</p>
+          <AnimatedEllipsis
+            label="wait"
+            className="join-code-modal__message"
+            live
+            as="p"
+          />
         ) : null}
 
         {phase === "error" ? (

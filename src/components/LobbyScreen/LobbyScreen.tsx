@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import AnimatedEllipsis from "@/components/AnimatedEllipsis/AnimatedEllipsis";
 import Button from "@/components/Button/Button";
 import JoinCodeModal from "@/components/JoinCodeModal/JoinCodeModal";
 import type { JoinModalPhase } from "@/components/JoinCodeModal/JoinCodeModal";
@@ -94,9 +95,11 @@ export default function LobbyScreen({
                   {lobbyCode.toUpperCase()}
                 </h1>
                 <p className="lobby-screen__instructions text-body">
-                  {isRosterLoading && playerCount === 0
-                    ? "loading lobby..."
-                    : instructions}
+                  {isRosterLoading && playerCount === 0 ? (
+                    <AnimatedEllipsis label="loading lobby" live />
+                  ) : (
+                    instructions
+                  )}
                 </p>
                 {isHost ? (
                   <Button

@@ -1,0 +1,38 @@
+@keyframes animated-ellipsis-pulse {
+  0%,
+  80%,
+  100% {
+    opacity: 0.3;
+  }
+
+  40% {
+    opacity: 1;
+  }
+}
+
+.animated-ellipsis__dots {
+  display: inline-flex;
+}
+
+.animated-ellipsis__dot {
+  animation: animated-ellipsis-pulse 1.2s ease-in-out infinite;
+}
+
+.animated-ellipsis__dot:nth-child(1) {
+  animation-delay: 0ms;
+}
+
+.animated-ellipsis__dot:nth-child(2) {
+  animation-delay: 200ms;
+}
+
+.animated-ellipsis__dot:nth-child(3) {
+  animation-delay: 400ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animated-ellipsis__dot {
+    animation: none;
+    opacity: 1;
+  }
+}

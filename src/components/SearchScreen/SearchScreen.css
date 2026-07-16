@@ -39,7 +39,7 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 20px;
+  gap: 8px;
   width: 100%;
 }
 
@@ -67,7 +67,7 @@
 
 .search-screen__results {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(1, minmax(0, 1fr));
   gap: 20px;
   width: 100%;
 }
@@ -84,6 +84,15 @@
 }
 
 .search-screen__message {
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.search-screen__loading-status {
+  font-family: var(--family-mono);
+  font-size: var(--size-20);
+  font-weight: var(--weight-medium);
+  line-height: var(--line-16);
   color: var(--color-text-muted);
   margin: 0;
 }

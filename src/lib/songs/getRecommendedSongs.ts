@@ -1,4 +1,7 @@
-import { searchSongs as searchSongsApi, type SongResult } from "@/lib/supabase/functions";
+import {
+  getRecommendedSongs as getRecommendedSongsApi,
+  type SongResult,
+} from "@/lib/supabase/functions";
 
 function getErrorMessage(error: unknown, data: unknown): string {
   if (data && typeof data === "object" && "error" in data) {
@@ -15,12 +18,10 @@ function getErrorMessage(error: unknown, data: unknown): string {
   return "Something went wrong. Please try again.";
 }
 
-export async function searchSongs(
+export async function getRecommendedSongs(
   playerId: string,
-  query: string,
-  limit = 10,
 ): Promise<{ songs: SongResult[] } | { error: string }> {
-  const { data, error } = await searchSongsApi(playerId, query, limit);
+  const { data, error } = await getRecommendedSongsApi(playerId);
 
   if (error || !data || "error" in data) {
     return { error: getErrorMessage(error, data) };

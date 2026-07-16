@@ -1,3 +1,4 @@
+import { RECOMMENDED_VIDEO_IDS } from "../recommended-songs.ts";
 import type { SongResult, SongSearchProvider } from "./types.ts";
 
 const YOUTUBE_API_BASE = "https://www.googleapis.com/youtube/v3";
@@ -38,8 +39,73 @@ type YouTubeSearchItem = {
 
 type YouTubeVideoItem = {
   id?: string;
+  snippet?: YouTubeSearchItem["snippet"];
   contentDetails?: { duration?: string };
 };
+
+function mapVideoItemToSongResult(item: YouTubeVideoItem): SongResult | null {
+  if (!item.id || !item.snippet?.title) {
+    return null;
+  }
+
+  const duration_sec = item.contentDetails?.duration
+    ? parseIso8601Duration(item.contentDetails.duration)
+    : 0;
+
+  return {
+    id: item.id,
+    title: item.snippet.title,
+    channel: item.snippet.channelTitle,
+    thumbnail_url:
+      item.snippet.thumbnails?.medium?.url ??
+      item.snippet.thumbnails?.default?.url,
+    duration_sec,
+  };
+}
+
+export async function fetchYouTubeVideosMetadata(
+  videoIds: string[],
+): Promise<SongResult[]> {
+  if (videoIds.length === 0) {
+    return [];
+  }
+
+  const params = new URLSearchParams({
+    part: "snippet,contentDetails",
+    id: videoIds.join(","),
+    key: getApiKey(),
+  });
+
+  const response = await fetch(
+    `${YOUTUBE_API_BASE}/videos?${params.toString()}`,
+  );
+
+  if (!response.ok) {
+    return [];
+  }
+
+  const data = await response.json();
+  const items = (data.items ?? []) as YouTubeVideoItem[];
+  const songsById = new Map<string, SongResult>();
+
+  for (const item of items) {
+    const song = mapVideoItemToSongResult(item);
+    if (song) {
+      songsById.set(song.id, song);
+    }
+  }
+
+  return videoIds
+    .map((videoId) => songsById.get(videoId) ?? null)
+    .filter((song): song is SongResult => song !== null);
+}
+
+export async function fetchYouTubeVideoMetadata(
+  videoId: string,
+): Promise<SongResult | null> {
+  const songs = await fetchYouTubeVideosMetadata([videoId]);
+  return songs[0] ?? null;
+}
 
 async function fetchVideoDurations(
   videoIds: string[],
@@ -75,45 +141,8 @@ async function fetchVideoDurations(
   return durations;
 }
 
-export async function fetchYouTubeVideoMetadata(
-  videoId: string,
-): Promise<SongResult | null> {
-  const params = new URLSearchParams({
-    part: "snippet,contentDetails",
-    id: videoId,
-    key: getApiKey(),
-  });
-
-  const response = await fetch(
-    `${YOUTUBE_API_BASE}/videos?${params.toString()}`,
-  );
-
-  if (!response.ok) {
-    return null;
-  }
-
-  const data = await response.json();
-  const item = (data.items ?? [])[0] as YouTubeVideoItem & {
-    snippet?: YouTubeSearchItem["snippet"];
-  };
-
-  if (!item?.id || !item.snippet?.title) {
-    return null;
-  }
-
-  const duration_sec = item.contentDetails?.duration
-    ? parseIso8601Duration(item.contentDetails.duration)
-    : 0;
-
-  return {
-    id: item.id,
-    title: item.snippet.title,
-    channel: item.snippet.channelTitle,
-    thumbnail_url:
-      item.snippet.thumbnails?.medium?.url ??
-      item.snippet.thumbnails?.default?.url,
-    duration_sec,
-  };
+export async function getYouTubeRecommendedSongs(): Promise<SongResult[]> {
+  return fetchYouTubeVideosMetadata([...RECOMMENDED_VIDEO_IDS]);
 }
 
 export const youtubeSongProvider: SongSearchProvider = {

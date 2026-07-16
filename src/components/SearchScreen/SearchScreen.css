@@ -1,5 +1,4 @@
 .search-screen {
-  --search-accent: #59998c;
   min-height: 100svh;
   display: flex;
   flex-direction: column;
@@ -11,33 +10,38 @@
   display: flex;
   justify-content: center;
   width: 100%;
-  padding: 60px 40px;
+  padding: 60px 0;
 }
 
-.search-screen__anchor {
-  position: relative;
-  width: 580px;
+.search-screen__container {
+  display: flex;
+  gap: 120px;
+  align-items: flex-start;
+  width: var(--layout-content-width);
+  max-width: 100%;
 }
 
 .search-screen__main {
   display: flex;
+  flex: 1;
   flex-direction: column;
   gap: 60px;
+  min-width: 0;
+  padding: 60px 0;
   width: 100%;
 }
 
 .search-screen__search-header {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   gap: 20px;
   width: 100%;
 }
 
 .search-screen__title {
-  color: var(--search-accent);
+  color: var(--color-text-primary);
   margin: 0;
-  text-align: center;
 }
 
 .search-screen__search-bar {
@@ -58,8 +62,8 @@
 }
 
 .search-screen__results {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 20px;
   width: 100%;
 }
@@ -78,7 +82,6 @@
 .search-screen__message {
   color: var(--color-text-muted);
   margin: 0;
-  text-align: center;
 }
 
 .search-screen__waiting {
@@ -99,9 +102,9 @@
 }
 
 .search-screen__roster {
-  position: absolute;
-  left: calc(100% + 160px);
-  top: 0;
+  flex-shrink: 0;
+  width: 248px;
+  padding: 60px 0;
 }
 
 @media (max-width: 720px) {
@@ -109,17 +112,24 @@
     padding: 40px var(--size-20);
   }
 
-  .search-screen__anchor {
+  .search-screen__container {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 40px;
     width: 100%;
-    max-width: 580px;
+  }
+
+  .search-screen__main {
+    padding: 0;
   }
 
   .search-screen__roster {
-    position: static;
-    left: auto;
-    top: auto;
     width: 100%;
-    margin-top: 40px;
+    padding: 0;
+  }
+
+  .search-screen__results {
+    grid-template-columns: 1fr;
   }
 
   .search-screen__search-bar {

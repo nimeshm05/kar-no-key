@@ -10,7 +10,7 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 24px;
-  color: var(--color-text-primary);
+  color: var(--color-accent-green);
 }
 
 .lobby-roster__error {
@@ -21,10 +21,17 @@
 .lobby-roster__list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
   margin: 0;
   padding: 0;
   list-style: none;
+}
+
+.lobby-roster--solo .lobby-roster__list {
+  gap: 20px;
+}
+
+.lobby-roster--multi .lobby-roster__list {
+  gap: 12px;
 }
 
 .lobby-roster__player {

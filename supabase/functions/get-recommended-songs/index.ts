@@ -1,21 +1,14 @@
 import { handleCors, jsonResponse } from "../_shared/cors.ts";
 import { requireLobbyPlayer } from "../_shared/lobby-state.ts";
 import { isValidPlayerId } from "../_shared/player-id.ts";
-import {
-  checkRateLimit,
-  getClientIp,
-} from "../_shared/rate-limit.ts";
-import { searchSongs } from "../_shared/song-providers/index.ts";
+import { checkRateLimit } from "../_shared/rate-limit.ts";
+import { getRecommendedSongs } from "../_shared/song-providers/index.ts";
 
 const PLAYER_LIMIT = 10;
 const PLAYER_WINDOW_MS = 60_000;
-const IP_LIMIT = 30;
-const IP_WINDOW_MS = 60_000;
 
-type SearchSongsRequest = {
+type GetRecommendedSongsRequest = {
   player_id?: string;
-  query?: string;
-  limit?: number;
 };
 
 Deno.serve(async (req) => {
@@ -28,7 +21,7 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: "Method not allowed" }, 405);
   }
 
-  let body: SearchSongsRequest;
+  let body: GetRecommendedSongsRequest;
   try {
     body = await req.json();
   } catch {
@@ -43,14 +36,6 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: "Invalid player_id format" }, 400);
   }
 
-  if (body.query !== undefined && typeof body.query !== "string") {
-    return jsonResponse({ error: "query must be a string" }, 400);
-  }
-
-  if (body.limit !== undefined && typeof body.limit !== "number") {
-    return jsonResponse({ error: "limit must be a number" }, 400);
-  }
-
   const auth = await requireLobbyPlayer(body.player_id);
   if (!auth.ok) {
     return jsonResponse({ error: auth.error }, auth.status);
@@ -59,7 +44,7 @@ Deno.serve(async (req) => {
   const { supabase, player, lobby } = auth;
 
   if (!player.is_host) {
-    return jsonResponse({ error: "Only the host can search for songs" }, 403);
+    return jsonResponse({ error: "Only the host can view recommended songs" }, 403);
   }
 
   if (!lobby.song_selection_started) {
@@ -68,14 +53,14 @@ Deno.serve(async (req) => {
 
   if (lobby.status !== "waiting") {
     return jsonResponse(
-      { error: "Song search is only available during song selection" },
+      { error: "Recommended songs are only available during song selection" },
       403,
     );
   }
 
   const playerRateLimit = await checkRateLimit(
     supabase,
-    `search-songs:player:${body.player_id}`,
+    `get-recommended-songs:player:${body.player_id}`,
     PLAYER_LIMIT,
     PLAYER_WINDOW_MS,
   );
@@ -83,46 +68,20 @@ Deno.serve(async (req) => {
   if (!playerRateLimit.ok) {
     return jsonResponse(
       {
-        error: `Too many searches. Try again in ${playerRateLimit.retryAfterSec} seconds.`,
+        error: `Too many requests. Try again in ${playerRateLimit.retryAfterSec} seconds.`,
       },
       429,
     );
   }
 
-  const clientIp = getClientIp(req);
-  if (clientIp) {
-    const ipRateLimit = await checkRateLimit(
-      supabase,
-      `search-songs:ip:${clientIp}`,
-      IP_LIMIT,
-      IP_WINDOW_MS,
-    );
-
-    if (!ipRateLimit.ok) {
-      return jsonResponse(
-        {
-          error: `Too many searches from this network. Try again in ${ipRateLimit.retryAfterSec} seconds.`,
-        },
-        429,
-      );
-    }
-  }
-
-  const query = body.query ?? "";
-  const limit = body.limit ?? 10;
-
-  if (!query.trim()) {
-    return jsonResponse({ error: "Search query is required" }, 400);
-  }
-
   try {
-    const songs = await searchSongs(query, limit);
+    const songs = await getRecommendedSongs();
     return jsonResponse({ songs });
   } catch (error) {
     if (error instanceof Error) {
       return jsonResponse({ error: error.message }, 500);
     }
 
-    return jsonResponse({ error: "Failed to search songs" }, 500);
+    return jsonResponse({ error: "Failed to load recommended songs" }, 500);
   }
 });

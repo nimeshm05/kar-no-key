@@ -81,54 +81,58 @@ export default function LobbyScreen({
       <Navbar displayName={displayName} onExitLobby={onExitLobby} />
 
       <div className="lobby-screen__body">
-        <div className="lobby-screen__anchor">
-          <section className="lobby-screen__main">
-            <div className="lobby-screen__hero">
-              <h1 className="lobby-screen__code text-heading-1">
-                {lobbyCode.toUpperCase()}
-              </h1>
-              <p className="lobby-screen__instructions text-body">
-                {isRosterLoading && playerCount === 0
-                  ? "loading lobby..."
-                  : instructions}
-              </p>
-              {isHost ? (
-                <Button
-                  variant="primary"
-                  type="button"
-                  className="lobby-screen__start-button"
-                  onClick={onStartGame}
-                  disabled={isLoading || isRosterLoading}
-                >
-                  let&apos;s gooo
-                </Button>
-              ) : null}
-              {startGameError ? (
-                <p className="lobby-screen__start-error text-body" role="alert">
-                  {startGameError}
+        <div className="lobby-screen__align">
+          <div className="lobby-screen__content">
+            <section className="lobby-screen__main">
+              <div className="lobby-screen__hero">
+                <h1 className="lobby-screen__code text-heading-1">
+                  {lobbyCode.toUpperCase()}
+                </h1>
+                <p className="lobby-screen__instructions text-body">
+                  {isRosterLoading && playerCount === 0
+                    ? "loading lobby..."
+                    : instructions}
                 </p>
-              ) : null}
-            </div>
+                {isHost ? (
+                  <Button
+                    variant="primary"
+                    type="button"
+                    className="lobby-screen__start-button"
+                    onClick={onStartGame}
+                    disabled={isLoading || isRosterLoading}
+                  >
+                    let&apos;s gooo
+                  </Button>
+                ) : null}
+                {startGameError ? (
+                  <p className="lobby-screen__start-error text-body" role="alert">
+                    {startGameError}
+                  </p>
+                ) : null}
+              </div>
 
-            {isSolo && !isRosterLoading ? (
-              <hr className="lobby-screen__divider" />
-            ) : null}
+              <div className="lobby-screen__divider">
+                <hr className="lobby-screen__divider-line" />
+                <p className="lobby-screen__divider-label text-button-label">or</p>
+                <hr className="lobby-screen__divider-line" />
+              </div>
 
-            <div className="lobby-screen__join">
-              <p className="lobby-screen__join-label text-body">
-                did your fren give you a code?
-              </p>
-              <Button
-                variant="secondary"
-                type="button"
-                className="lobby-screen__join-button"
-                onClick={() => setIsJoinModalOpen(true)}
-                disabled={isLoading}
-              >
-                my fren gave me a code
-              </Button>
-            </div>
-          </section>
+              <div className="lobby-screen__join">
+                <p className="lobby-screen__join-label text-body">
+                  did your fren give you a code?
+                </p>
+                <Button
+                  variant="secondary"
+                  type="button"
+                  className="lobby-screen__join-button"
+                  onClick={() => setIsJoinModalOpen(true)}
+                  disabled={isLoading}
+                >
+                  my fren gave me a code
+                </Button>
+              </div>
+            </section>
+          </div>
 
           <LobbyRoster
             className="lobby-screen__roster"

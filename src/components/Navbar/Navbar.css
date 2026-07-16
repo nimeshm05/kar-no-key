@@ -1,9 +1,16 @@
 .navbar {
   display: flex;
   align-items: center;
+  justify-content: center;
   height: 92px;
-  padding: 0 40px;
   width: 100%;
+}
+
+.navbar__content {
+  display: flex;
+  align-items: center;
+  width: var(--layout-content-width);
+  max-width: 100%;
 }
 
 .navbar__section {

@@ -22,4 +22,5 @@
   --color-input-border-disabled: var(--neutral-200);
   --color-input-text-disabled: var(--neutral-250);
   --color-text-error: var(--red-500);
+  --color-accent-green: var(--accent-green);
 }

@@ -11,6 +11,7 @@ import {
 import { getPlayerId } from "@/lib/player/identity";
 import { loadLobbySession, clearLobbySession } from "@/lib/player/session";
 import type { SongResult } from "@/lib/songs/searchSongs";
+import { getRecommendedSongs } from "@/lib/songs/getRecommendedSongs";
 import {
   getLobbyState,
   leaveLobby,
@@ -32,6 +33,11 @@ export default function SearchFlow() {
   const [lyricsStatusBySongId, setLyricsStatusBySongId] = useState<
     Record<string, "available" | "unavailable">
   >({});
+  const [recommendedSongs, setRecommendedSongs] = useState<SongResult[]>([]);
+  const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(false);
+  const [recommendationsError, setRecommendationsError] = useState<string | null>(
+    null,
+  );
 
   const handleRouteFromStatus = useCallback(
     (status: string, songSelectionStarted: boolean) => {
@@ -135,6 +141,41 @@ export default function SearchFlow() {
     });
   }, [fetchLobbyState, router]);
 
+  useEffect(() => {
+    if (!isReady || !isHost || !playerId) {
+      return;
+    }
+
+    let cancelled = false;
+
+    async function fetchRecommendations() {
+      setIsLoadingRecommendations(true);
+      setRecommendationsError(null);
+
+      const result = await getRecommendedSongs(playerId);
+
+      if (cancelled) {
+        return;
+      }
+
+      setIsLoadingRecommendations(false);
+
+      if ("error" in result) {
+        setRecommendationsError(result.error);
+        setRecommendedSongs([]);
+        return;
+      }
+
+      setRecommendedSongs(result.songs);
+    }
+
+    void fetchRecommendations();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isReady, isHost, playerId]);
+
   async function handleExitLobby() {
     if (playerId) {
       try {
@@ -203,9 +244,13 @@ export default function SearchFlow() {
     <SearchScreen
       displayName={displayName}
       isHost={isHost}
+      playerId={playerId ?? ""}
       players={players}
       isRosterLoading={isRosterLoading}
       rosterError={rosterError}
+      recommendedSongs={recommendedSongs}
+      isLoadingRecommendations={isLoadingRecommendations}
+      recommendationsError={recommendationsError}
       isConfirming={isConfirming}
       confirmError={confirmError}
       lyricsStatusBySongId={lyricsStatusBySongId}

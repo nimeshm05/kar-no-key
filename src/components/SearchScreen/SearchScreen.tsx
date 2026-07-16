@@ -14,9 +14,13 @@ import "./SearchScreen.css";
 type SearchScreenProps = {
   displayName: string;
   isHost: boolean;
+  playerId: string;
   players: LobbyPlayer[];
   isRosterLoading: boolean;
   rosterError: string | null;
+  recommendedSongs: SongResult[];
+  isLoadingRecommendations: boolean;
+  recommendationsError: string | null;
   isConfirming: boolean;
   confirmError: string | null;
   lyricsStatusBySongId?: Record<string, "available" | "unavailable">;
@@ -37,9 +41,13 @@ function formatDuration(seconds?: number): string | null {
 export default function SearchScreen({
   displayName,
   isHost,
+  playerId,
   players,
   isRosterLoading,
   rosterError,
+  recommendedSongs,
+  isLoadingRecommendations,
+  recommendationsError,
   isConfirming,
   confirmError,
   lyricsStatusBySongId = {},
@@ -58,7 +66,7 @@ export default function SearchScreen({
     setSearchError(null);
     setSelectedSong(null);
 
-    const result = await searchSongs(query);
+    const result = await searchSongs(playerId, query);
 
     setIsSearching(false);
     setHasSearched(true);
@@ -88,12 +96,15 @@ export default function SearchScreen({
     }
   }
 
+  const displaySongs = hasSearched ? songs : recommendedSongs;
+  const isGridLoading = hasSearched ? isSearching : isLoadingRecommendations;
+
   return (
     <main className="search-screen">
       <Navbar displayName={displayName} onExitLobby={onExitLobby} />
 
       <div className="search-screen__body">
-        <div className="search-screen__anchor">
+        <div className="search-screen__container">
           {isHost ? (
             <section className="search-screen__main">
               <div className="search-screen__search-header">
@@ -128,15 +139,27 @@ export default function SearchScreen({
                 </p>
               ) : null}
 
+              {!hasSearched && recommendationsError ? (
+                <p className="search-screen__message text-body" role="alert">
+                  {recommendationsError}
+                </p>
+              ) : null}
+
+              {isGridLoading ? (
+                <p className="search-screen__message text-body">
+                  {hasSearched ? "searching..." : "loading recommendations..."}
+                </p>
+              ) : null}
+
               {!searchError && hasSearched && songs.length === 0 ? (
                 <p className="search-screen__message text-body">
                   no songs found. try a different search.
                 </p>
               ) : null}
 
-              {songs.length > 0 ? (
+              {!isGridLoading && displaySongs.length > 0 ? (
                 <div className="search-screen__results">
-                  {songs.map((song) => (
+                  {displaySongs.map((song) => (
                     <SongCard
                       key={song.id}
                       song={song}

@@ -80,6 +80,10 @@ export type SearchSongsResult =
   | { songs: SongResult[] }
   | { error: string };
 
+export type GetRecommendedSongsResult =
+  | { songs: SongResult[] }
+  | { error: string };
+
 export type LyricPhrase = {
   index: number;
   text: string;
@@ -217,12 +221,22 @@ export async function startSongSelection(
 }
 
 export async function searchSongs(
+  playerId: string,
   query: string,
   limit?: number,
 ): Promise<FunctionInvokeResult<SearchSongsResult>> {
   return invokeFunction<SearchSongsResult>("search-songs", {
+    player_id: playerId,
     query,
     limit,
+  });
+}
+
+export async function getRecommendedSongs(
+  playerId: string,
+): Promise<FunctionInvokeResult<GetRecommendedSongsResult>> {
+  return invokeFunction<GetRecommendedSongsResult>("get-recommended-songs", {
+    player_id: playerId,
   });
 }
 

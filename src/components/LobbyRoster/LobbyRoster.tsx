@@ -20,7 +20,13 @@ export default function LobbyRoster({
   const playerCount = sortedPlayers.length;
   const showRosterList = playerCount > 0 && !isLoading;
 
-  const rosterClasses = ["lobby-roster", className].filter(Boolean).join(" ");
+  const rosterClasses = [
+    "lobby-roster",
+    playerCount <= 1 ? "lobby-roster--solo" : "lobby-roster--multi",
+    className,
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   return (
     <aside className={rosterClasses}>

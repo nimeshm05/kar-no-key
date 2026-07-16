@@ -1,6 +1,6 @@
 import type { SongResult, SongSearchProvider } from "./types.ts";
 
-const MOCK_SONGS: SongResult[] = [
+export const MOCK_SONGS: SongResult[] = [
   {
     id: "mock-1",
     title: "More than friends (with Honne) Audio Only",
@@ -13,6 +13,21 @@ const MOCK_SONGS: SongResult[] = [
   },
   {
     id: "mock-3",
+    title: "My Way (2008 Remastered)",
+    artist: "Frank Sinatra",
+  },
+  {
+    id: "mock-4",
+    title: "My Way (2008 Remastered)",
+    artist: "Frank Sinatra",
+  },
+  {
+    id: "mock-5",
+    title: "My Way (2008 Remastered)",
+    artist: "Frank Sinatra",
+  },
+  {
+    id: "mock-6",
     title: "My Way (2008 Remastered)",
     artist: "Frank Sinatra",
   },
@@ -32,3 +47,7 @@ export const mockSongProvider: SongSearchProvider = {
     }).slice(0, limit);
   },
 };
+
+export function getMockRecommendedSongs(): SongResult[] {
+  return [...MOCK_SONGS];
+}

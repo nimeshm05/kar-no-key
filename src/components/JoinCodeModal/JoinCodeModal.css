@@ -17,6 +17,10 @@
   cursor: pointer;
 }
 
+.join-code-modal__overlay:disabled {
+  cursor: default;
+}
+
 .join-code-modal__panel {
   position: relative;
   z-index: 1;
@@ -24,8 +28,15 @@
   flex-direction: column;
   align-items: center;
   gap: 20px;
+  width: 340px;
+  min-height: 172px;
   padding: 20px;
   background: var(--color-background);
+  box-sizing: border-box;
+}
+
+.join-code-modal__panel--centered {
+  justify-content: center;
 }
 
 .join-code-modal__title {
@@ -40,20 +51,58 @@
   border: 0;
 }
 
-.join-code-modal__submit {
-  width: 248px;
+.join-code-modal__input {
+  width: 100%;
 }
 
-.join-code-modal__waiting {
-  color: var(--color-text-muted);
-  margin: 0;
-  text-align: center;
-  width: 248px;
+.join-code-modal__actions {
+  display: flex;
+  gap: 20px;
+  width: 100%;
 }
 
-.join-code-modal__error {
-  color: var(--color-text-error);
+.join-code-modal__action {
+  flex: 1;
+  min-width: 0;
+}
+
+.join-code-modal__action--submit:disabled {
+  opacity: 1;
+  background: var(--neutral-400);
+  color: rgba(255, 255, 255, 0.4);
+  cursor: not-allowed;
+}
+
+.join-code-modal__action--submit:disabled:hover,
+.join-code-modal__action--submit:disabled:active {
+  background: var(--neutral-400);
+  color: rgba(255, 255, 255, 0.4);
+  opacity: 1;
+}
+
+.join-code-modal__retry {
+  width: 100%;
+}
+
+.join-code-modal__message {
+  font-family: var(--family-mono);
+  font-size: var(--size-20);
+  font-weight: var(--weight-medium);
+  line-height: var(--line-16);
+  color: var(--color-text-primary);
   margin: 0;
   text-align: center;
-  width: 248px;
+  width: 100%;
+}
+
+.join-code-modal__message-secondary {
+  margin-top: 0;
+}
+
+.join-code-modal__message p {
+  margin: 0;
+}
+
+.join-code-modal__message p + p {
+  margin-top: var(--line-16);
 }

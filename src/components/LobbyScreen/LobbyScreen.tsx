@@ -21,7 +21,6 @@ type LobbyScreenProps = {
   onJoinLobby: () => Promise<boolean>;
   isLoading: boolean;
   isRosterLoading: boolean;
-  joinError: string | null;
   rosterError: string | null;
   joinModalPhase: JoinModalPhase;
   onJoinModalPhaseChange: (phase: JoinModalPhase) => void;
@@ -40,7 +39,6 @@ export default function LobbyScreen({
   onJoinLobby,
   isLoading,
   isRosterLoading,
-  joinError,
   rosterError,
   joinModalPhase,
   onJoinModalPhaseChange,
@@ -55,10 +53,14 @@ export default function LobbyScreen({
     : "share this code with your frens to begin the race.";
 
   function handleCloseModal() {
-    if (!isLoading) {
+    if (joinModalPhase === "enter-code" || joinModalPhase === "error") {
       setIsJoinModalOpen(false);
       onJoinModalPhaseChange("enter-code");
     }
+  }
+
+  function handleRetry() {
+    onJoinModalPhaseChange("enter-code");
   }
 
   async function handleJoinSubmit() {
@@ -67,12 +69,15 @@ export default function LobbyScreen({
     if (success) {
       onJoinModalPhaseChange("waiting-for-host");
     } else {
-      onJoinModalPhaseChange("enter-code");
+      onJoinModalPhaseChange("error");
     }
   }
 
   const isModalOpen =
-    isJoinModalOpen || joinModalPhase === "waiting-for-host";
+    isJoinModalOpen ||
+    joinModalPhase === "joining" ||
+    joinModalPhase === "error" ||
+    joinModalPhase === "waiting-for-host";
 
   return (
     <main
@@ -149,8 +154,7 @@ export default function LobbyScreen({
           onJoinCodeChange={onJoinCodeChange}
           onClose={handleCloseModal}
           onSubmit={handleJoinSubmit}
-          isLoading={isLoading || joinModalPhase === "joining"}
-          error={joinError}
+          onRetry={handleRetry}
           phase={joinModalPhase}
         />
       ) : null}

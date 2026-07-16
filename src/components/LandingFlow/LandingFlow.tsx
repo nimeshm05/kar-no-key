@@ -53,7 +53,6 @@ export default function LandingFlow() {
   const [isRosterLoading, setIsRosterLoading] = useState(false);
   const [joinCode, setJoinCode] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [joinError, setJoinError] = useState<string | null>(null);
   const [lobbyRosterError, setLobbyRosterError] = useState<string | null>(null);
   const [startGameError, setStartGameError] = useState<string | null>(null);
   const [joinModalPhase, setJoinModalPhase] = useState<JoinModalPhase>("enter-code");
@@ -256,7 +255,6 @@ export default function LandingFlow() {
     setPlayers([]);
     setIsHost(true);
     setError(null);
-    setJoinError(null);
     setLobbyRosterError(null);
     setStartGameError(null);
     setJoinModalPhase("enter-code");
@@ -296,7 +294,6 @@ export default function LandingFlow() {
     const normalizedCurrentCode = normalizeLobbyCodeInput(lobbyCode);
 
     setIsLoading(true);
-    setJoinError(null);
     setError(null);
 
     try {
@@ -304,7 +301,6 @@ export default function LandingFlow() {
         const { data: leaveData, error: leaveError } = await leaveLobby(playerId);
 
         if (leaveError || !leaveData || "error" in leaveData) {
-          setJoinError(getErrorMessage(leaveError, leaveData));
           return false;
         }
       }
@@ -317,7 +313,6 @@ export default function LandingFlow() {
         );
 
         if (joinInvokeError || !joinData || "error" in joinData) {
-          setJoinError(getErrorMessage(joinInvokeError, joinData));
           return false;
         }
 
@@ -341,8 +336,7 @@ export default function LandingFlow() {
       }
 
       return false;
-    } catch (caughtError) {
-      setJoinError(getErrorMessage(caughtError, null));
+    } catch {
       return false;
     } finally {
       setIsLoading(false);
@@ -417,7 +411,6 @@ export default function LandingFlow() {
               onJoinLobby={handleJoinLobby}
               isLoading={isLoading}
               isRosterLoading={isRosterLoading}
-              joinError={joinError}
               rosterError={lobbyRosterError}
               joinModalPhase={joinModalPhase}
               onJoinModalPhaseChange={setJoinModalPhase}

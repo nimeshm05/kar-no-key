@@ -35,7 +35,7 @@ function formatDuration(seconds?: number): string | null {
 
   const minutes = Math.floor(seconds / 60);
   const remainingSeconds = seconds % 60;
-  return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
+  return `${minutes.toString().padStart(2, "0")}:${remainingSeconds.toString().padStart(2, "0")}`;
 }
 
 export default function SearchScreen({
@@ -111,7 +111,7 @@ export default function SearchScreen({
           {isHost ? (
             <section className="search-screen__main">
               <div className="search-screen__search-header">
-                <h1 className="search-screen__title text-heading-1">
+                <h1 className="search-screen__title text-heading-2">
                   SEARCH A SONG
                 </h1>
                 <div className="search-screen__search-bar">

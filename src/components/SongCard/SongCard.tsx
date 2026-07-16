@@ -62,19 +62,21 @@ export default function SongCard({
         )}
       </div>
       <div className="song-card__info">
-        <p className="song-card__title text-heading-3">{song.title}</p>
-        {subtitle ? (
-          <p className="song-card__subtitle text-body">{subtitle}</p>
-        ) : null}
+        <div className="song-card__details">
+          <p className="song-card__title text-button-label">{song.title}</p>
+          {subtitle ? (
+            <p className="song-card__subtitle text-button-label">{subtitle}</p>
+          ) : null}
+        </div>
         <div className="song-card__meta">
           {durationLabel ? (
-            <span className="song-card__duration text-body">{durationLabel}</span>
+            <span className="song-card__duration text-button-label">{durationLabel}</span>
           ) : null}
           {lyricsStatus ? (
             <span
               className={[
                 "song-card__lyrics-badge",
-                "text-body",
+                "text-button-label",
                 lyricsStatus === "available"
                   ? "song-card__lyrics-badge--available"
                   : "song-card__lyrics-badge--unavailable",

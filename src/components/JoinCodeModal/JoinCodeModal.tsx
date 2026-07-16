@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import AnimatedEllipsis from "@/components/AnimatedEllipsis/AnimatedEllipsis";
 import Button from "@/components/Button/Button";
 import InputField from "@/components/InputField/InputField";
+import { lockBodyScroll } from "@/lib/dom/bodyScrollLock";
 import { isLobbyCodeMinLength } from "@/lib/lobby/lobbyCode";
 import "./JoinCodeModal.css";
 
@@ -44,8 +45,7 @@ export default function JoinCodeModal({
   const isBusy = phase === "joining" || phase === "waiting-for-host";
 
   useEffect(() => {
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    const unlockBodyScroll = lockBodyScroll();
 
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape" && canDismiss) {
@@ -56,7 +56,7 @@ export default function JoinCodeModal({
     document.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      document.body.style.overflow = previousOverflow;
+      unlockBodyScroll();
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [onClose, canDismiss]);

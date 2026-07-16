@@ -86,6 +86,12 @@ export default function SongCard({
             </span>
           ) : null}
         </div>
+        {onSelect ? (
+          <div className="song-card__hover-action" aria-hidden="true">
+            <span className="song-card__hover-label text-button-label">select song</span>
+            <span className="song-card__hover-icon" aria-hidden="true" />
+          </div>
+        ) : null}
       </div>
     </div>
   );

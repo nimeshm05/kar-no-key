@@ -11,8 +11,10 @@
   cursor: pointer;
 }
 
-.song-card--interactive:hover {
-  border-color: var(--neutral-300);
+.song-card--interactive:hover,
+.song-card--interactive:focus-visible {
+  background: var(--neutral-100);
+  border-color: var(--neutral-200);
 }
 
 .song-card--selected {
@@ -86,4 +88,45 @@
 
 .song-card__lyrics-badge--unavailable {
   color: var(--color-text-error);
+}
+
+.song-card--interactive:hover .song-card__info,
+.song-card--interactive:focus-visible .song-card__info {
+  gap: 12px;
+}
+
+.song-card__hover-action {
+  display: none;
+  align-items: center;
+  gap: 8px;
+}
+
+.song-card__hover-label {
+  color: var(--color-text-muted);
+}
+
+.song-card__hover-icon {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  transform: rotate(180deg);
+  background-color: var(--color-text-muted);
+  mask-image: url("/icons/arrow-left.svg");
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+  -webkit-mask-image: url("/icons/arrow-left.svg");
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  -webkit-mask-size: contain;
+}
+
+.song-card--interactive:hover .song-card__meta,
+.song-card--interactive:focus-visible .song-card__meta {
+  display: none;
+}
+
+.song-card--interactive:hover .song-card__hover-action,
+.song-card--interactive:focus-visible .song-card__hover-action {
+  display: flex;
 }

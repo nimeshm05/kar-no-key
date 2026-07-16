@@ -3,15 +3,16 @@
 import { useState } from "react";
 import Button from "@/components/Button/Button";
 import JoinCodeModal from "@/components/JoinCodeModal/JoinCodeModal";
+import type { JoinModalPhase } from "@/components/JoinCodeModal/JoinCodeModal";
+import LobbyRoster from "@/components/LobbyRoster/LobbyRoster";
 import Navbar from "@/components/Navbar/Navbar";
-import { sortLobbyPlayers } from "@/lib/lobby/sortLobbyPlayers";
-import { LOBBY_MAX_PLAYERS } from "@/lib/lobby/lobbyConstants";
 import type { LobbyPlayer } from "@/lib/supabase/functions";
 import "./LobbyScreen.css";
 
 type LobbyScreenProps = {
   displayName: string;
   lobbyCode: string;
+  isHost: boolean;
   players: LobbyPlayer[];
   joinCode: string;
   onJoinCodeChange: (value: string) => void;
@@ -22,11 +23,15 @@ type LobbyScreenProps = {
   isRosterLoading: boolean;
   joinError: string | null;
   rosterError: string | null;
+  joinModalPhase: JoinModalPhase;
+  onJoinModalPhaseChange: (phase: JoinModalPhase) => void;
+  startGameError: string | null;
 };
 
 export default function LobbyScreen({
   displayName,
   lobbyCode,
+  isHost,
   players,
   joinCode,
   onJoinCodeChange,
@@ -37,12 +42,13 @@ export default function LobbyScreen({
   isRosterLoading,
   joinError,
   rosterError,
+  joinModalPhase,
+  onJoinModalPhaseChange,
+  startGameError,
 }: LobbyScreenProps) {
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
-  const sortedPlayers = sortLobbyPlayers(players);
-  const playerCount = sortedPlayers.length;
+  const playerCount = players.length;
   const isSolo = playerCount <= 1;
-  const showRosterList = playerCount > 0 && !isRosterLoading;
 
   const instructions = isSolo
     ? "invite your friends by sharing this code, or start the race on your own."
@@ -51,19 +57,26 @@ export default function LobbyScreen({
   function handleCloseModal() {
     if (!isLoading) {
       setIsJoinModalOpen(false);
+      onJoinModalPhaseChange("enter-code");
     }
   }
 
   async function handleJoinSubmit() {
+    onJoinModalPhaseChange("joining");
     const success = await onJoinLobby();
     if (success) {
-      setIsJoinModalOpen(false);
+      onJoinModalPhaseChange("waiting-for-host");
+    } else {
+      onJoinModalPhaseChange("enter-code");
     }
   }
 
+  const isModalOpen =
+    isJoinModalOpen || joinModalPhase === "waiting-for-host";
+
   return (
     <main
-      className={`lobby-screen${isJoinModalOpen ? " lobby-screen--modal-open" : ""}`}
+      className={`lobby-screen${isModalOpen ? " lobby-screen--modal-open" : ""}`}
     >
       <Navbar displayName={displayName} onExitLobby={onExitLobby} />
 
@@ -79,15 +92,22 @@ export default function LobbyScreen({
                   ? "loading lobby..."
                   : instructions}
               </p>
-              <Button
-                variant="primary"
-                type="button"
-                className="lobby-screen__start-button"
-                onClick={onStartGame}
-                disabled={isLoading || isRosterLoading}
-              >
-                let&apos;s gooo
-              </Button>
+              {isHost ? (
+                <Button
+                  variant="primary"
+                  type="button"
+                  className="lobby-screen__start-button"
+                  onClick={onStartGame}
+                  disabled={isLoading || isRosterLoading}
+                >
+                  let&apos;s gooo
+                </Button>
+              ) : null}
+              {startGameError ? (
+                <p className="lobby-screen__start-error text-body" role="alert">
+                  {startGameError}
+                </p>
+              ) : null}
             </div>
 
             {isSolo && !isRosterLoading ? (
@@ -110,49 +130,24 @@ export default function LobbyScreen({
             </div>
           </section>
 
-          <aside className="lobby-screen__roster">
-            <div className="lobby-screen__roster-header text-body">
-              <span>players joined</span>
-              <span>
-                {playerCount}/{LOBBY_MAX_PLAYERS}
-              </span>
-            </div>
-
-            {rosterError ? (
-              <p className="lobby-screen__roster-error text-body" role="alert">
-                {rosterError}
-              </p>
-            ) : null}
-
-            {showRosterList ? (
-              <ul className="lobby-screen__roster-list">
-                {sortedPlayers.map((player) => (
-                  <li
-                    key={player.player_id}
-                    className="lobby-screen__roster-player text-button-label"
-                  >
-                    <span className="lobby-screen__roster-name">
-                      {player.display_name.toLowerCase()}
-                    </span>
-                    <span className="lobby-screen__roster-role">
-                      {player.is_host ? "host" : "player"}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-          </aside>
+          <LobbyRoster
+            className="lobby-screen__roster"
+            players={players}
+            isLoading={isRosterLoading}
+            error={rosterError}
+          />
         </div>
       </div>
 
-      {isJoinModalOpen ? (
+      {isModalOpen ? (
         <JoinCodeModal
           joinCode={joinCode}
           onJoinCodeChange={onJoinCodeChange}
           onClose={handleCloseModal}
           onSubmit={handleJoinSubmit}
-          isLoading={isLoading}
+          isLoading={isLoading || joinModalPhase === "joining"}
           error={joinError}
+          phase={joinModalPhase}
         />
       ) : null}
     </main>

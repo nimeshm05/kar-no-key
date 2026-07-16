@@ -1,0 +1,132 @@
+.search-screen {
+  --search-accent: #59998c;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-background);
+}
+
+.search-screen__body {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  padding: 60px 40px;
+}
+
+.search-screen__anchor {
+  position: relative;
+  width: 580px;
+}
+
+.search-screen__main {
+  display: flex;
+  flex-direction: column;
+  gap: 60px;
+  width: 100%;
+}
+
+.search-screen__search-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  width: 100%;
+}
+
+.search-screen__title {
+  color: var(--search-accent);
+  margin: 0;
+  text-align: center;
+}
+
+.search-screen__search-bar {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.search-screen__search-input {
+  flex: 1;
+  width: auto;
+  min-width: 0;
+}
+
+.search-screen__search-button {
+  flex-shrink: 0;
+}
+
+.search-screen__results {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+.search-screen__confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.search-screen__confirm-button {
+  width: 100%;
+}
+
+.search-screen__message {
+  color: var(--color-text-muted);
+  margin: 0;
+  text-align: center;
+}
+
+.search-screen__waiting {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  width: 100%;
+}
+
+.search-screen__waiting-message {
+  position: relative;
+  z-index: 1;
+  color: var(--color-text-muted);
+  margin: 0;
+  text-align: center;
+}
+
+.search-screen__roster {
+  position: absolute;
+  left: calc(100% + 160px);
+  top: 0;
+}
+
+@media (max-width: 720px) {
+  .search-screen__body {
+    padding: 40px var(--size-20);
+  }
+
+  .search-screen__anchor {
+    width: 100%;
+    max-width: 580px;
+  }
+
+  .search-screen__roster {
+    position: static;
+    left: auto;
+    top: auto;
+    width: 100%;
+    margin-top: 40px;
+  }
+
+  .search-screen__search-bar {
+    flex-direction: column;
+  }
+
+  .search-screen__search-button {
+    width: 100%;
+  }
+}

@@ -6,7 +6,9 @@ export const POLL_INTERVAL_MS = 3000;
 export type LobbyRosterUpdate = {
   lobby_id: string;
   code: string;
+  status: string;
   max_players: number;
+  song_selection_started: boolean;
   players: LobbyPlayer[];
 };
 
@@ -70,7 +72,9 @@ export function useLobbyRosterPolling({
         onUpdate({
           lobby_id: data.lobby_id,
           code: data.code,
+          status: data.status,
           max_players: data.max_players,
+          song_selection_started: data.song_selection_started,
           players: data.players,
         });
       } catch (caughtError) {

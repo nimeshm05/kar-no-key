@@ -2,7 +2,7 @@ import { handleCors, jsonResponse } from "../_shared/cors.ts";
 import { isValidPlayerId } from "../_shared/player-id.ts";
 import { createSupabaseAdmin } from "../_shared/supabase-admin.ts";
 
-type GetLobbyPlayersRequest = {
+type StartSongSelectionRequest = {
   player_id?: string;
 };
 
@@ -16,7 +16,7 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: "Method not allowed" }, 405);
   }
 
-  let body: GetLobbyPlayersRequest;
+  let body: StartSongSelectionRequest;
   try {
     body = await req.json();
   } catch {
@@ -40,7 +40,7 @@ Deno.serve(async (req) => {
 
   const { data: player, error: playerError } = await supabase
     .from("players")
-    .select("id, lobby_id")
+    .select("id, lobby_id, is_host")
     .eq("id", body.player_id)
     .maybeSingle();
 
@@ -52,9 +52,13 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: "Player is not in a lobby" }, 404);
   }
 
+  if (!player.is_host) {
+    return jsonResponse({ error: "Only the host can start song selection" }, 403);
+  }
+
   const { data: lobby, error: lobbyError } = await supabase
     .from("lobbies")
-    .select("id, code, status, max_players, song_selection_started")
+    .select("id, code, status, song_selection_started")
     .eq("id", player.lobby_id)
     .maybeSingle();
 
@@ -70,27 +74,36 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: "Lobby is closed" }, 403);
   }
 
-  const { data: players, error: playersError } = await supabase
-    .from("players")
-    .select("id, display_name, is_host, is_connected, joined_at")
-    .eq("lobby_id", lobby.id)
-    .order("joined_at", { ascending: true });
+  if (lobby.status !== "waiting") {
+    return jsonResponse(
+      { error: "Song selection can only be started from the waiting state" },
+      403,
+    );
+  }
 
-  if (playersError) {
-    return jsonResponse({ error: "Failed to load lobby players" }, 500);
+  if (lobby.song_selection_started) {
+    return jsonResponse({
+      lobby_id: lobby.id,
+      code: lobby.code,
+      song_selection_started: true,
+    });
+  }
+
+  const { error: updateError } = await supabase
+    .from("lobbies")
+    .update({
+      song_selection_started: true,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", lobby.id);
+
+  if (updateError) {
+    return jsonResponse({ error: "Failed to start song selection" }, 500);
   }
 
   return jsonResponse({
     lobby_id: lobby.id,
     code: lobby.code,
-    status: lobby.status,
-    max_players: lobby.max_players,
-    song_selection_started: lobby.song_selection_started,
-    players: (players ?? []).map((row) => ({
-      player_id: row.id,
-      display_name: row.display_name,
-      is_host: row.is_host,
-      is_connected: row.is_connected,
-    })),
+    song_selection_started: true,
   });
 });

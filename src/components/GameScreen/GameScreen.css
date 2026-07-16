@@ -1,0 +1,98 @@
+.game-screen {
+  --game-accent: #59998c;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-background);
+}
+
+.game-screen__body {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  padding: 60px 40px;
+}
+
+.game-screen__anchor {
+  position: relative;
+  width: 580px;
+}
+
+.game-screen__main {
+  display: flex;
+  flex-direction: column;
+  gap: 60px;
+  width: 100%;
+}
+
+.game-screen__song-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: center;
+}
+
+.game-screen__song-title {
+  margin: 0;
+  color: var(--game-accent);
+}
+
+.game-screen__song-channel {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.game-screen__unlock {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  min-height: 300px;
+  justify-content: center;
+}
+
+.game-screen__unlock-message {
+  position: relative;
+  z-index: 1;
+  color: var(--color-text-muted);
+  margin: 0;
+  text-align: center;
+}
+
+.game-screen__unlock-button {
+  position: relative;
+  z-index: 1;
+}
+
+.game-screen__waiting {
+  color: var(--color-text-muted);
+  margin: 0;
+  text-align: center;
+}
+
+.game-screen__roster {
+  position: absolute;
+  left: calc(100% + 160px);
+  top: 0;
+}
+
+@media (max-width: 720px) {
+  .game-screen__body {
+    padding: 40px var(--size-20);
+  }
+
+  .game-screen__anchor {
+    width: 100%;
+    max-width: 580px;
+  }
+
+  .game-screen__roster {
+    position: static;
+    left: auto;
+    top: auto;
+    width: 100%;
+    margin-top: 40px;
+  }
+}

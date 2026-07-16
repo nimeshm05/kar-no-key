@@ -44,6 +44,13 @@
   width: 248px;
 }
 
+.join-code-modal__waiting {
+  color: var(--color-text-muted);
+  margin: 0;
+  text-align: center;
+  width: 248px;
+}
+
 .join-code-modal__error {
   color: var(--color-text-error);
   margin: 0;

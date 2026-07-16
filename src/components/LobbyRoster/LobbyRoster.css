@@ -1,0 +1,46 @@
+.lobby-roster {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 248px;
+}
+
+.lobby-roster__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  color: var(--color-text-primary);
+}
+
+.lobby-roster__error {
+  color: var(--color-text-error);
+  margin: 0;
+}
+
+.lobby-roster__list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lobby-roster__player {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 248px;
+  color: var(--color-text-muted);
+}
+
+.lobby-roster__name {
+  flex: 1;
+  min-width: 0;
+}
+
+.lobby-roster__role {
+  flex-shrink: 0;
+  white-space: nowrap;
+}

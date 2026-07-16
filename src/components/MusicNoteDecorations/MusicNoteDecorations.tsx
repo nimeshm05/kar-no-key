@@ -5,19 +5,38 @@ import { usePendulumRotations } from "@/components/TypewriterIllustration/usePen
 import {
   NAME_PAGE_DECORATIONS,
   NAME_PAGE_PENDULUMS,
+  SEARCH_PAGE_DECORATIONS,
+  SEARCH_PAGE_PENDULUMS,
+  type NoteDecoration,
 } from "./decorations";
 import { MUSIC_NOTES } from "./musicNotes";
 import "./MusicNoteDecorations.css";
 
 const MotionG = motion.g;
 
-export default function MusicNoteDecorations() {
+type MusicNoteDecorationsProps = {
+  variant?: "landing" | "search";
+};
+
+function getDecorations(variant: MusicNoteDecorationsProps["variant"]): NoteDecoration[] {
+  return variant === "search" ? SEARCH_PAGE_DECORATIONS : NAME_PAGE_DECORATIONS;
+}
+
+function getPendulums(variant: MusicNoteDecorationsProps["variant"]) {
+  return variant === "search" ? SEARCH_PAGE_PENDULUMS : NAME_PAGE_PENDULUMS;
+}
+
+export default function MusicNoteDecorations({
+  variant = "landing",
+}: MusicNoteDecorationsProps) {
   const reduceMotion = useReducedMotion();
-  const p = usePendulumRotations(NAME_PAGE_PENDULUMS, reduceMotion);
+  const decorations = getDecorations(variant);
+  const pendulums = getPendulums(variant);
+  const p = usePendulumRotations(pendulums, reduceMotion);
 
   return (
     <div className="music-note-decorations" aria-hidden="true">
-      {NAME_PAGE_DECORATIONS.map((decoration) => {
+      {decorations.map((decoration) => {
         const note = MUSIC_NOTES[decoration.noteId];
 
         if (!note) {

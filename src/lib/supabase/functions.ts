@@ -43,13 +43,92 @@ export type LobbyPlayer = {
   display_name: string;
   is_host: boolean;
   is_connected: boolean;
+  score?: number;
+  phrases_completed?: number;
 };
 
 export type GetLobbyPlayersResult =
   | {
       lobby_id: string;
       code: string;
+      status: string;
       max_players: number;
+      song_selection_started: boolean;
+      players: LobbyPlayer[];
+    }
+  | { error: string };
+
+export type StartSongSelectionResult =
+  | {
+      lobby_id: string;
+      code: string;
+      song_selection_started: boolean;
+    }
+  | { error: string };
+
+export type SongResult = {
+  id: string;
+  title: string;
+  artist?: string;
+  channel?: string;
+  thumbnail_url?: string;
+  duration_sec?: number;
+  has_lyrics?: boolean;
+};
+
+export type SearchSongsResult =
+  | { songs: SongResult[] }
+  | { error: string };
+
+export type LyricPhrase = {
+  index: number;
+  text: string;
+  start_ms: number;
+  end_ms: number;
+};
+
+export type LobbySong = {
+  youtube_video_id: string;
+  title: string;
+  channel?: string | null;
+  thumbnail_url?: string | null;
+  duration_sec: number;
+  lyrics_phrases: LyricPhrase[];
+  lyrics_source: string;
+};
+
+export type SelectSongResult =
+  | {
+      lobby_id: string;
+      code: string;
+      status: string;
+      song: LobbySong;
+    }
+  | { error: string; has_lyrics?: boolean };
+
+export type StartCountdownResult =
+  | {
+      lobby_id: string;
+      code: string;
+      status: string;
+      countdown_start_at: string;
+      playback_start_at: string;
+      server_now: string;
+    }
+  | { error: string };
+
+export type GetLobbyStateResult =
+  | {
+      lobby_id: string;
+      code: string;
+      status: string;
+      max_players: number;
+      song_selection_started: boolean;
+      selected_youtube_video_id: string | null;
+      countdown_start_at: string | null;
+      playback_start_at: string | null;
+      server_now: string;
+      song: LobbySong | null;
       players: LobbyPlayer[];
     }
   | { error: string };
@@ -117,6 +196,50 @@ export async function getLobbyPlayers(
   playerId: string,
 ): Promise<FunctionInvokeResult<GetLobbyPlayersResult>> {
   return invokeFunction<GetLobbyPlayersResult>("get-lobby-players", {
+    player_id: playerId,
+  });
+}
+
+export async function getLobbyState(
+  playerId: string,
+): Promise<FunctionInvokeResult<GetLobbyStateResult>> {
+  return invokeFunction<GetLobbyStateResult>("get-lobby-state", {
+    player_id: playerId,
+  });
+}
+
+export async function startSongSelection(
+  playerId: string,
+): Promise<FunctionInvokeResult<StartSongSelectionResult>> {
+  return invokeFunction<StartSongSelectionResult>("start-song-selection", {
+    player_id: playerId,
+  });
+}
+
+export async function searchSongs(
+  query: string,
+  limit?: number,
+): Promise<FunctionInvokeResult<SearchSongsResult>> {
+  return invokeFunction<SearchSongsResult>("search-songs", {
+    query,
+    limit,
+  });
+}
+
+export async function selectSong(
+  playerId: string,
+  youtubeVideoId: string,
+): Promise<FunctionInvokeResult<SelectSongResult>> {
+  return invokeFunction<SelectSongResult>("select-song", {
+    player_id: playerId,
+    youtube_video_id: youtubeVideoId,
+  });
+}
+
+export async function startCountdown(
+  playerId: string,
+): Promise<FunctionInvokeResult<StartCountdownResult>> {
+  return invokeFunction<StartCountdownResult>("start-countdown", {
     player_id: playerId,
   });
 }

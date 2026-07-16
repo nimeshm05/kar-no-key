@@ -10,7 +10,7 @@
     "supabase:start": "supabase start",
     "supabase:stop": "supabase stop",
     "supabase:reset": "supabase db reset",
-    "supabase:functions": "supabase functions serve",
+    "supabase:functions": "supabase functions serve --env-file .env.local",
     "test:lobby-code": "node supabase/functions/_shared/lobby-code.node.test.mjs",
     "test:display-name": "node supabase/functions/_shared/display-name.node.test.mjs",
     "test:format-lobby-code": "node src/lib/lobby/formatLobbyCode.test.mjs",

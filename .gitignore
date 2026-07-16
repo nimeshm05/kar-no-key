@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local design documentation (not for GitHub)
+DESIGN_DECISIONS.md

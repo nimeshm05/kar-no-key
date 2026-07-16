@@ -6,6 +6,8 @@ import InputField from "@/components/InputField/InputField";
 import { isLobbyCodeMinLength } from "@/lib/lobby/lobbyCode";
 import "./JoinCodeModal.css";
 
+export type JoinModalPhase = "enter-code" | "joining" | "waiting-for-host";
+
 type JoinCodeModalProps = {
   joinCode: string;
   onJoinCodeChange: (value: string) => void;
@@ -13,6 +15,7 @@ type JoinCodeModalProps = {
   onSubmit: () => void;
   isLoading: boolean;
   error: string | null;
+  phase: JoinModalPhase;
 };
 
 export default function JoinCodeModal({
@@ -22,8 +25,10 @@ export default function JoinCodeModal({
   onSubmit,
   isLoading,
   error,
+  phase,
 }: JoinCodeModalProps) {
-  const canSubmit = isLobbyCodeMinLength(joinCode) && !isLoading;
+  const isWaitingForHost = phase === "waiting-for-host";
+  const canSubmit = isLobbyCodeMinLength(joinCode) && !isLoading && !isWaitingForHost;
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
@@ -59,31 +64,40 @@ export default function JoinCodeModal({
         className="join-code-modal__panel"
       >
         <h2 id="join-code-modal-title" className="join-code-modal__title">
-          Enter lobby code
+          {isWaitingForHost ? "Waiting for host" : "Enter lobby code"}
         </h2>
-        <InputField
-          value={joinCode}
-          onChange={(event) => onJoinCodeChange(event.target.value)}
-          placeholder="enter your code"
-          align="center"
-          aria-label="Lobby code"
-          autoFocus
-          disabled={isLoading}
-        />
-        {error ? (
-          <p className="join-code-modal__error text-body" role="alert">
-            {error}
+
+        {isWaitingForHost ? (
+          <p className="join-code-modal__waiting text-body">
+            waiting for the host to start
           </p>
-        ) : null}
-        <Button
-          variant="primary"
-          type="button"
-          className="join-code-modal__submit"
-          disabled={!canSubmit}
-          onClick={onSubmit}
-        >
-          {isLoading ? "joining..." : "let&apos;s gooo"}
-        </Button>
+        ) : (
+          <>
+            <InputField
+              value={joinCode}
+              onChange={(event) => onJoinCodeChange(event.target.value)}
+              placeholder="enter your code"
+              align="center"
+              aria-label="Lobby code"
+              autoFocus
+              disabled={isLoading}
+            />
+            {error ? (
+              <p className="join-code-modal__error text-body" role="alert">
+                {error}
+              </p>
+            ) : null}
+            <Button
+              variant="primary"
+              type="button"
+              className="join-code-modal__submit"
+              disabled={!canSubmit}
+              onClick={onSubmit}
+            >
+              {isLoading ? "joining..." : "let&apos;s gooo"}
+            </Button>
+          </>
+        )}
       </div>
     </div>
   );

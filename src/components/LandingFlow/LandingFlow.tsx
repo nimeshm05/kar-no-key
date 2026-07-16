@@ -1,11 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import TypewriterIllustration from "@/components/TypewriterIllustration/TypewriterIllustration";
 import Button from "@/components/Button/Button";
 import InputField from "@/components/InputField/InputField";
 import LobbyScreen from "@/components/LobbyScreen/LobbyScreen";
+import type { JoinModalPhase } from "@/components/JoinCodeModal/JoinCodeModal";
+import { getRouteForLobbyStatus } from "@/lib/lobby/lobbyRoute";
 import { normalizeLobbyCodeInput } from "@/lib/lobby/lobbyCode";
 import { useLobbyRosterPolling } from "@/lib/lobby/useLobbyRosterPolling";
 import { getPlayerId } from "@/lib/player/identity";
@@ -15,6 +18,7 @@ import {
   getLobbyPlayers,
   joinLobby,
   leaveLobby,
+  startSongSelection,
   type LobbyPlayer,
 } from "@/lib/supabase/functions";
 import "./LandingFlow.css";
@@ -37,6 +41,7 @@ function getErrorMessage(error: unknown, data: unknown): string {
 }
 
 export default function LandingFlow() {
+  const router = useRouter();
   const prefersReducedMotion = useReducedMotion();
   const [step, setStep] = useState<Step>("landing");
   const [displayName, setDisplayName] = useState("");
@@ -50,21 +55,47 @@ export default function LandingFlow() {
   const [error, setError] = useState<string | null>(null);
   const [joinError, setJoinError] = useState<string | null>(null);
   const [lobbyRosterError, setLobbyRosterError] = useState<string | null>(null);
+  const [startGameError, setStartGameError] = useState<string | null>(null);
+  const [joinModalPhase, setJoinModalPhase] = useState<JoinModalPhase>("enter-code");
   const [playerId, setPlayerId] = useState<string | null>(null);
+
+  const navigateToLobbyRoute = useCallback(
+    (status: string, songSelectionStarted: boolean) => {
+      const route = getRouteForLobbyStatus(status, songSelectionStarted);
+      if (route) {
+        router.push(route);
+        return true;
+      }
+      return false;
+    },
+    [router],
+  );
+
+  const navigateToSearch = useCallback(() => {
+    router.push("/search");
+  }, [router]);
 
   const applyRosterData = useCallback(
     (data: {
       lobby_id: string;
       code: string;
       max_players: number;
+      status: string;
+      song_selection_started: boolean;
       players: LobbyPlayer[];
     }) => {
       setLobbyCode(data.code);
       setLobbyId(data.lobby_id);
       setPlayers(data.players);
       setLobbyRosterError(null);
+
+      if (data.song_selection_started) {
+        if (!navigateToLobbyRoute(data.status, data.song_selection_started)) {
+          navigateToSearch();
+        }
+      }
     },
-    [],
+    [navigateToLobbyRoute, navigateToSearch],
   );
 
   const fetchLobbyRoster = useCallback(
@@ -85,6 +116,13 @@ export default function LandingFlow() {
           return false;
         }
 
+        if (data.song_selection_started) {
+          if (!navigateToLobbyRoute(data.status, data.song_selection_started)) {
+            navigateToSearch();
+          }
+          return true;
+        }
+
         applyRosterData(data);
         return true;
       } catch (caughtError) {
@@ -99,7 +137,7 @@ export default function LandingFlow() {
         }
       }
     },
-    [applyRosterData],
+    [applyRosterData, navigateToLobbyRoute, navigateToSearch],
   );
 
   const handleRosterUpdate = useCallback(
@@ -107,6 +145,8 @@ export default function LandingFlow() {
       lobby_id: string;
       code: string;
       max_players: number;
+      status: string;
+      song_selection_started: boolean;
       players: LobbyPlayer[];
     }) => {
       applyRosterData(data);
@@ -125,7 +165,7 @@ export default function LandingFlow() {
 
   useLobbyRosterPolling({
     playerId,
-    enabled: step === "lobby",
+    enabled: step === "lobby" || joinModalPhase === "waiting-for-host",
     existingPlayerCount: players.length,
     onUpdate: handleRosterUpdate,
     onError: handleRosterPollError,
@@ -218,11 +258,33 @@ export default function LandingFlow() {
     setError(null);
     setJoinError(null);
     setLobbyRosterError(null);
+    setStartGameError(null);
+    setJoinModalPhase("enter-code");
     setStep("landing");
   }
 
-  function handleStartGame() {
-    // Module 7: game start lifecycle
+  async function handleStartGame() {
+    if (!playerId || !isHost || isLoading || isRosterLoading) {
+      return;
+    }
+
+    setIsLoading(true);
+    setStartGameError(null);
+
+    try {
+      const { data, error: invokeError } = await startSongSelection(playerId);
+
+      if (invokeError || !data || "error" in data) {
+        setStartGameError(getErrorMessage(invokeError, data));
+        return;
+      }
+
+      navigateToSearch();
+    } catch (caughtError) {
+      setStartGameError(getErrorMessage(caughtError, null));
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   async function handleJoinLobby(): Promise<boolean> {
@@ -346,6 +408,7 @@ export default function LandingFlow() {
             <LobbyScreen
               displayName={displayName}
               lobbyCode={lobbyCode}
+              isHost={isHost}
               players={players}
               joinCode={joinCode}
               onJoinCodeChange={setJoinCode}
@@ -356,6 +419,9 @@ export default function LandingFlow() {
               isRosterLoading={isRosterLoading}
               joinError={joinError}
               rosterError={lobbyRosterError}
+              joinModalPhase={joinModalPhase}
+              onJoinModalPhaseChange={setJoinModalPhase}
+              startGameError={startGameError}
             />
             {error ? (
               <p className="landing-form__error text-body" role="alert">

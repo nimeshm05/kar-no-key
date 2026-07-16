@@ -1,0 +1,48 @@
+.phrase-typing-area {
+  position: relative;
+  width: 100%;
+}
+
+.phrase-typing-area__display {
+  font-family: var(--family-mono);
+  font-size: var(--size-32);
+  font-weight: var(--weight-semibold);
+  line-height: var(--line-20);
+  word-break: break-word;
+  text-align: center;
+  min-height: 2.5em;
+}
+
+.phrase-typing-area__char--pending {
+  color: var(--neutral-300);
+}
+
+.phrase-typing-area__char--correct {
+  color: var(--color-text-primary);
+}
+
+.phrase-typing-area__char--incorrect {
+  color: var(--color-text-error);
+}
+
+.phrase-typing-area__input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: text;
+  border: none;
+  background: transparent;
+}
+
+.phrase-typing-area__input:disabled {
+  cursor: default;
+}
+
+.text-heading-2 {
+  font-family: var(--family-mono);
+  font-size: var(--size-32);
+  font-weight: var(--weight-semibold);
+  line-height: var(--line-20);
+}

@@ -14,6 +14,9 @@ fi
 : "${SUPABASE_PROJECT_REF:?Missing SUPABASE_PROJECT_REF in .env.local}"
 : "${SUPABASE_SERVICE_ROLE_KEY:?Missing SUPABASE_SERVICE_ROLE_KEY in .env.local}"
 : "${SUPABASE_ACCESS_TOKEN:?Missing SUPABASE_ACCESS_TOKEN in .env.local}"
+: "${YOUTUBE_API_KEY:?Missing YOUTUBE_API_KEY in .env.local}"
+
+SONG_SEARCH_PROVIDER="${SONG_SEARCH_PROVIDER:-youtube}"
 
 export SUPABASE_ACCESS_TOKEN
 
@@ -23,6 +26,12 @@ npx supabase link --project-ref "$SUPABASE_PROJECT_REF" --yes
 echo "→ Pushing database migrations..."
 npx supabase db push --yes
 
+echo "→ Setting Edge Function secrets..."
+npx supabase secrets set \
+  SONG_SEARCH_PROVIDER="$SONG_SEARCH_PROVIDER" \
+  YOUTUBE_API_KEY="$YOUTUBE_API_KEY" \
+  --project-ref "$SUPABASE_PROJECT_REF"
+
 echo "→ Deploying Edge Functions..."
 npx supabase functions deploy validate-lobby-code --project-ref "$SUPABASE_PROJECT_REF"
 npx supabase functions deploy generate-lobby-code --project-ref "$SUPABASE_PROJECT_REF"
@@ -30,6 +39,11 @@ npx supabase functions deploy create-lobby --project-ref "$SUPABASE_PROJECT_REF"
 npx supabase functions deploy join-lobby --project-ref "$SUPABASE_PROJECT_REF"
 npx supabase functions deploy leave-lobby --project-ref "$SUPABASE_PROJECT_REF"
 npx supabase functions deploy get-lobby-players --project-ref "$SUPABASE_PROJECT_REF"
+npx supabase functions deploy start-song-selection --project-ref "$SUPABASE_PROJECT_REF"
+npx supabase functions deploy search-songs --project-ref "$SUPABASE_PROJECT_REF"
+npx supabase functions deploy select-song --project-ref "$SUPABASE_PROJECT_REF"
+npx supabase functions deploy start-countdown --project-ref "$SUPABASE_PROJECT_REF"
+npx supabase functions deploy get-lobby-state --project-ref "$SUPABASE_PROJECT_REF"
 
 echo "→ Verifying create-lobby + join-lobby + leave-lobby + get-lobby-players..."
 HOST_ID="$(node -e "console.log(crypto.randomUUID())")"

@@ -11,6 +11,84 @@ export type NoteDecoration = {
   width: number;
 };
 
+export const SEARCH_PAGE_DECORATIONS: NoteDecoration[] = [
+  {
+    id: "search-note-1",
+    noteId: "music",
+    top: "48.5%",
+    left: "33.8%",
+    rotation: -8,
+    width: 28,
+  },
+  {
+    id: "search-note-2",
+    noteId: "music_4",
+    top: "37.8%",
+    left: "53.6%",
+    rotation: 12,
+    width: 22,
+  },
+  {
+    id: "search-note-3",
+    noteId: "music_2",
+    top: "47.3%",
+    right: "39.2%",
+    rotation: 6,
+    width: 24,
+  },
+  {
+    id: "search-note-4",
+    noteId: "music-2_2",
+    top: "72.7%",
+    right: "40%",
+    rotation: -10,
+    width: 38,
+  },
+  {
+    id: "search-note-5",
+    noteId: "music_5",
+    top: "68.4%",
+    left: "35%",
+    rotation: 15,
+    width: 24,
+  },
+  {
+    id: "search-note-6",
+    noteId: "music_6",
+    top: "42.8%",
+    left: "43.4%",
+    rotation: -5,
+    width: 20,
+  },
+  {
+    id: "search-note-7",
+    noteId: "music-2",
+    top: "59.2%",
+    right: "35.4%",
+    rotation: 8,
+    width: 32,
+  },
+  {
+    id: "search-note-8",
+    noteId: "music_3",
+    top: "69.5%",
+    left: "48.7%",
+    rotation: -12,
+    width: 20,
+  },
+];
+
+export const SEARCH_PAGE_PENDULUMS: PendulumConfig[] = [
+  { id: "search-note-1", origin: "center center", amplitude: 8, repeatDelay: 0.3, delay: 0 },
+  { id: "search-note-2", origin: "center center", amplitude: 9, repeatDelay: 0.28, delay: 0.1 },
+  { id: "search-note-3", origin: "center center", amplitude: 7, repeatDelay: 0.25, delay: 0.15 },
+  { id: "search-note-4", origin: "center center", amplitude: 10, repeatDelay: 0.32, delay: 0.05 },
+  { id: "search-note-5", origin: "center center", amplitude: 8, repeatDelay: 0.26, delay: 0.2 },
+  { id: "search-note-6", origin: "center center", amplitude: 6, repeatDelay: 0.22, delay: 0.12 },
+  { id: "search-note-7", origin: "center center", amplitude: 9, repeatDelay: 0.3, delay: 0.08 },
+  { id: "search-note-8", origin: "center center", amplitude: 7, repeatDelay: 0.24, delay: 0.18 },
+];
+
 export const NAME_PAGE_DECORATIONS: NoteDecoration[] = [
   {
     id: "name-note-1",

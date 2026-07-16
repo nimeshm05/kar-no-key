@@ -10,7 +10,7 @@
   display: flex;
   justify-content: center;
   width: 100%;
-  padding: 60px 0;
+  padding: 0;
 }
 
 .search-screen__container {
@@ -27,8 +27,12 @@
   flex-direction: column;
   gap: 60px;
   min-width: 0;
-  padding: 60px 0;
+  padding: 80px 0;
   width: 100%;
+}
+
+.search-screen__main--player-waiting {
+  justify-content: flex-start;
 }
 
 .search-screen__search-header {
@@ -84,27 +88,16 @@
   margin: 0;
 }
 
-.search-screen__waiting {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 400px;
-  width: 100%;
-}
-
 .search-screen__waiting-message {
-  position: relative;
-  z-index: 1;
   color: var(--color-text-muted);
   margin: 0;
-  text-align: center;
+  width: 100%;
 }
 
 .search-screen__roster {
   flex-shrink: 0;
   width: 248px;
-  padding: 60px 0;
+  padding: 80px 0;
 }
 
 @media (max-width: 720px) {

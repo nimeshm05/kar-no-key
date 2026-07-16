@@ -4,7 +4,6 @@ import { useState } from "react";
 import Button from "@/components/Button/Button";
 import InputField from "@/components/InputField/InputField";
 import LobbyRoster from "@/components/LobbyRoster/LobbyRoster";
-import MusicNoteDecorations from "@/components/MusicNoteDecorations/MusicNoteDecorations";
 import Navbar from "@/components/Navbar/Navbar";
 import SongCard from "@/components/SongCard/SongCard";
 import { searchSongs, type SongResult } from "@/lib/songs/searchSongs";
@@ -192,13 +191,10 @@ export default function SearchScreen({
               ) : null}
             </section>
           ) : (
-            <section className="search-screen__main">
-              <div className="search-screen__waiting">
-                <MusicNoteDecorations variant="search" />
-                <p className="search-screen__waiting-message text-body">
-                  WAITING FOR THE HOST TO SELECT A SONG
-                </p>
-              </div>
+            <section className="search-screen__main search-screen__main--player-waiting">
+              <p className="search-screen__waiting-message text-body">
+                WAITING FOR THE HOST TO SELECT A SONG...
+              </p>
             </section>
           )}
 

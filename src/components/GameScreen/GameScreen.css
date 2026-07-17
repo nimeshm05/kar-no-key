@@ -86,7 +86,9 @@
 }
 
 .game-screen__song-title-text {
+  display: inline-block;
   flex-shrink: 0;
+  max-width: none;
 }
 
 .game-screen__song-title-gap {

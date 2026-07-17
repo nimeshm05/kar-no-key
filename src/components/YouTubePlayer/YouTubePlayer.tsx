@@ -7,6 +7,7 @@ type YouTubePlayerHandle = {
   seekTo: (seconds: number) => void;
   play: () => void;
   pause: () => void;
+  getCurrentTime: () => number;
 };
 
 type YouTubePlayerProps = {
@@ -45,6 +46,7 @@ type YTPlayer = {
   playVideo: () => void;
   pauseVideo: () => void;
   getPlayerState: () => number;
+  getCurrentTime: () => number;
 };
 
 let apiLoadPromise: Promise<void> | null = null;
@@ -125,6 +127,9 @@ export default function YouTubePlayer({
               },
               pause: () => {
                 event.target.pauseVideo();
+              },
+              getCurrentTime: () => {
+                return event.target.getCurrentTime();
               },
             });
           },

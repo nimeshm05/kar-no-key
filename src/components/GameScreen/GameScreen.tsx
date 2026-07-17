@@ -16,6 +16,7 @@ type PlayerHandle = {
   seekTo: (seconds: number) => void;
   play: () => void;
   pause: () => void;
+  getCurrentTime: () => number;
 };
 
 type GameScreenProps = {
@@ -41,6 +42,20 @@ type GameScreenProps = {
 const SONG_TITLE_MARQUEE_GAP_PX = 40;
 const SONG_TITLE_MARQUEE_SPEED_PX_PER_SEC = 40;
 const SONG_TITLE_MARQUEE_MIN_DURATION_SEC = 6;
+const DRIFT_THRESHOLD_MS = 800;
+const DRIFT_CHECK_INTERVAL_MS = 1000;
+
+function computeServerElapsedSec(
+  playbackStartAt: string,
+  playbackElapsedMs: number,
+  serverNow: string,
+): number {
+  const playbackStartMs = new Date(playbackStartAt).getTime();
+  const serverTime = new Date(serverNow).getTime();
+  const offset = serverTime - Date.now();
+  const segmentElapsed = Math.max(0, Date.now() + offset - playbackStartMs);
+  return (playbackElapsedMs + segmentElapsed) / 1000;
+}
 
 function formatTime(totalSeconds: number): string {
   const safeSeconds = Math.max(0, Math.floor(totalSeconds));
@@ -76,6 +91,7 @@ export default function GameScreen({
   const playerHandleRef = useRef<PlayerHandle | null>(null);
   const lastPlaybackStateRef = useRef<string | null>(null);
   const titleContainerRef = useRef<HTMLDivElement>(null);
+  const titleTrackRef = useRef<HTMLDivElement>(null);
   const titleTextRef = useRef<HTMLSpanElement>(null);
 
   const isPlaying = lobbyStatus === "playing";
@@ -87,23 +103,14 @@ export default function GameScreen({
     [song.lyrics_phrases],
   );
 
-  const handleSeek = useMemo(
-    () => (elapsedSec: number) => {
-      if (isPlaying && playerHandleRef.current) {
-        playerHandleRef.current.seekTo(elapsedSec);
-      }
-    },
-    [isPlaying],
-  );
-
-  const { elapsedMs, activePhraseIndex, activePhrase } = usePlaybackSync({
-    phrases,
-    playbackStartAt: isPlaying ? playbackStartAt : null,
-    playbackElapsedMs,
-    serverNow,
-    enabled: isPlaying,
-    onSeek: handleSeek,
-  });
+  const { elapsedMs, activePhraseIndex, activePhrase, getServerElapsedSec } =
+    usePlaybackSync({
+      phrases,
+      playbackStartAt: isPlaying ? playbackStartAt : null,
+      playbackElapsedMs,
+      serverNow,
+      enabled: isPlaying,
+    });
 
   const countdownValue = useCountdownTick({
     countdownStartAt,
@@ -114,9 +121,10 @@ export default function GameScreen({
 
   useEffect(() => {
     const container = titleContainerRef.current;
+    const track = titleTrackRef.current;
     const text = titleTextRef.current;
 
-    if (!container || !text) {
+    if (!container || !track || !text) {
       return;
     }
 
@@ -128,9 +136,13 @@ export default function GameScreen({
         return;
       }
 
+      const containerStyles = getComputedStyle(containerElement);
+      const availableWidth =
+        containerElement.clientWidth -
+        parseFloat(containerStyles.paddingLeft) -
+        parseFloat(containerStyles.paddingRight);
       const textWidth = textElement.scrollWidth;
-      const containerWidth = containerElement.clientWidth;
-      const isOverflowing = textWidth > containerWidth;
+      const isOverflowing = textWidth > availableWidth;
 
       if (!isOverflowing) {
         setIsMarqueeActive(false);
@@ -148,10 +160,15 @@ export default function GameScreen({
       setIsMarqueeActive(true);
     }
 
-    measureTitleOverflow();
+    const runMeasure = () => {
+      window.requestAnimationFrame(measureTitleOverflow);
+    };
 
-    const resizeObserver = new ResizeObserver(measureTitleOverflow);
+    runMeasure();
+
+    const resizeObserver = new ResizeObserver(runMeasure);
     resizeObserver.observe(container);
+    resizeObserver.observe(track);
 
     return () => {
       resizeObserver.disconnect();
@@ -176,6 +193,31 @@ export default function GameScreen({
   }, [activePhraseIndex, lockedPhraseIndex, phrases]);
 
   useEffect(() => {
+    if (!isPlaying || !playbackStartAt) {
+      return;
+    }
+
+    const intervalId = window.setInterval(() => {
+      const handle = playerHandleRef.current;
+      if (!handle) {
+        return;
+      }
+
+      const serverElapsedSec = getServerElapsedSec();
+      const youtubeElapsedSec = handle.getCurrentTime();
+      const driftMs = Math.abs(serverElapsedSec - youtubeElapsedSec) * 1000;
+
+      if (driftMs > DRIFT_THRESHOLD_MS) {
+        handle.seekTo(serverElapsedSec);
+      }
+    }, DRIFT_CHECK_INTERVAL_MS);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [getServerElapsedSec, isPlaying, playbackStartAt]);
+
+  useEffect(() => {
     const handle = playerHandleRef.current;
     if (!handle) {
       return;
@@ -188,11 +230,11 @@ export default function GameScreen({
     lastPlaybackStateRef.current = lobbyStatus;
 
     if (isPlaying && playbackStartAt) {
-      const playbackStartMs = new Date(playbackStartAt).getTime();
-      const serverTime = new Date(serverNow).getTime();
-      const offset = serverTime - Date.now();
-      const segmentElapsed = Math.max(0, (Date.now() + offset - playbackStartMs) / 1000);
-      const elapsedSec = (playbackElapsedMs + segmentElapsed * 1000) / 1000;
+      const elapsedSec = computeServerElapsedSec(
+        playbackStartAt,
+        playbackElapsedMs,
+        serverNow,
+      );
       handle.seekTo(elapsedSec);
       handle.play();
       return;
@@ -207,11 +249,11 @@ export default function GameScreen({
     playerHandleRef.current = handle;
 
     if (isPlaying && playbackStartAt) {
-      const playbackStartMs = new Date(playbackStartAt).getTime();
-      const serverTime = new Date(serverNow).getTime();
-      const offset = serverTime - Date.now();
-      const segmentElapsed = Math.max(0, (Date.now() + offset - playbackStartMs) / 1000);
-      const elapsedSec = (playbackElapsedMs + segmentElapsed * 1000) / 1000;
+      const elapsedSec = computeServerElapsedSec(
+        playbackStartAt,
+        playbackElapsedMs,
+        serverNow,
+      );
       handle.seekTo(elapsedSec);
       handle.play();
     }
@@ -273,6 +315,7 @@ export default function GameScreen({
                   title={song.title}
                 >
                   <div
+                    ref={titleTrackRef}
                     className={[
                       "game-screen__song-title-track",
                       isMarqueeActive ? "game-screen__song-title-track--marquee" : "",

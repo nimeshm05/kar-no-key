@@ -1,7 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { LyricPhrase } from "./types";
-
-const RESYNC_INTERVAL_MS = 5000;
 
 function normalizeForMatch(text: string): string {
   return text
@@ -31,13 +29,22 @@ export function getActivePhraseIndex(
   return 0;
 }
 
+function computeElapsedMs(
+  playbackStartMs: number,
+  playbackElapsedMs: number,
+  serverOffsetMs: number,
+): number {
+  const now = Date.now() + serverOffsetMs;
+  const segmentElapsed = Math.max(0, now - playbackStartMs);
+  return playbackElapsedMs + segmentElapsed;
+}
+
 type UsePlaybackSyncOptions = {
   phrases: LyricPhrase[];
   playbackStartAt: string | null;
   playbackElapsedMs: number;
   serverNow: string | null;
   enabled: boolean;
-  onSeek?: (elapsedSec: number) => void;
 };
 
 export function usePlaybackSync({
@@ -46,29 +53,48 @@ export function usePlaybackSync({
   playbackElapsedMs,
   serverNow,
   enabled,
-  onSeek,
 }: UsePlaybackSyncOptions) {
   const [elapsedMs, setElapsedMs] = useState(playbackElapsedMs);
   const [activePhraseIndex, setActivePhraseIndex] = useState(-1);
   const serverOffsetRef = useRef(0);
-  const onSeekRef = useRef(onSeek);
+  const playbackStartMsRef = useRef(0);
+  const playbackElapsedMsRef = useRef(playbackElapsedMs);
+  const serverNowRef = useRef(serverNow);
 
-  useEffect(() => {
-    onSeekRef.current = onSeek;
-  }, [onSeek]);
-
-  useEffect(() => {
-    if (!serverNow) {
-      return;
-    }
-
-    const serverTime = new Date(serverNow).getTime();
-    const clientTime = Date.now();
-    serverOffsetRef.current = serverTime - clientTime;
-  }, [serverNow]);
+  serverNowRef.current = serverNow;
 
   useEffect(() => {
     if (!enabled || !playbackStartAt) {
+      return;
+    }
+
+    const latestServerNow = serverNowRef.current;
+    if (!latestServerNow) {
+      return;
+    }
+
+    serverOffsetRef.current = new Date(latestServerNow).getTime() - Date.now();
+    playbackStartMsRef.current = new Date(playbackStartAt).getTime();
+    playbackElapsedMsRef.current = playbackElapsedMs;
+  }, [enabled, playbackStartAt, playbackElapsedMs]);
+
+  const getServerElapsedSec = useCallback((): number => {
+    if (!enabled || !playbackStartAt) {
+      return playbackElapsedMsRef.current / 1000;
+    }
+
+    return (
+      computeElapsedMs(
+        playbackStartMsRef.current,
+        playbackElapsedMsRef.current,
+        serverOffsetRef.current,
+      ) / 1000
+    );
+  }, [enabled, playbackStartAt]);
+
+  useEffect(() => {
+    if (!enabled || !playbackStartAt) {
+      playbackElapsedMsRef.current = playbackElapsedMs;
       setElapsedMs(playbackElapsedMs);
       setActivePhraseIndex(
         playbackElapsedMs > 0
@@ -79,26 +105,44 @@ export function usePlaybackSync({
     }
 
     const playbackStartMs = new Date(playbackStartAt).getTime();
+    playbackStartMsRef.current = playbackStartMs;
+    playbackElapsedMsRef.current = playbackElapsedMs;
     let animationFrameId = 0;
-    let lastSeekAt = 0;
+    let lastDisplayedSecond = -1;
+    let lastPhraseIndex = -1;
 
     function tick() {
-      const now = Date.now() + serverOffsetRef.current;
-      const segmentElapsed = Math.max(0, now - playbackStartMs);
-      const elapsed = playbackElapsedMs + segmentElapsed;
-      setElapsedMs(elapsed);
-      setActivePhraseIndex(getActivePhraseIndex(phrases, elapsed));
+      const elapsed = computeElapsedMs(
+        playbackStartMsRef.current,
+        playbackElapsedMsRef.current,
+        serverOffsetRef.current,
+      );
+      const phraseIndex = getActivePhraseIndex(phrases, elapsed);
+      const displayedSecond = Math.floor(elapsed / 1000);
 
       if (
-        onSeekRef.current &&
-        now - lastSeekAt >= RESYNC_INTERVAL_MS
+        phraseIndex !== lastPhraseIndex ||
+        displayedSecond !== lastDisplayedSecond
       ) {
-        lastSeekAt = now;
-        onSeekRef.current(elapsed / 1000);
+        lastPhraseIndex = phraseIndex;
+        lastDisplayedSecond = displayedSecond;
+        setElapsedMs(elapsed);
+        setActivePhraseIndex(phraseIndex);
       }
 
       animationFrameId = window.requestAnimationFrame(tick);
     }
+
+    const initialElapsed = computeElapsedMs(
+      playbackStartMsRef.current,
+      playbackElapsedMsRef.current,
+      serverOffsetRef.current,
+    );
+    const initialPhraseIndex = getActivePhraseIndex(phrases, initialElapsed);
+    lastDisplayedSecond = Math.floor(initialElapsed / 1000);
+    lastPhraseIndex = initialPhraseIndex;
+    setElapsedMs(initialElapsed);
+    setActivePhraseIndex(initialPhraseIndex);
 
     animationFrameId = window.requestAnimationFrame(tick);
 
@@ -114,5 +158,6 @@ export function usePlaybackSync({
     elapsedMs,
     activePhraseIndex,
     activePhrase,
+    getServerElapsedSec,
   };
 }

@@ -87,13 +87,12 @@ export default function SearchScreen({
   }
 
   function handleSongSelect(song: SongResult) {
-    setSelectedSong(song);
-  }
-
-  function handleConfirm() {
-    if (selectedSong) {
-      onConfirmSelection(selectedSong);
+    if (isConfirming) {
+      return;
     }
+
+    setSelectedSong(song);
+    onConfirmSelection(song);
   }
 
   const displaySongs = hasSearched ? songs : recommendedSongs;
@@ -173,41 +172,25 @@ export default function SearchScreen({
               ) : null}
 
               {showSongGrid ? (
-                <div className="search-screen__results">
-                  {displaySongs.map((song) => (
-                    <SongCard
-                      key={song.id}
-                      song={song}
-                      isSelected={selectedSong?.id === song.id}
-                      onSelect={handleSongSelect}
-                      durationLabel={formatDuration(song.duration_sec)}
-                      lyricsStatus={lyricsStatusBySongId[song.id] ?? null}
-                    />
-                  ))}
-                </div>
-              ) : null}
-
-              {selectedSong ? (
-                <div className="search-screen__confirm">
-                  <Button
-                    variant="primary"
-                    type="button"
-                    className="search-screen__confirm-button"
-                    onClick={handleConfirm}
-                    disabled={isConfirming}
-                  >
-                    {isConfirming ? (
-                      <AnimatedEllipsis label="confirming" />
-                    ) : (
-                      "confirm selection"
-                    )}
-                  </Button>
+                <>
+                  <div className="search-screen__results">
+                    {displaySongs.map((song) => (
+                      <SongCard
+                        key={song.id}
+                        song={song}
+                        isSelected={selectedSong?.id === song.id}
+                        onSelect={isConfirming ? undefined : handleSongSelect}
+                        durationLabel={formatDuration(song.duration_sec)}
+                        lyricsStatus={lyricsStatusBySongId[song.id] ?? null}
+                      />
+                    ))}
+                  </div>
                   {confirmError ? (
                     <p className="search-screen__message text-body" role="alert">
                       {confirmError}
                     </p>
                   ) : null}
-                </div>
+                </>
               ) : null}
             </section>
           ) : (

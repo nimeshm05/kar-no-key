@@ -72,17 +72,6 @@
   width: 100%;
 }
 
-.search-screen__confirm {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  width: 100%;
-}
-
-.search-screen__confirm-button {
-  width: 100%;
-}
-
 .search-screen__message {
   color: var(--color-text-muted);
   margin: 0;

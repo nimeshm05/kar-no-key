@@ -8,6 +8,7 @@ type LobbyRosterProps = {
   isLoading?: boolean;
   error?: string | null;
   className?: string;
+  variant?: "lobby" | "game";
 };
 
 export default function LobbyRoster({
@@ -15,14 +16,17 @@ export default function LobbyRoster({
   isLoading = false,
   error = null,
   className,
+  variant = "lobby",
 }: LobbyRosterProps) {
   const sortedPlayers = sortLobbyPlayers(players);
   const playerCount = sortedPlayers.length;
   const showRosterList = playerCount > 0 && !isLoading;
+  const isGameVariant = variant === "game";
 
   const rosterClasses = [
     "lobby-roster",
     playerCount <= 1 ? "lobby-roster--solo" : "lobby-roster--multi",
+    isGameVariant && "lobby-roster--game",
     className,
   ]
     .filter(Boolean)
@@ -30,12 +34,19 @@ export default function LobbyRoster({
 
   return (
     <aside className={rosterClasses}>
-      <div className="lobby-roster__header text-body">
-        <span>players joined</span>
-        <span>
-          {playerCount}/{LOBBY_MAX_PLAYERS}
-        </span>
-      </div>
+      {isGameVariant ? (
+        <div className="lobby-roster__header lobby-roster__header--game text-body">
+          <span>players</span>
+          <span>score</span>
+        </div>
+      ) : (
+        <div className="lobby-roster__header text-body">
+          <span>players joined</span>
+          <span>
+            {playerCount}/{LOBBY_MAX_PLAYERS}
+          </span>
+        </div>
+      )}
 
       {error ? (
         <p className="lobby-roster__error text-body" role="alert">
@@ -53,9 +64,15 @@ export default function LobbyRoster({
               <span className="lobby-roster__name">
                 {player.display_name.toLowerCase()}
               </span>
-              <span className="lobby-roster__role">
-                {player.is_host ? "host" : "player"}
-              </span>
+              {isGameVariant ? (
+                <span className="lobby-roster__score">
+                  {player.score ?? 0}
+                </span>
+              ) : (
+                <span className="lobby-roster__role">
+                  {player.is_host ? "host" : "player"}
+                </span>
+              )}
             </li>
           ))}
         </ul>

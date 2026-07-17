@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import AnimatedEllipsis from "@/components/AnimatedEllipsis/AnimatedEllipsis";
 import Button from "@/components/Button/Button";
+import IconButton from "@/components/IconButton/IconButton";
 import LobbyRoster from "@/components/LobbyRoster/LobbyRoster";
-import MusicNoteDecorations from "@/components/MusicNoteDecorations/MusicNoteDecorations";
 import Navbar from "@/components/Navbar/Navbar";
 import YouTubePlayer from "@/components/YouTubePlayer/YouTubePlayer";
 import PhraseTypingArea from "@/components/PhraseTypingArea/PhraseTypingArea";
+import { useCountdownTick } from "@/lib/game/useCountdownTick";
 import { usePlaybackSync } from "@/lib/game/usePlaybackSync";
 import type { LobbyPlayer, LobbySong } from "@/lib/supabase/functions";
 import "./GameScreen.css";
@@ -20,29 +20,58 @@ type PlayerHandle = {
 
 type GameScreenProps = {
   displayName: string;
+  isHost: boolean;
+  lobbyStatus: string;
   players: LobbyPlayer[];
   song: LobbySong;
-  playbackStartAt: string;
+  countdownStartAt: string | null;
+  playbackStartAt: string | null;
+  playbackElapsedMs: number;
   serverNow: string;
   isRosterLoading: boolean;
   rosterError: string | null;
+  controlError: string | null;
+  isControlPending: boolean;
+  onPlay: () => void;
+  onPause: () => void;
+  onEndSong: () => void;
   onExitLobby: () => void;
 };
 
+function formatTime(totalSeconds: number): string {
+  const safeSeconds = Math.max(0, Math.floor(totalSeconds));
+  const minutes = Math.floor(safeSeconds / 60);
+  const seconds = safeSeconds % 60;
+  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+}
+
 export default function GameScreen({
   displayName,
+  isHost,
+  lobbyStatus,
   players,
   song,
+  countdownStartAt,
   playbackStartAt,
+  playbackElapsedMs,
   serverNow,
   isRosterLoading,
   rosterError,
+  controlError,
+  isControlPending,
+  onPlay,
+  onPause,
+  onEndSong,
   onExitLobby,
 }: GameScreenProps) {
-  const [audioUnlocked, setAudioUnlocked] = useState(false);
   const [typedText, setTypedText] = useState("");
   const [lockedPhraseIndex, setLockedPhraseIndex] = useState(-1);
   const playerHandleRef = useRef<PlayerHandle | null>(null);
+  const lastPlaybackStateRef = useRef<string | null>(null);
+
+  const isPlaying = lobbyStatus === "playing";
+  const isCountdown = lobbyStatus === "countdown";
+  const isReady = lobbyStatus === "ready";
 
   const phrases = useMemo(
     () => song.lyrics_phrases ?? [],
@@ -51,19 +80,27 @@ export default function GameScreen({
 
   const handleSeek = useMemo(
     () => (elapsedSec: number) => {
-      if (audioUnlocked && playerHandleRef.current) {
+      if (isPlaying && playerHandleRef.current) {
         playerHandleRef.current.seekTo(elapsedSec);
       }
     },
-    [audioUnlocked],
+    [isPlaying],
   );
 
-  const { activePhraseIndex, activePhrase } = usePlaybackSync({
+  const { elapsedMs, activePhraseIndex, activePhrase } = usePlaybackSync({
     phrases,
+    playbackStartAt: isPlaying ? playbackStartAt : null,
+    playbackElapsedMs,
+    serverNow,
+    enabled: isPlaying,
+    onSeek: handleSeek,
+  });
+
+  const countdownValue = useCountdownTick({
+    countdownStartAt,
     playbackStartAt,
     serverNow,
-    enabled: audioUnlocked,
-    onSeek: handleSeek,
+    enabled: isCountdown,
   });
 
   useEffect(() => {
@@ -83,32 +120,67 @@ export default function GameScreen({
     }
   }, [activePhraseIndex, lockedPhraseIndex, phrases]);
 
-  function handleAudioUnlock() {
-    setAudioUnlocked(true);
-    if (playerHandleRef.current) {
+  useEffect(() => {
+    const handle = playerHandleRef.current;
+    if (!handle) {
+      return;
+    }
+
+    if (lobbyStatus === lastPlaybackStateRef.current) {
+      return;
+    }
+
+    lastPlaybackStateRef.current = lobbyStatus;
+
+    if (isPlaying && playbackStartAt) {
       const playbackStartMs = new Date(playbackStartAt).getTime();
       const serverTime = new Date(serverNow).getTime();
       const offset = serverTime - Date.now();
-      const elapsedSec = Math.max(0, (Date.now() + offset - playbackStartMs) / 1000);
-      playerHandleRef.current.seekTo(elapsedSec);
-      playerHandleRef.current.play();
+      const segmentElapsed = Math.max(0, (Date.now() + offset - playbackStartMs) / 1000);
+      const elapsedSec = (playbackElapsedMs + segmentElapsed * 1000) / 1000;
+      handle.seekTo(elapsedSec);
+      handle.play();
+      return;
     }
-  }
+
+    if (isReady) {
+      handle.pause();
+    }
+  }, [isPlaying, isReady, lobbyStatus, playbackElapsedMs, playbackStartAt, serverNow]);
 
   function handlePlayerReady(handle: PlayerHandle) {
     playerHandleRef.current = handle;
-    if (audioUnlocked) {
+
+    if (isPlaying && playbackStartAt) {
       const playbackStartMs = new Date(playbackStartAt).getTime();
       const serverTime = new Date(serverNow).getTime();
       const offset = serverTime - Date.now();
-      const elapsedSec = Math.max(0, (Date.now() + offset - playbackStartMs) / 1000);
+      const segmentElapsed = Math.max(0, (Date.now() + offset - playbackStartMs) / 1000);
+      const elapsedSec = (playbackElapsedMs + segmentElapsed * 1000) / 1000;
       handle.seekTo(elapsedSec);
       handle.play();
     }
   }
 
+  function handleTransportClick() {
+    if (isControlPending || isCountdown) {
+      return;
+    }
+
+    if (isPlaying) {
+      onPause();
+      return;
+    }
+
+    onPlay();
+  }
+
   const isPhraseLocked =
     activePhraseIndex >= 0 && activePhraseIndex <= lockedPhraseIndex;
+
+  const elapsedSeconds = elapsedMs / 1000;
+  const durationSeconds = song.duration_sec ?? 0;
+  const showCountdown = isCountdown && countdownValue !== null && countdownValue > 0;
 
   return (
     <main className="game-screen">
@@ -120,49 +192,80 @@ export default function GameScreen({
       />
 
       <div className="game-screen__body">
-        <div className="game-screen__anchor">
+        <div className="game-screen__container">
           <section className="game-screen__main">
-            <div className="game-screen__song-info">
-              <p className="game-screen__song-title text-heading-3">{song.title}</p>
-              {song.channel ? (
-                <p className="game-screen__song-channel text-body">{song.channel}</p>
-              ) : null}
+            <div className="game-screen__control-bar">
+              <div className="game-screen__song-card">
+                {song.thumbnail_url ? (
+                  <img
+                    className="game-screen__thumbnail"
+                    src={song.thumbnail_url}
+                    alt=""
+                  />
+                ) : (
+                  <div className="game-screen__thumbnail-placeholder" aria-hidden="true" />
+                )}
+                <p className="game-screen__song-title text-heading-3">{song.title}</p>
+              </div>
+
+              <div className="game-screen__controls">
+                <p className="game-screen__timer text-button-label">
+                  {formatTime(elapsedSeconds)} / {formatTime(durationSeconds)}
+                </p>
+
+                {isHost ? (
+                  <div className="game-screen__host-controls">
+                    <IconButton
+                      variant="secondary"
+                      type="button"
+                      iconSrc={isPlaying ? "/icons/pause.svg" : "/icons/play_arrow.svg"}
+                      iconAlt={isPlaying ? "pause" : "play"}
+                      onClick={handleTransportClick}
+                      disabled={isControlPending || isCountdown}
+                    />
+                    <Button
+                      variant="primary"
+                      type="button"
+                      className="game-screen__end-song-button"
+                      onClick={onEndSong}
+                      disabled={isControlPending}
+                    >
+                      end song
+                    </Button>
+                  </div>
+                ) : null}
+              </div>
             </div>
 
-            {!audioUnlocked ? (
-              <div className="game-screen__unlock">
-                <MusicNoteDecorations variant="search" />
-                <p className="game-screen__unlock-message text-body">
-                  TAP TO ENABLE AUDIO AND START TYPING
+            {controlError ? (
+              <p className="game-screen__control-error text-body" role="alert">
+                {controlError}
+              </p>
+            ) : null}
+
+            <div className="game-screen__panel">
+              {showCountdown ? (
+                <p className="game-screen__countdown text-heading-1" aria-live="polite">
+                  {countdownValue}
                 </p>
-                <Button
-                  variant="primary"
-                  type="button"
-                  className="game-screen__unlock-button"
-                  onClick={handleAudioUnlock}
-                >
-                  ready
-                </Button>
-              </div>
-            ) : activePhrase ? (
-              <PhraseTypingArea
-                phraseText={activePhrase.text}
-                typedText={typedText}
-                onTypedTextChange={setTypedText}
-                isLocked={isPhraseLocked}
-              />
-            ) : (
-              <AnimatedEllipsis
-                label="get ready"
-                className="game-screen__waiting text-body"
-                live
-                as="p"
-              />
-            )}
+              ) : isPlaying && activePhrase ? (
+                <PhraseTypingArea
+                  phraseText={activePhrase.text}
+                  typedText={typedText}
+                  onTypedTextChange={setTypedText}
+                  isLocked={isPhraseLocked}
+                />
+              ) : (
+                <p className="game-screen__ready-message text-heading-2">
+                  get ready...
+                </p>
+              )}
+            </div>
           </section>
 
           <LobbyRoster
             className="game-screen__roster"
+            variant="game"
             players={players}
             isLoading={isRosterLoading}
             error={rosterError}

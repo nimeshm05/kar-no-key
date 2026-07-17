@@ -11,8 +11,11 @@ import {
 import { getPlayerId } from "@/lib/player/identity";
 import { loadLobbySession, clearLobbySession } from "@/lib/player/session";
 import {
+  endSong,
   getLobbyState,
   leaveLobby,
+  pausePlayback,
+  startCountdown,
   type LobbyPlayer,
   type LobbySong,
 } from "@/lib/supabase/functions";
@@ -20,12 +23,18 @@ import {
 export default function GameFlow() {
   const router = useRouter();
   const [displayName, setDisplayName] = useState("");
+  const [isHost, setIsHost] = useState(false);
   const [players, setPlayers] = useState<LobbyPlayer[]>([]);
   const [song, setSong] = useState<LobbySong | null>(null);
+  const [lobbyStatus, setLobbyStatus] = useState<string>("ready");
+  const [countdownStartAt, setCountdownStartAt] = useState<string | null>(null);
   const [playbackStartAt, setPlaybackStartAt] = useState<string | null>(null);
+  const [playbackElapsedMs, setPlaybackElapsedMs] = useState(0);
   const [serverNow, setServerNow] = useState<string>(new Date().toISOString());
   const [isRosterLoading, setIsRosterLoading] = useState(true);
   const [rosterError, setRosterError] = useState<string | null>(null);
+  const [controlError, setControlError] = useState<string | null>(null);
+  const [isControlPending, setIsControlPending] = useState(false);
   const [playerId, setPlayerId] = useState<string | null>(null);
   const [isReady, setIsReady] = useState(false);
 
@@ -35,11 +44,6 @@ export default function GameFlow() {
 
       if (route === "/search") {
         router.replace("/search");
-        return true;
-      }
-
-      if (route === "/countdown") {
-        router.replace("/countdown");
         return true;
       }
 
@@ -57,7 +61,10 @@ export default function GameFlow() {
     (data: LobbyStateUpdate) => {
       setPlayers(data.players);
       setSong(data.song);
+      setLobbyStatus(data.status);
+      setCountdownStartAt(data.countdown_start_at);
       setPlaybackStartAt(data.playback_start_at);
+      setPlaybackElapsedMs(data.playback_elapsed_ms);
       setServerNow(data.server_now);
       setRosterError(null);
       handleRouteFromStatus(data.status, data.song_selection_started);
@@ -78,18 +85,16 @@ export default function GameFlow() {
           return false;
         }
 
-        if (data.status !== "countdown" && data.status !== "playing") {
-          const route = getRouteForLobbyStatus(
-            data.status,
-            data.song_selection_started,
-          );
-          if (route) {
-            router.replace(route);
-            return false;
-          }
+        if (
+          data.status !== "ready" &&
+          data.status !== "countdown" &&
+          data.status !== "playing"
+        ) {
+          handleRouteFromStatus(data.status, data.song_selection_started);
+          return false;
         }
 
-        if (!data.song || !data.playback_start_at) {
+        if (!data.song) {
           setRosterError("Game data is not ready yet.");
           return false;
         }
@@ -103,7 +108,7 @@ export default function GameFlow() {
         setIsRosterLoading(false);
       }
     },
-    [applyLobbyState, router],
+    [applyLobbyState, handleRouteFromStatus],
   );
 
   const handleStateUpdate = useCallback(
@@ -120,6 +125,7 @@ export default function GameFlow() {
   useLobbyStatePolling({
     playerId,
     enabled: isReady,
+    pollIntervalMs: 1000,
     onUpdate: handleStateUpdate,
     onError: handleStatePollError,
   });
@@ -135,6 +141,7 @@ export default function GameFlow() {
 
     setPlayerId(id);
     setDisplayName(session.displayName);
+    setIsHost(session.isHost);
 
     void fetchLobbyState(id).then((success) => {
       if (success) {
@@ -162,19 +169,108 @@ export default function GameFlow() {
     router.replace("/");
   }
 
-  if (!isReady || !song || !playbackStartAt) {
+  async function handlePlay() {
+    if (!playerId || !isHost) {
+      return;
+    }
+
+    setIsControlPending(true);
+    setControlError(null);
+
+    try {
+      const { data, error: invokeError } = await startCountdown(playerId);
+
+      if (invokeError || !data || "error" in data) {
+        setControlError(getErrorMessage(invokeError, data));
+        return;
+      }
+
+      setLobbyStatus(data.status);
+      setCountdownStartAt(data.countdown_start_at);
+      setPlaybackStartAt(data.playback_start_at);
+      setPlaybackElapsedMs(data.playback_elapsed_ms);
+      setServerNow(data.server_now);
+    } catch (caughtError) {
+      setControlError(getErrorMessage(caughtError, null));
+    } finally {
+      setIsControlPending(false);
+    }
+  }
+
+  async function handlePause() {
+    if (!playerId || !isHost) {
+      return;
+    }
+
+    setIsControlPending(true);
+    setControlError(null);
+
+    try {
+      const { data, error: invokeError } = await pausePlayback(playerId);
+
+      if (invokeError || !data || "error" in data) {
+        setControlError(getErrorMessage(invokeError, data));
+        return;
+      }
+
+      setLobbyStatus(data.status);
+      setCountdownStartAt(null);
+      setPlaybackStartAt(null);
+      setPlaybackElapsedMs(data.playback_elapsed_ms);
+      setServerNow(data.server_now);
+    } catch (caughtError) {
+      setControlError(getErrorMessage(caughtError, null));
+    } finally {
+      setIsControlPending(false);
+    }
+  }
+
+  async function handleEndSong() {
+    if (!playerId || !isHost) {
+      return;
+    }
+
+    setIsControlPending(true);
+    setControlError(null);
+
+    try {
+      const { data, error: invokeError } = await endSong(playerId);
+
+      if (invokeError || !data || "error" in data) {
+        setControlError(getErrorMessage(invokeError, data));
+        return;
+      }
+
+      router.replace("/search");
+    } catch (caughtError) {
+      setControlError(getErrorMessage(caughtError, null));
+    } finally {
+      setIsControlPending(false);
+    }
+  }
+
+  if (!isReady || !song) {
     return null;
   }
 
   return (
     <GameScreen
       displayName={displayName}
+      isHost={isHost}
+      lobbyStatus={lobbyStatus}
       players={players}
       song={song}
+      countdownStartAt={countdownStartAt}
       playbackStartAt={playbackStartAt}
+      playbackElapsedMs={playbackElapsedMs}
       serverNow={serverNow}
       isRosterLoading={isRosterLoading}
       rosterError={rosterError}
+      controlError={controlError}
+      isControlPending={isControlPending}
+      onPlay={() => void handlePlay()}
+      onPause={() => void handlePause()}
+      onEndSong={() => void handleEndSong()}
       onExitLobby={handleExitLobby}
     />
   );

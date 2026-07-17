@@ -98,6 +98,7 @@ Deno.serve(async (req) => {
     selected_youtube_video_id: lobby.selected_youtube_video_id,
     countdown_start_at: lobby.countdown_start_at,
     playback_start_at: lobby.playback_start_at,
+    playback_elapsed_ms: lobby.playback_elapsed_ms ?? 0,
     server_now: serverNow.toISOString(),
     song,
     players: (players ?? []).map((row) => ({

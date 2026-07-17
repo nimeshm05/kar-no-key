@@ -373,7 +373,7 @@ export default function LandingFlow() {
               <InputField
                 value={displayName}
                 onChange={(event) => setDisplayName(event.target.value)}
-                placeholder="Your name"
+                placeholder="give yourself a name"
                 align="center"
                 aria-label="Your name"
                 disabled={isLoading}

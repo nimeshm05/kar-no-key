@@ -2,9 +2,7 @@ import { handleCors, jsonResponse } from "../_shared/cors.ts";
 import { isValidPlayerId } from "../_shared/player-id.ts";
 import { requireLobbyPlayer } from "../_shared/lobby-state.ts";
 
-const COUNTDOWN_SECONDS = 3;
-
-type StartCountdownRequest = {
+type PausePlaybackRequest = {
   player_id?: string;
 };
 
@@ -18,7 +16,7 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: "Method not allowed" }, 405);
   }
 
-  let body: StartCountdownRequest;
+  let body: PausePlaybackRequest;
   try {
     body = await req.json();
   } catch {
@@ -41,49 +39,47 @@ Deno.serve(async (req) => {
   const { supabase, player, lobby } = auth;
 
   if (!player.is_host) {
-    return jsonResponse({ error: "Only the host can start the countdown" }, 403);
+    return jsonResponse({ error: "Only the host can pause playback" }, 403);
   }
 
-  if (
-    lobby.status !== "ready" &&
-    lobby.status !== "countdown" &&
-    lobby.status !== "playing"
-  ) {
+  if (lobby.status !== "playing" && lobby.status !== "countdown") {
     return jsonResponse(
-      { error: "Countdown can only start when a song is selected" },
+      { error: "Playback can only be paused while playing or counting down" },
       403,
     );
   }
 
-  if (!lobby.selected_youtube_video_id) {
-    return jsonResponse({ error: "No song selected" }, 400);
-  }
+  const now = Date.now();
+  let elapsedMs = lobby.playback_elapsed_ms ?? 0;
 
-  const now = new Date();
-  const playbackStart = new Date(now.getTime() + COUNTDOWN_SECONDS * 1000);
-  const playbackElapsedMs = lobby.playback_elapsed_ms ?? 0;
+  if (
+    lobby.status === "playing" &&
+    lobby.playback_start_at
+  ) {
+    const playbackStartMs = new Date(lobby.playback_start_at).getTime();
+    elapsedMs += Math.max(0, now - playbackStartMs);
+  }
 
   const { error: updateError } = await supabase
     .from("lobbies")
     .update({
-      status: "countdown",
-      countdown_start_at: now.toISOString(),
-      playback_start_at: playbackStart.toISOString(),
-      updated_at: now.toISOString(),
+      status: "ready",
+      playback_elapsed_ms: elapsedMs,
+      countdown_start_at: null,
+      playback_start_at: null,
+      updated_at: new Date(now).toISOString(),
     })
     .eq("id", lobby.id);
 
   if (updateError) {
-    return jsonResponse({ error: "Failed to start countdown" }, 500);
+    return jsonResponse({ error: "Failed to pause playback" }, 500);
   }
 
   return jsonResponse({
     lobby_id: lobby.id,
     code: lobby.code,
-    status: "countdown",
-    countdown_start_at: now.toISOString(),
-    playback_start_at: playbackStart.toISOString(),
-    playback_elapsed_ms: playbackElapsedMs,
-    server_now: now.toISOString(),
+    status: "ready",
+    playback_elapsed_ms: elapsedMs,
+    server_now: new Date(now).toISOString(),
   });
 });

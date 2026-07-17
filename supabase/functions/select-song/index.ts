@@ -134,6 +134,9 @@ Deno.serve(async (req) => {
     .update({
       selected_youtube_video_id: videoId,
       status: "ready",
+      countdown_start_at: null,
+      playback_start_at: null,
+      playback_elapsed_ms: 0,
       updated_at: new Date().toISOString(),
     })
     .eq("id", lobby.id);

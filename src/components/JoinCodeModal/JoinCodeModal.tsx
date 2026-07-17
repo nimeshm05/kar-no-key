@@ -133,7 +133,7 @@ export default function JoinCodeModal({
         {phase === "error" ? (
           <>
             <p className="join-code-modal__message">
-              unable to connect. please enter the correct code.
+              please enter the correct code.
             </p>
             <Button
               variant="primary"

@@ -63,6 +63,7 @@
 
 .search-screen__search-button {
   flex-shrink: 0;
+  width: 216px;
 }
 
 .search-screen__results {
@@ -72,16 +73,12 @@
   width: 100%;
 }
 
-.search-screen__message {
-  color: var(--color-text-muted);
-  margin: 0;
+.search-screen__results--searching {
+  opacity: 0.5;
+  pointer-events: none;
 }
 
-.search-screen__loading-status {
-  font-family: var(--family-mono);
-  font-size: var(--size-20);
-  font-weight: var(--weight-medium);
-  line-height: var(--line-16);
+.search-screen__message {
   color: var(--color-text-muted);
   margin: 0;
 }

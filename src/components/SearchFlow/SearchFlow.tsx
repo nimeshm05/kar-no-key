@@ -43,11 +43,6 @@ export default function SearchFlow() {
     (status: string, songSelectionStarted: boolean) => {
       const route = getRouteForLobbyStatus(status, songSelectionStarted);
 
-      if (route === "/countdown") {
-        router.replace("/countdown");
-        return true;
-      }
-
       if (route === "/game") {
         router.replace("/game");
         return true;
@@ -148,11 +143,13 @@ export default function SearchFlow() {
 
     let cancelled = false;
 
+    const activePlayerId = playerId;
+
     async function fetchRecommendations() {
       setIsLoadingRecommendations(true);
       setRecommendationsError(null);
 
-      const result = await getRecommendedSongs(playerId);
+      const result = await getRecommendedSongs(activePlayerId);
 
       if (cancelled) {
         return;
@@ -228,7 +225,7 @@ export default function SearchFlow() {
         [song.id]: "available",
       }));
 
-      router.replace("/countdown");
+      router.replace("/game");
     } catch (caughtError) {
       setConfirmError(getErrorMessage(caughtError, null));
     } finally {

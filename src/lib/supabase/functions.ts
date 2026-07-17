@@ -117,6 +117,27 @@ export type StartCountdownResult =
       status: string;
       countdown_start_at: string;
       playback_start_at: string;
+      playback_elapsed_ms: number;
+      server_now: string;
+    }
+  | { error: string };
+
+export type PausePlaybackResult =
+  | {
+      lobby_id: string;
+      code: string;
+      status: string;
+      playback_elapsed_ms: number;
+      server_now: string;
+    }
+  | { error: string };
+
+export type EndSongResult =
+  | {
+      lobby_id: string;
+      code: string;
+      status: string;
+      song_selection_started: boolean;
       server_now: string;
     }
   | { error: string };
@@ -131,6 +152,7 @@ export type GetLobbyStateResult =
       selected_youtube_video_id: string | null;
       countdown_start_at: string | null;
       playback_start_at: string | null;
+      playback_elapsed_ms: number;
       server_now: string;
       song: LobbySong | null;
       players: LobbyPlayer[];
@@ -254,6 +276,22 @@ export async function startCountdown(
   playerId: string,
 ): Promise<FunctionInvokeResult<StartCountdownResult>> {
   return invokeFunction<StartCountdownResult>("start-countdown", {
+    player_id: playerId,
+  });
+}
+
+export async function pausePlayback(
+  playerId: string,
+): Promise<FunctionInvokeResult<PausePlaybackResult>> {
+  return invokeFunction<PausePlaybackResult>("pause-playback", {
+    player_id: playerId,
+  });
+}
+
+export async function endSong(
+  playerId: string,
+): Promise<FunctionInvokeResult<EndSongResult>> {
+  return invokeFunction<EndSongResult>("end-song", {
     player_id: playerId,
   });
 }

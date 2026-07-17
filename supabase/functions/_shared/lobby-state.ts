@@ -15,6 +15,7 @@ type LobbyRow = {
   selected_youtube_video_id: string | null;
   countdown_start_at: string | null;
   playback_start_at: string | null;
+  playback_elapsed_ms: number;
 };
 
 export type LobbyAuthResult =
@@ -48,7 +49,7 @@ export async function requireLobbyPlayer(
   const { data: lobby, error: lobbyError } = await supabase
     .from("lobbies")
     .select(
-      "id, code, status, max_players, song_selection_started, selected_youtube_video_id, countdown_start_at, playback_start_at",
+      "id, code, status, max_players, song_selection_started, selected_youtube_video_id, countdown_start_at, playback_start_at, playback_elapsed_ms",
     )
     .eq("id", player.lobby_id)
     .maybeSingle();

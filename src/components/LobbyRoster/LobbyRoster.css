@@ -51,3 +51,12 @@
   flex-shrink: 0;
   white-space: nowrap;
 }
+
+.lobby-roster__score {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.lobby-roster--game .lobby-roster__header--game {
+  gap: 24px;
+}

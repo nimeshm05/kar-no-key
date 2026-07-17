@@ -2,9 +2,7 @@ import { handleCors, jsonResponse } from "../_shared/cors.ts";
 import { isValidPlayerId } from "../_shared/player-id.ts";
 import { requireLobbyPlayer } from "../_shared/lobby-state.ts";
 
-const COUNTDOWN_SECONDS = 3;
-
-type StartCountdownRequest = {
+type EndSongRequest = {
   player_id?: string;
 };
 
@@ -18,7 +16,7 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: "Method not allowed" }, 405);
   }
 
-  let body: StartCountdownRequest;
+  let body: EndSongRequest;
   try {
     body = await req.json();
   } catch {
@@ -41,49 +39,37 @@ Deno.serve(async (req) => {
   const { supabase, player, lobby } = auth;
 
   if (!player.is_host) {
-    return jsonResponse({ error: "Only the host can start the countdown" }, 403);
-  }
-
-  if (
-    lobby.status !== "ready" &&
-    lobby.status !== "countdown" &&
-    lobby.status !== "playing"
-  ) {
-    return jsonResponse(
-      { error: "Countdown can only start when a song is selected" },
-      403,
-    );
+    return jsonResponse({ error: "Only the host can end the song" }, 403);
   }
 
   if (!lobby.selected_youtube_video_id) {
-    return jsonResponse({ error: "No song selected" }, 400);
+    return jsonResponse({ error: "No song is currently selected" }, 400);
   }
 
   const now = new Date();
-  const playbackStart = new Date(now.getTime() + COUNTDOWN_SECONDS * 1000);
-  const playbackElapsedMs = lobby.playback_elapsed_ms ?? 0;
 
   const { error: updateError } = await supabase
     .from("lobbies")
     .update({
-      status: "countdown",
-      countdown_start_at: now.toISOString(),
-      playback_start_at: playbackStart.toISOString(),
+      status: "waiting",
+      song_selection_started: true,
+      selected_youtube_video_id: null,
+      countdown_start_at: null,
+      playback_start_at: null,
+      playback_elapsed_ms: 0,
       updated_at: now.toISOString(),
     })
     .eq("id", lobby.id);
 
   if (updateError) {
-    return jsonResponse({ error: "Failed to start countdown" }, 500);
+    return jsonResponse({ error: "Failed to end song" }, 500);
   }
 
   return jsonResponse({
     lobby_id: lobby.id,
     code: lobby.code,
-    status: "countdown",
-    countdown_start_at: now.toISOString(),
-    playback_start_at: playbackStart.toISOString(),
-    playback_elapsed_ms: playbackElapsedMs,
+    status: "waiting",
+    song_selection_started: true,
     server_now: now.toISOString(),
   });
 });

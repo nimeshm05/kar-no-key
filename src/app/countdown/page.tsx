@@ -1,5 +1,5 @@
-import CountdownFlow from "@/components/CountdownFlow/CountdownFlow";
+import { redirect } from "next/navigation";
 
 export default function CountdownPage() {
-  return <CountdownFlow />;
+  redirect("/game");
 }

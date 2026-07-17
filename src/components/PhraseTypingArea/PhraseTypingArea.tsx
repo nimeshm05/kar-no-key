@@ -63,7 +63,7 @@ export default function PhraseTypingArea({
 
   return (
     <div className="phrase-typing-area">
-      <div className="phrase-typing-area__display text-heading-2" aria-hidden="true">
+      <div className="phrase-typing-area__display" aria-hidden="true">
         {renderPhraseOverlay(phraseText, typedText)}
       </div>
       <input

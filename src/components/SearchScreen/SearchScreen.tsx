@@ -96,10 +96,9 @@ export default function SearchScreen({
   }
 
   const displaySongs = hasSearched ? songs : recommendedSongs;
-  const showSearchLoading = isSearching;
   const showRecommendationsLoading = !hasSearched && isLoadingRecommendations;
   const showSongGrid =
-    !showSearchLoading && !showRecommendationsLoading && displaySongs.length > 0;
+    !showRecommendationsLoading && displaySongs.length > 0;
 
   return (
     <main className="search-screen">
@@ -110,9 +109,9 @@ export default function SearchScreen({
           {isHost ? (
             <section className="search-screen__main">
               <div className="search-screen__search-header">
-                <h1 className="search-screen__title text-heading-2">
+                <h2 className="search-screen__title text-heading-2">
                   SEARCH A SONG
-                </h1>
+                </h2>
                 <div className="search-screen__search-bar">
                   <InputField
                     value={query}
@@ -130,7 +129,11 @@ export default function SearchScreen({
                     onClick={() => void handleSearch()}
                     disabled={isSearching}
                   >
-                    search
+                    {isSearching ? (
+                      <AnimatedEllipsis label="searching" />
+                    ) : (
+                      "search"
+                    )}
                   </Button>
                 </div>
               </div>
@@ -147,15 +150,6 @@ export default function SearchScreen({
                 </p>
               ) : null}
 
-              {showSearchLoading ? (
-                <AnimatedEllipsis
-                  label="searching"
-                  className="search-screen__loading-status"
-                  live
-                  as="p"
-                />
-              ) : null}
-
               {showRecommendationsLoading ? (
                 <AnimatedEllipsis
                   label="loading recommendations"
@@ -165,7 +159,7 @@ export default function SearchScreen({
                 />
               ) : null}
 
-              {!searchError && hasSearched && !showSearchLoading && songs.length === 0 ? (
+              {!searchError && hasSearched && !isSearching && songs.length === 0 ? (
                 <p className="search-screen__message text-body">
                   no songs found. try a different search.
                 </p>
@@ -173,7 +167,14 @@ export default function SearchScreen({
 
               {showSongGrid ? (
                 <>
-                  <div className="search-screen__results">
+                  <div
+                    className={[
+                      "search-screen__results",
+                      isSearching ? "search-screen__results--searching" : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
+                  >
                     {displaySongs.map((song) => (
                       <SongCard
                         key={song.id}

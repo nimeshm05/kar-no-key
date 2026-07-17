@@ -17,6 +17,7 @@ export type LobbyStateUpdate = {
   selected_youtube_video_id: string | null;
   countdown_start_at: string | null;
   playback_start_at: string | null;
+  playback_elapsed_ms: number;
   server_now: string;
   song: LobbySong | null;
   players: LobbyPlayer[];
@@ -25,6 +26,7 @@ export type LobbyStateUpdate = {
 type UseLobbyStatePollingOptions = {
   playerId: string | null;
   enabled: boolean;
+  pollIntervalMs?: number;
   onUpdate: (data: LobbyStateUpdate) => void;
   onError: (message: string) => void;
 };
@@ -54,6 +56,7 @@ function toLobbyStateUpdate(data: GetLobbyStateResult & { error?: never }): Lobb
     selected_youtube_video_id: data.selected_youtube_video_id,
     countdown_start_at: data.countdown_start_at,
     playback_start_at: data.playback_start_at,
+    playback_elapsed_ms: data.playback_elapsed_ms,
     server_now: data.server_now,
     song: data.song,
     players: data.players,
@@ -63,6 +66,7 @@ function toLobbyStateUpdate(data: GetLobbyStateResult & { error?: never }): Lobb
 export function useLobbyStatePolling({
   playerId,
   enabled,
+  pollIntervalMs = LOBBY_STATE_POLL_INTERVAL_MS,
   onUpdate,
   onError,
 }: UseLobbyStatePollingOptions) {
@@ -107,7 +111,7 @@ export function useLobbyStatePolling({
 
     const intervalId = window.setInterval(() => {
       void poll();
-    }, LOBBY_STATE_POLL_INTERVAL_MS);
+    }, pollIntervalMs);
 
     function handleVisibilityChange() {
       if (document.visibilityState === "visible") {
@@ -122,5 +126,5 @@ export function useLobbyStatePolling({
       window.clearInterval(intervalId);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [playerId, enabled]);
+  }, [playerId, enabled, pollIntervalMs]);
 }

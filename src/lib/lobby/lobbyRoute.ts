@@ -23,11 +23,7 @@ export function getRouteForLobbyStatus(
     return "/search";
   }
 
-  if (status === "ready") {
-    return "/countdown";
-  }
-
-  if (status === "countdown" || status === "playing") {
+  if (status === "ready" || status === "countdown" || status === "playing") {
     return "/game";
   }
 

@@ -34,6 +34,7 @@ export function getActivePhraseIndex(
 type UsePlaybackSyncOptions = {
   phrases: LyricPhrase[];
   playbackStartAt: string | null;
+  playbackElapsedMs: number;
   serverNow: string | null;
   enabled: boolean;
   onSeek?: (elapsedSec: number) => void;
@@ -42,11 +43,12 @@ type UsePlaybackSyncOptions = {
 export function usePlaybackSync({
   phrases,
   playbackStartAt,
+  playbackElapsedMs,
   serverNow,
   enabled,
   onSeek,
 }: UsePlaybackSyncOptions) {
-  const [elapsedMs, setElapsedMs] = useState(0);
+  const [elapsedMs, setElapsedMs] = useState(playbackElapsedMs);
   const [activePhraseIndex, setActivePhraseIndex] = useState(-1);
   const serverOffsetRef = useRef(0);
   const onSeekRef = useRef(onSeek);
@@ -67,8 +69,12 @@ export function usePlaybackSync({
 
   useEffect(() => {
     if (!enabled || !playbackStartAt) {
-      setElapsedMs(0);
-      setActivePhraseIndex(-1);
+      setElapsedMs(playbackElapsedMs);
+      setActivePhraseIndex(
+        playbackElapsedMs > 0
+          ? getActivePhraseIndex(phrases, playbackElapsedMs)
+          : -1,
+      );
       return;
     }
 
@@ -78,7 +84,8 @@ export function usePlaybackSync({
 
     function tick() {
       const now = Date.now() + serverOffsetRef.current;
-      const elapsed = Math.max(0, now - playbackStartMs);
+      const segmentElapsed = Math.max(0, now - playbackStartMs);
+      const elapsed = playbackElapsedMs + segmentElapsed;
       setElapsedMs(elapsed);
       setActivePhraseIndex(getActivePhraseIndex(phrases, elapsed));
 
@@ -98,7 +105,7 @@ export function usePlaybackSync({
     return () => {
       window.cancelAnimationFrame(animationFrameId);
     };
-  }, [enabled, playbackStartAt, phrases]);
+  }, [enabled, playbackElapsedMs, playbackStartAt, phrases]);
 
   const activePhrase =
     activePhraseIndex >= 0 ? phrases[activePhraseIndex] ?? null : null;

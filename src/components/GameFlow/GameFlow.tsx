@@ -8,6 +8,7 @@ import {
   useLobbyStatePolling,
   type LobbyStateUpdate,
 } from "@/lib/lobby/useLobbyStatePolling";
+import { useLobbyScoreBroadcast } from "@/lib/lobby/useLobbyScoreBroadcast";
 import { getPlayerId } from "@/lib/player/identity";
 import { loadLobbySession, clearLobbySession } from "@/lib/player/session";
 import {
@@ -36,6 +37,7 @@ export default function GameFlow() {
   const [controlError, setControlError] = useState<string | null>(null);
   const [isControlPending, setIsControlPending] = useState(false);
   const [playerId, setPlayerId] = useState<string | null>(null);
+  const [lobbyId, setLobbyId] = useState<string | null>(null);
   const [isReady, setIsReady] = useState(false);
 
   const handleRouteFromStatus = useCallback(
@@ -59,6 +61,7 @@ export default function GameFlow() {
 
   const applyLobbyState = useCallback(
     (data: LobbyStateUpdate) => {
+      setLobbyId(data.lobby_id);
       setPlayers(data.players);
       setSong(data.song);
       setLobbyStatus(data.status);
@@ -122,12 +125,37 @@ export default function GameFlow() {
     setRosterError(message);
   }, []);
 
+  const handleScoreUpdate = useCallback(
+    (updatedPlayerId: string, score: number, phrasesCompleted: number) => {
+      setPlayers((current) =>
+        current.map((player) =>
+          player.player_id === updatedPlayerId
+            ? { ...player, score, phrases_completed: phrasesCompleted }
+            : player,
+        ),
+      );
+    },
+    [],
+  );
+
   useLobbyStatePolling({
     playerId,
     enabled: isReady,
     pollIntervalMs: 1000,
     onUpdate: handleStateUpdate,
     onError: handleStatePollError,
+  });
+
+  useLobbyScoreBroadcast({
+    lobbyId,
+    enabled: isReady,
+    onScoreUpdate: (payload) => {
+      handleScoreUpdate(
+        payload.player_id,
+        payload.score,
+        payload.phrases_completed,
+      );
+    },
   });
 
   useEffect(() => {
@@ -255,6 +283,7 @@ export default function GameFlow() {
 
   return (
     <GameScreen
+      playerId={playerId}
       displayName={displayName}
       isHost={isHost}
       lobbyStatus={lobbyStatus}
@@ -268,6 +297,7 @@ export default function GameFlow() {
       rosterError={rosterError}
       controlError={controlError}
       isControlPending={isControlPending}
+      onScoreUpdate={handleScoreUpdate}
       onPlay={() => void handlePlay()}
       onPause={() => void handlePause()}
       onEndSong={() => void handleEndSong()}

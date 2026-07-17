@@ -8,6 +8,7 @@ import type { JoinModalPhase } from "@/components/JoinCodeModal/JoinCodeModal";
 import LobbyRoster from "@/components/LobbyRoster/LobbyRoster";
 import Navbar from "@/components/Navbar/Navbar";
 import type { LobbyPlayer } from "@/lib/supabase/functions";
+import { normalizeLobbyCodeInput } from "@/lib/lobby/lobbyCode";
 import "./LobbyScreen.css";
 
 type LobbyScreenProps = {
@@ -54,7 +55,11 @@ export default function LobbyScreen({
     : "share this code with your frens to begin the race.";
 
   function handleCloseModal() {
-    if (joinModalPhase === "enter-code" || joinModalPhase === "error") {
+    if (
+      joinModalPhase === "enter-code" ||
+      joinModalPhase === "error" ||
+      joinModalPhase === "own-code"
+    ) {
       setIsJoinModalOpen(false);
       onJoinModalPhaseChange("enter-code");
     }
@@ -64,7 +69,21 @@ export default function LobbyScreen({
     onJoinModalPhaseChange("enter-code");
   }
 
+  function handleOwnCodeStartGame() {
+    setIsJoinModalOpen(false);
+    onJoinModalPhaseChange("enter-code");
+    onStartGame();
+  }
+
   async function handleJoinSubmit() {
+    if (
+      isHost &&
+      normalizeLobbyCodeInput(joinCode) === normalizeLobbyCodeInput(lobbyCode)
+    ) {
+      onJoinModalPhaseChange("own-code");
+      return;
+    }
+
     onJoinModalPhaseChange("joining");
     const success = await onJoinLobby();
     if (success) {
@@ -78,7 +97,8 @@ export default function LobbyScreen({
     isJoinModalOpen ||
     joinModalPhase === "joining" ||
     joinModalPhase === "error" ||
-    joinModalPhase === "waiting-for-host";
+    joinModalPhase === "waiting-for-host" ||
+    joinModalPhase === "own-code";
 
   return (
     <main
@@ -158,6 +178,7 @@ export default function LobbyScreen({
           onClose={handleCloseModal}
           onSubmit={handleJoinSubmit}
           onRetry={handleRetry}
+          onOwnCodeStartGame={handleOwnCodeStartGame}
           phase={joinModalPhase}
         />
       ) : null}

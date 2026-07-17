@@ -13,6 +13,7 @@
     "supabase:functions": "supabase functions serve --env-file .env.local",
     "test:lobby-code": "node supabase/functions/_shared/lobby-code.node.test.mjs",
     "test:display-name": "node supabase/functions/_shared/display-name.node.test.mjs",
+    "test:scoring": "node --experimental-strip-types supabase/functions/_shared/scoring/scoring.node.test.mjs",
     "test:format-lobby-code": "node src/lib/lobby/formatLobbyCode.test.mjs",
     "supabase:deploy": "bash scripts/deploy-hosted-supabase.sh"
   },

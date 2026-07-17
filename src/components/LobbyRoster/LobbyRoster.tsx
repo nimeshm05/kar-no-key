@@ -1,3 +1,5 @@
+"use client";
+
 import { sortLobbyPlayers } from "@/lib/lobby/sortLobbyPlayers";
 import { LOBBY_MAX_PLAYERS } from "@/lib/lobby/lobbyConstants";
 import type { LobbyPlayer } from "@/lib/supabase/functions";
@@ -18,10 +20,10 @@ export default function LobbyRoster({
   className,
   variant = "lobby",
 }: LobbyRosterProps) {
-  const sortedPlayers = sortLobbyPlayers(players);
+  const isGameVariant = variant === "game";
+  const sortedPlayers = sortLobbyPlayers(players, { sortByScore: isGameVariant });
   const playerCount = sortedPlayers.length;
   const showRosterList = playerCount > 0 && !isLoading;
-  const isGameVariant = variant === "game";
 
   const rosterClasses = [
     "lobby-roster",
@@ -65,7 +67,10 @@ export default function LobbyRoster({
                 {player.display_name.toLowerCase()}
               </span>
               {isGameVariant ? (
-                <span className="lobby-roster__score">
+                <span
+                  key={`${player.player_id}-${player.score ?? 0}`}
+                  className="lobby-roster__score lobby-roster__score--updated"
+                >
                   {player.score ?? 0}
                 </span>
               ) : (

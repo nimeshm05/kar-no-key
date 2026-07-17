@@ -142,6 +142,15 @@ export type EndSongResult =
     }
   | { error: string };
 
+export type SubmitPhraseProgressResult =
+  | {
+      score: number;
+      phrases_completed: number;
+      points_awarded: number;
+      phrase_bonus_awarded: boolean;
+    }
+  | { error: string };
+
 export type GetLobbyStateResult =
   | {
       lobby_id: string;
@@ -293,5 +302,21 @@ export async function endSong(
 ): Promise<FunctionInvokeResult<EndSongResult>> {
   return invokeFunction<EndSongResult>("end-song", {
     player_id: playerId,
+  });
+}
+
+export async function submitPhraseProgress(
+  playerId: string,
+  payload: {
+    phrase_index: number;
+    typed_text: string;
+    finalize?: boolean;
+  },
+): Promise<FunctionInvokeResult<SubmitPhraseProgressResult>> {
+  return invokeFunction<SubmitPhraseProgressResult>("submit-phrase-progress", {
+    player_id: playerId,
+    phrase_index: payload.phrase_index,
+    typed_text: payload.typed_text,
+    finalize: payload.finalize ?? false,
   });
 }

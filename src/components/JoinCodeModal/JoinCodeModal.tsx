@@ -8,7 +8,12 @@ import { lockBodyScroll } from "@/lib/dom/bodyScrollLock";
 import { isLobbyCodeMinLength } from "@/lib/lobby/lobbyCode";
 import "./JoinCodeModal.css";
 
-export type JoinModalPhase = "enter-code" | "joining" | "error" | "waiting-for-host";
+export type JoinModalPhase =
+  | "enter-code"
+  | "joining"
+  | "error"
+  | "waiting-for-host"
+  | "own-code";
 
 type JoinCodeModalProps = {
   joinCode: string;
@@ -16,6 +21,7 @@ type JoinCodeModalProps = {
   onClose: () => void;
   onSubmit: () => void;
   onRetry: () => void;
+  onOwnCodeStartGame: () => void;
   phase: JoinModalPhase;
 };
 
@@ -27,6 +33,8 @@ function getDialogTitle(phase: JoinModalPhase): string {
       return "Unable to connect";
     case "waiting-for-host":
       return "Waiting for host";
+    case "own-code":
+      return "Cannot join own lobby";
     default:
       return "Enter lobby code";
   }
@@ -38,9 +46,11 @@ export default function JoinCodeModal({
   onClose,
   onSubmit,
   onRetry,
+  onOwnCodeStartGame,
   phase,
 }: JoinCodeModalProps) {
-  const canDismiss = phase === "enter-code" || phase === "error";
+  const canDismiss =
+    phase === "enter-code" || phase === "error" || phase === "own-code";
   const canSubmit = isLobbyCodeMinLength(joinCode);
   const isBusy = phase === "joining" || phase === "waiting-for-host";
 
@@ -143,6 +153,32 @@ export default function JoinCodeModal({
             >
               retry
             </Button>
+          </>
+        ) : null}
+
+        {phase === "own-code" ? (
+          <>
+            <p className="join-code-modal__message">
+              you cannot input your own code. wanna play the game yourself?
+            </p>
+            <div className="join-code-modal__actions">
+              <Button
+                variant="secondary"
+                type="button"
+                className="join-code-modal__action"
+                onClick={onClose}
+              >
+                cancel
+              </Button>
+              <Button
+                variant="primary"
+                type="button"
+                className="join-code-modal__action"
+                onClick={onOwnCodeStartGame}
+              >
+                let&apos;s go
+              </Button>
+            </div>
           </>
         ) : null}
 

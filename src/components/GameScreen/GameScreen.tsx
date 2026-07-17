@@ -8,6 +8,7 @@ import Navbar from "@/components/Navbar/Navbar";
 import YouTubePlayer from "@/components/YouTubePlayer/YouTubePlayer";
 import PhraseTypingArea from "@/components/PhraseTypingArea/PhraseTypingArea";
 import { useCountdownTick } from "@/lib/game/useCountdownTick";
+import { usePhraseScoring } from "@/lib/game/usePhraseScoring";
 import { usePlaybackSync } from "@/lib/game/usePlaybackSync";
 import type { LobbyPlayer, LobbySong } from "@/lib/supabase/functions";
 import "./GameScreen.css";
@@ -20,6 +21,7 @@ type PlayerHandle = {
 };
 
 type GameScreenProps = {
+  playerId: string | null;
   displayName: string;
   isHost: boolean;
   lobbyStatus: string;
@@ -33,6 +35,11 @@ type GameScreenProps = {
   rosterError: string | null;
   controlError: string | null;
   isControlPending: boolean;
+  onScoreUpdate: (
+    playerId: string,
+    score: number,
+    phrasesCompleted: number,
+  ) => void;
   onPlay: () => void;
   onPause: () => void;
   onEndSong: () => void;
@@ -65,6 +72,7 @@ function formatTime(totalSeconds: number): string {
 }
 
 export default function GameScreen({
+  playerId,
   displayName,
   isHost,
   lobbyStatus,
@@ -78,6 +86,7 @@ export default function GameScreen({
   rosterError,
   controlError,
   isControlPending,
+  onScoreUpdate,
   onPlay,
   onPause,
   onEndSong,
@@ -85,6 +94,7 @@ export default function GameScreen({
 }: GameScreenProps) {
   const [typedText, setTypedText] = useState("");
   const [lockedPhraseIndex, setLockedPhraseIndex] = useState(-1);
+  const prevActivePhraseIndexRef = useRef(-1);
   const [isMarqueeActive, setIsMarqueeActive] = useState(false);
   const [marqueeDistance, setMarqueeDistance] = useState(0);
   const [marqueeDuration, setMarqueeDuration] = useState(0);
@@ -117,6 +127,14 @@ export default function GameScreen({
     playbackStartAt,
     serverNow,
     enabled: isCountdown,
+  });
+
+  usePhraseScoring({
+    playerId,
+    isPlaying,
+    activePhraseIndex,
+    typedText,
+    onScoreUpdate,
   });
 
   useEffect(() => {
@@ -176,21 +194,18 @@ export default function GameScreen({
   }, [song.title]);
 
   useEffect(() => {
-    setTypedText("");
-  }, [activePhraseIndex]);
+    const previousPhraseIndex = prevActivePhraseIndexRef.current;
 
-  useEffect(() => {
     if (
-      activePhraseIndex >= 0 &&
-      activePhraseIndex !== lockedPhraseIndex &&
-      activePhraseIndex > lockedPhraseIndex
+      previousPhraseIndex >= 0 &&
+      activePhraseIndex > previousPhraseIndex
     ) {
-      const previousPhrase = phrases[activePhraseIndex - 1];
-      if (previousPhrase && activePhraseIndex - 1 > lockedPhraseIndex) {
-        setLockedPhraseIndex(activePhraseIndex - 1);
-      }
+      setLockedPhraseIndex(previousPhraseIndex);
+      setTypedText("");
     }
-  }, [activePhraseIndex, lockedPhraseIndex, phrases]);
+
+    prevActivePhraseIndexRef.current = activePhraseIndex;
+  }, [activePhraseIndex]);
 
   useEffect(() => {
     if (!isPlaying || !playbackStartAt) {

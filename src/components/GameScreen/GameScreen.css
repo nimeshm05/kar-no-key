@@ -59,13 +59,62 @@
 }
 
 .game-screen__song-title {
+  flex: 1;
   margin: 0;
   padding: var(--size-16);
   min-width: 0;
   overflow: hidden;
+  color: var(--color-text-primary);
+}
+
+.game-screen__song-title-track {
+  display: block;
+  width: 100%;
+  overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: var(--color-text-primary);
+}
+
+.game-screen__song-title-track--marquee {
+  display: inline-flex;
+  align-items: center;
+  width: auto;
+  max-width: none;
+  overflow: visible;
+  text-overflow: clip;
+  animation: game-screen-song-title-marquee var(--marquee-duration, 10s) linear infinite;
+}
+
+.game-screen__song-title-text {
+  flex-shrink: 0;
+}
+
+.game-screen__song-title-gap {
+  flex-shrink: 0;
+  width: 40px;
+}
+
+@keyframes game-screen-song-title-marquee {
+  0%,
+  12% {
+    transform: translateX(0);
+  }
+
+  88%,
+  100% {
+    transform: translateX(calc(-1 * var(--marquee-distance)));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .game-screen__song-title-track--marquee {
+    animation: none;
+  }
+
+  .game-screen__song-title-track {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }
 
 .game-screen__controls {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import Button from "@/components/Button/Button";
 import IconButton from "@/components/IconButton/IconButton";
 import LobbyRoster from "@/components/LobbyRoster/LobbyRoster";
@@ -38,6 +38,10 @@ type GameScreenProps = {
   onExitLobby: () => void;
 };
 
+const SONG_TITLE_MARQUEE_GAP_PX = 40;
+const SONG_TITLE_MARQUEE_SPEED_PX_PER_SEC = 40;
+const SONG_TITLE_MARQUEE_MIN_DURATION_SEC = 6;
+
 function formatTime(totalSeconds: number): string {
   const safeSeconds = Math.max(0, Math.floor(totalSeconds));
   const minutes = Math.floor(safeSeconds / 60);
@@ -66,8 +70,13 @@ export default function GameScreen({
 }: GameScreenProps) {
   const [typedText, setTypedText] = useState("");
   const [lockedPhraseIndex, setLockedPhraseIndex] = useState(-1);
+  const [isMarqueeActive, setIsMarqueeActive] = useState(false);
+  const [marqueeDistance, setMarqueeDistance] = useState(0);
+  const [marqueeDuration, setMarqueeDuration] = useState(0);
   const playerHandleRef = useRef<PlayerHandle | null>(null);
   const lastPlaybackStateRef = useRef<string | null>(null);
+  const titleContainerRef = useRef<HTMLDivElement>(null);
+  const titleTextRef = useRef<HTMLSpanElement>(null);
 
   const isPlaying = lobbyStatus === "playing";
   const isCountdown = lobbyStatus === "countdown";
@@ -102,6 +111,52 @@ export default function GameScreen({
     serverNow,
     enabled: isCountdown,
   });
+
+  useEffect(() => {
+    const container = titleContainerRef.current;
+    const text = titleTextRef.current;
+
+    if (!container || !text) {
+      return;
+    }
+
+    function measureTitleOverflow() {
+      const textElement = titleTextRef.current;
+      const containerElement = titleContainerRef.current;
+
+      if (!textElement || !containerElement) {
+        return;
+      }
+
+      const textWidth = textElement.scrollWidth;
+      const containerWidth = containerElement.clientWidth;
+      const isOverflowing = textWidth > containerWidth;
+
+      if (!isOverflowing) {
+        setIsMarqueeActive(false);
+        return;
+      }
+
+      const distance = textWidth + SONG_TITLE_MARQUEE_GAP_PX;
+      const duration = Math.max(
+        SONG_TITLE_MARQUEE_MIN_DURATION_SEC,
+        distance / SONG_TITLE_MARQUEE_SPEED_PX_PER_SEC,
+      );
+
+      setMarqueeDistance(distance);
+      setMarqueeDuration(duration);
+      setIsMarqueeActive(true);
+    }
+
+    measureTitleOverflow();
+
+    const resizeObserver = new ResizeObserver(measureTitleOverflow);
+    resizeObserver.observe(container);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [song.title]);
 
   useEffect(() => {
     setTypedText("");
@@ -182,6 +237,13 @@ export default function GameScreen({
   const durationSeconds = song.duration_sec ?? 0;
   const showCountdown = isCountdown && countdownValue !== null && countdownValue > 0;
 
+  const marqueeStyle: CSSProperties | undefined = isMarqueeActive
+    ? {
+        "--marquee-distance": `${marqueeDistance}px`,
+        "--marquee-duration": `${marqueeDuration}s`,
+      }
+    : undefined;
+
   return (
     <main className="game-screen">
       <Navbar displayName={displayName} onExitLobby={onExitLobby} />
@@ -205,7 +267,42 @@ export default function GameScreen({
                 ) : (
                   <div className="game-screen__thumbnail-placeholder" aria-hidden="true" />
                 )}
-                <p className="game-screen__song-title text-heading-3">{song.title}</p>
+                <div
+                  ref={titleContainerRef}
+                  className="game-screen__song-title"
+                  title={song.title}
+                >
+                  <div
+                    className={[
+                      "game-screen__song-title-track",
+                      isMarqueeActive ? "game-screen__song-title-track--marquee" : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
+                    style={marqueeStyle}
+                  >
+                    <span
+                      ref={titleTextRef}
+                      className="game-screen__song-title-text text-heading-3"
+                    >
+                      {song.title}
+                    </span>
+                    {isMarqueeActive ? (
+                      <>
+                        <span
+                          className="game-screen__song-title-gap"
+                          aria-hidden="true"
+                        />
+                        <span
+                          className="game-screen__song-title-text text-heading-3"
+                          aria-hidden="true"
+                        >
+                          {song.title}
+                        </span>
+                      </>
+                    ) : null}
+                  </div>
+                </div>
               </div>
 
               <div className="game-screen__controls">

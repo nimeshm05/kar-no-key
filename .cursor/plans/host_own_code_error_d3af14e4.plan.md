@@ -4,13 +4,13 @@ overview: When the host submits their own lobby code in the join modal, intercep
 todos:
   - id: modal-own-code-phase
     content: Add own-code phase UI and onOwnCodeStartGame prop to JoinCodeModal.tsx
-    status: in_progress
+    status: completed
   - id: lobby-detect-own-code
     content: Detect host own-code on submit in LobbyScreen; wire let's go → onStartGame and cancel → close
-    status: pending
+    status: completed
   - id: manual-test-own-code
     content: "Manual test: host own code shows error; let's go starts game; cancel closes modal"
-    status: pending
+    status: completed
 isProject: false
 ---
 

@@ -53,11 +53,11 @@ export default function PhraseTypingArea({
   onTypedTextChange,
   isLocked,
 }: PhraseTypingAreaProps) {
-  const inputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     if (!isLocked) {
-      inputRef.current?.focus();
+      textareaRef.current?.focus();
     }
   }, [phraseText, isLocked]);
 
@@ -66,10 +66,9 @@ export default function PhraseTypingArea({
       <div className="phrase-typing-area__display" aria-hidden="true">
         {renderPhraseOverlay(phraseText, typedText)}
       </div>
-      <input
-        ref={inputRef}
+      <textarea
+        ref={textareaRef}
         className="phrase-typing-area__input"
-        type="text"
         value={typedText}
         onChange={(event) => onTypedTextChange(event.target.value)}
         disabled={isLocked}
@@ -78,6 +77,7 @@ export default function PhraseTypingArea({
         autoCorrect="off"
         autoCapitalize="off"
         spellCheck={false}
+        rows={1}
       />
     </div>
   );

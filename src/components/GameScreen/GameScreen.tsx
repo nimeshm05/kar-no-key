@@ -417,11 +417,28 @@ export default function GameScreen({
                     isLocked={isPhraseLocked}
                   />
                 ) : (
-                  <p className="game-screen__ready-message text-body">
-                    {isHost
-                      ? "click play to start the race"
-                      : "get ready..."}
-                  </p>
+                  <textarea
+                    className="game-screen__panel-textarea"
+                    value=""
+                    placeholder={
+                      isHost
+                        ? "click play to start the race"
+                        : "get ready..."
+                    }
+                    aria-label={
+                      isHost
+                        ? "click play to start the race"
+                        : "get ready..."
+                    }
+                    onChange={() => {}}
+                    onKeyDown={(event) => {
+                      event.preventDefault();
+                    }}
+                    autoComplete="off"
+                    spellCheck={false}
+                    rows={1}
+                    autoFocus
+                  />
                 )}
               </div>
 

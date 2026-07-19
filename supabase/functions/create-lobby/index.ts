@@ -5,12 +5,17 @@ import {
   LobbyCodeGenerationError,
 } from "../_shared/lobby-code.ts";
 import { isValidPlayerId } from "../_shared/player-id.ts";
+import { mintPlayerSessionToken } from "../_shared/player-session.ts";
+import { checkRateLimit, getClientIp } from "../_shared/rate-limit.ts";
 import { createSupabaseAdmin } from "../_shared/supabase-admin.ts";
 
 type CreateLobbyRequest = {
   player_id?: string;
   display_name?: string;
 };
+
+const RATE_LIMIT_MAX = 10;
+const RATE_LIMIT_WINDOW_MS = 60_000;
 
 Deno.serve(async (req) => {
   const corsResponse = handleCors(req);
@@ -19,38 +24,53 @@ Deno.serve(async (req) => {
   }
 
   if (req.method !== "POST") {
-    return jsonResponse({ error: "Method not allowed" }, 405);
+    return jsonResponse({ error: "Method not allowed" }, 405, req);
   }
 
   let body: CreateLobbyRequest;
   try {
     body = await req.json();
   } catch {
-    return jsonResponse({ error: "Invalid JSON body" }, 400);
+    return jsonResponse({ error: "Invalid JSON body" }, 400, req);
   }
 
   if (!body.player_id || typeof body.player_id !== "string") {
-    return jsonResponse({ error: "Missing player_id" }, 400);
+    return jsonResponse({ error: "Missing player_id" }, 400, req);
   }
 
   if (!body.display_name || typeof body.display_name !== "string") {
-    return jsonResponse({ error: "Missing display_name" }, 400);
+    return jsonResponse({ error: "Missing display_name" }, 400, req);
   }
 
   if (!isValidPlayerId(body.player_id)) {
-    return jsonResponse({ error: "Invalid player_id format" }, 400);
+    return jsonResponse({ error: "Invalid player_id format" }, 400, req);
   }
 
   const nameResult = validateDisplayName(body.display_name);
   if (!nameResult.valid) {
-    return jsonResponse({ error: nameResult.error }, 400);
+    return jsonResponse({ error: nameResult.error }, 400, req);
   }
 
   let supabase;
   try {
     supabase = createSupabaseAdmin();
   } catch {
-    return jsonResponse({ error: "Server configuration error" }, 500);
+    return jsonResponse({ error: "Server configuration error" }, 500, req);
+  }
+
+  const clientIp = getClientIp(req) ?? "unknown";
+  const rateLimit = await checkRateLimit(
+    supabase,
+    `create-lobby:${clientIp}`,
+    RATE_LIMIT_MAX,
+    RATE_LIMIT_WINDOW_MS,
+  );
+  if (!rateLimit.ok) {
+    return jsonResponse(
+      { error: "Too many requests. Please try again shortly." },
+      429,
+      req,
+    );
   }
 
   const { data: existingPlayer, error: existingPlayerError } = await supabase
@@ -60,7 +80,7 @@ Deno.serve(async (req) => {
     .maybeSingle();
 
   if (existingPlayerError) {
-    return jsonResponse({ error: "Failed to check player session" }, 500);
+    return jsonResponse({ error: "Failed to check player session" }, 500, req);
   }
 
   if (existingPlayer) {
@@ -71,13 +91,14 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (existingLobbyError) {
-      return jsonResponse({ error: "Failed to check player session" }, 500);
+      return jsonResponse({ error: "Failed to check player session" }, 500, req);
     }
 
     if (existingLobby && existingLobby.status !== "closed") {
       return jsonResponse(
         { error: "Player is already in an active lobby" },
         409,
+        req,
       );
     }
   }
@@ -87,10 +108,10 @@ Deno.serve(async (req) => {
     code = await generateUniqueCode(supabase);
   } catch (error) {
     if (error instanceof LobbyCodeGenerationError) {
-      return jsonResponse({ error: error.message }, 500);
+      return jsonResponse({ error: error.message }, 500, req);
     }
 
-    return jsonResponse({ error: "Failed to generate lobby code" }, 500);
+    return jsonResponse({ error: "Failed to generate lobby code" }, 500, req);
   }
 
   const { data: lobby, error: lobbyError } = await supabase
@@ -100,7 +121,7 @@ Deno.serve(async (req) => {
     .single();
 
   if (lobbyError || !lobby) {
-    return jsonResponse({ error: "Failed to create lobby" }, 500);
+    return jsonResponse({ error: "Failed to create lobby" }, 500, req);
   }
 
   if (existingPlayer) {
@@ -117,7 +138,7 @@ Deno.serve(async (req) => {
 
     if (updatePlayerError) {
       await supabase.from("lobbies").delete().eq("id", lobby.id);
-      return jsonResponse({ error: "Failed to create host player" }, 500);
+      return jsonResponse({ error: "Failed to create host player" }, 500, req);
     }
   } else {
     const { error: insertPlayerError } = await supabase.from("players").insert({
@@ -130,7 +151,7 @@ Deno.serve(async (req) => {
 
     if (insertPlayerError) {
       await supabase.from("lobbies").delete().eq("id", lobby.id);
-      return jsonResponse({ error: "Failed to create host player" }, 500);
+      return jsonResponse({ error: "Failed to create host player" }, 500, req);
     }
   }
 
@@ -140,7 +161,14 @@ Deno.serve(async (req) => {
     .eq("id", lobby.id);
 
   if (updateLobbyError) {
-    return jsonResponse({ error: "Failed to assign lobby host" }, 500);
+    return jsonResponse({ error: "Failed to assign lobby host" }, 500, req);
+  }
+
+  let sessionToken: string;
+  try {
+    sessionToken = await mintPlayerSessionToken(body.player_id, lobby.id);
+  } catch {
+    return jsonResponse({ error: "Server configuration error" }, 500, req);
   }
 
   return jsonResponse({
@@ -148,5 +176,6 @@ Deno.serve(async (req) => {
     lobby_id: lobby.id,
     player_id: body.player_id,
     display_name: nameResult.name,
-  });
+    session_token: sessionToken,
+  }, 200, req);
 });

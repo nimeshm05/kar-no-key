@@ -15,6 +15,7 @@ fi
 : "${SUPABASE_SERVICE_ROLE_KEY:?Missing SUPABASE_SERVICE_ROLE_KEY in .env.local}"
 : "${SUPABASE_ACCESS_TOKEN:?Missing SUPABASE_ACCESS_TOKEN in .env.local}"
 : "${YOUTUBE_API_KEY:?Missing YOUTUBE_API_KEY in .env.local}"
+: "${PLAYER_SESSION_SECRET:?Missing PLAYER_SESSION_SECRET in .env.local}"
 
 SONG_SEARCH_PROVIDER="${SONG_SEARCH_PROVIDER:-youtube}"
 
@@ -27,9 +28,17 @@ echo "→ Pushing database migrations..."
 npx supabase db push --yes
 
 echo "→ Setting Edge Function secrets..."
+SECRETS_ARGS=(
+  "SONG_SEARCH_PROVIDER=$SONG_SEARCH_PROVIDER"
+  "YOUTUBE_API_KEY=$YOUTUBE_API_KEY"
+  "PLAYER_SESSION_SECRET=$PLAYER_SESSION_SECRET"
+)
+if [[ -n "${CORS_ALLOWED_ORIGINS:-}" ]]; then
+  SECRETS_ARGS+=("CORS_ALLOWED_ORIGINS=$CORS_ALLOWED_ORIGINS")
+fi
+
 npx supabase secrets set \
-  SONG_SEARCH_PROVIDER="$SONG_SEARCH_PROVIDER" \
-  YOUTUBE_API_KEY="$YOUTUBE_API_KEY" \
+  "${SECRETS_ARGS[@]}" \
   --project-ref "$SUPABASE_PROJECT_REF"
 
 echo "→ Deploying Edge Functions..."
@@ -60,27 +69,28 @@ CREATE_RESP="$(curl -s -X POST \
   -d "{\"player_id\":\"${HOST_ID}\",\"display_name\":\"Norman\"}")"
 echo "$CREATE_RESP"
 LOBBY_CODE="$(node -e "const r=JSON.parse(process.argv[1]); console.log(r.code||'')" "$CREATE_RESP")"
-if [[ -n "$LOBBY_CODE" ]]; then
-  curl -s -X POST \
+HOST_TOKEN="$(node -e "const r=JSON.parse(process.argv[1]); console.log(r.session_token||'')" "$CREATE_RESP")"
+if [[ -n "$LOBBY_CODE" && -n "$HOST_TOKEN" ]]; then
+  JOIN_RESP="$(curl -s -X POST \
     "${NEXT_PUBLIC_SUPABASE_URL}/functions/v1/join-lobby" \
     -H "Authorization: Bearer ${NEXT_PUBLIC_SUPABASE_ANON_KEY}" \
     -H "apikey: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}" \
     -H "Content-Type: application/json" \
-    -d "{\"player_id\":\"${JOINER_ID}\",\"display_name\":\"Alex\",\"code\":\"${LOBBY_CODE}\"}"
-  echo ""
+    -d "{\"player_id\":\"${JOINER_ID}\",\"display_name\":\"Alex\",\"code\":\"${LOBBY_CODE}\"}")"
+  echo "$JOIN_RESP"
   curl -s -X POST \
     "${NEXT_PUBLIC_SUPABASE_URL}/functions/v1/get-lobby-players" \
     -H "Authorization: Bearer ${NEXT_PUBLIC_SUPABASE_ANON_KEY}" \
     -H "apikey: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}" \
     -H "Content-Type: application/json" \
-    -d "{\"player_id\":\"${HOST_ID}\"}"
+    -d "{\"player_id\":\"${HOST_ID}\",\"session_token\":\"${HOST_TOKEN}\"}"
   echo ""
   curl -s -X POST \
     "${NEXT_PUBLIC_SUPABASE_URL}/functions/v1/leave-lobby" \
     -H "Authorization: Bearer ${NEXT_PUBLIC_SUPABASE_ANON_KEY}" \
     -H "apikey: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}" \
     -H "Content-Type: application/json" \
-    -d "{\"player_id\":\"${HOST_ID}\"}"
+    -d "{\"player_id\":\"${HOST_ID}\",\"session_token\":\"${HOST_TOKEN}\"}"
   echo ""
   curl -s -X POST \
     "${NEXT_PUBLIC_SUPABASE_URL}/functions/v1/create-lobby" \
@@ -89,6 +99,9 @@ if [[ -n "$LOBBY_CODE" ]]; then
     -H "Content-Type: application/json" \
     -d "{\"player_id\":\"${HOST_ID}\",\"display_name\":\"Norman\"}"
   echo ""
+else
+  echo "Verification skipped: create-lobby did not return code + session_token"
+  exit 1
 fi
 
 echo ""

@@ -418,7 +418,9 @@ export default function GameScreen({
                   />
                 ) : (
                   <p className="game-screen__ready-message text-body">
-                    get ready...
+                    {isHost
+                      ? "click play to start the race"
+                      : "get ready..."}
                   </p>
                 )}
               </div>

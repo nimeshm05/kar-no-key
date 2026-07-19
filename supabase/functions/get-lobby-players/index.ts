@@ -1,9 +1,13 @@
 import { handleCors, jsonResponse } from "../_shared/cors.ts";
+import {
+  getSessionTokenFromBody,
+  requireLobbyPlayer,
+} from "../_shared/lobby-state.ts";
 import { isValidPlayerId } from "../_shared/player-id.ts";
-import { createSupabaseAdmin } from "../_shared/supabase-admin.ts";
 
 type GetLobbyPlayersRequest = {
   player_id?: string;
+  session_token?: string;
 };
 
 Deno.serve(async (req) => {
@@ -13,62 +17,33 @@ Deno.serve(async (req) => {
   }
 
   if (req.method !== "POST") {
-    return jsonResponse({ error: "Method not allowed" }, 405);
+    return jsonResponse({ error: "Method not allowed" }, 405, req);
   }
 
   let body: GetLobbyPlayersRequest;
   try {
     body = await req.json();
   } catch {
-    return jsonResponse({ error: "Invalid JSON body" }, 400);
+    return jsonResponse({ error: "Invalid JSON body" }, 400, req);
   }
 
   if (!body.player_id || typeof body.player_id !== "string") {
-    return jsonResponse({ error: "Missing player_id" }, 400);
+    return jsonResponse({ error: "Missing player_id" }, 400, req);
   }
 
   if (!isValidPlayerId(body.player_id)) {
-    return jsonResponse({ error: "Invalid player_id format" }, 400);
+    return jsonResponse({ error: "Invalid player_id format" }, 400, req);
   }
 
-  let supabase;
-  try {
-    supabase = createSupabaseAdmin();
-  } catch {
-    return jsonResponse({ error: "Server configuration error" }, 500);
+  const auth = await requireLobbyPlayer(
+    body.player_id,
+    getSessionTokenFromBody(body),
+  );
+  if (!auth.ok) {
+    return jsonResponse({ error: auth.error }, auth.status, req);
   }
 
-  const { data: player, error: playerError } = await supabase
-    .from("players")
-    .select("id, lobby_id")
-    .eq("id", body.player_id)
-    .maybeSingle();
-
-  if (playerError) {
-    return jsonResponse({ error: "Failed to check player session" }, 500);
-  }
-
-  if (!player) {
-    return jsonResponse({ error: "Player is not in a lobby" }, 404);
-  }
-
-  const { data: lobby, error: lobbyError } = await supabase
-    .from("lobbies")
-    .select("id, code, status, max_players, song_selection_started")
-    .eq("id", player.lobby_id)
-    .maybeSingle();
-
-  if (lobbyError) {
-    return jsonResponse({ error: "Failed to load lobby" }, 500);
-  }
-
-  if (!lobby) {
-    return jsonResponse({ error: "Lobby not found" }, 404);
-  }
-
-  if (lobby.status === "closed") {
-    return jsonResponse({ error: "Lobby is closed" }, 403);
-  }
+  const { supabase, lobby } = auth;
 
   const { data: players, error: playersError } = await supabase
     .from("players")
@@ -77,7 +52,7 @@ Deno.serve(async (req) => {
     .order("joined_at", { ascending: true });
 
   if (playersError) {
-    return jsonResponse({ error: "Failed to load lobby players" }, 500);
+    return jsonResponse({ error: "Failed to load lobby players" }, 500, req);
   }
 
   return jsonResponse({
@@ -92,5 +67,5 @@ Deno.serve(async (req) => {
       is_host: row.is_host,
       is_connected: row.is_connected,
     })),
-  });
+  }, 200, req);
 });

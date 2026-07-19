@@ -1,5 +1,9 @@
 import { handleCors, jsonResponse } from "../_shared/cors.ts";
-import { getEffectiveLobbyStatus, requireLobbyPlayer } from "../_shared/lobby-state.ts";
+import {
+  getEffectiveLobbyStatus,
+  getSessionTokenFromBody,
+  requireLobbyPlayer,
+} from "../_shared/lobby-state.ts";
 import { isValidPlayerId } from "../_shared/player-id.ts";
 import { checkRateLimit } from "../_shared/rate-limit.ts";
 import { broadcastScoreUpdate } from "../_shared/scoring/broadcast.ts";
@@ -34,41 +38,44 @@ Deno.serve(async (req) => {
   }
 
   if (req.method !== "POST") {
-    return jsonResponse({ error: "Method not allowed" }, 405);
+    return jsonResponse({ error: "Method not allowed" }, 405, req);
   }
 
   let body: SubmitPhraseProgressRequest;
   try {
     body = await req.json();
   } catch {
-    return jsonResponse({ error: "Invalid JSON body" }, 400);
+    return jsonResponse({ error: "Invalid JSON body" }, 400, req);
   }
 
   if (!body.player_id || typeof body.player_id !== "string") {
-    return jsonResponse({ error: "Missing player_id" }, 400);
+    return jsonResponse({ error: "Missing player_id" }, 400, req);
   }
 
   if (!isValidPlayerId(body.player_id)) {
-    return jsonResponse({ error: "Invalid player_id format" }, 400);
+    return jsonResponse({ error: "Invalid player_id format" }, 400, req);
   }
 
   if (typeof body.phrase_index !== "number" || !Number.isInteger(body.phrase_index)) {
-    return jsonResponse({ error: "Missing or invalid phrase_index" }, 400);
+    return jsonResponse({ error: "Missing or invalid phrase_index" }, 400, req);
   }
 
   if (body.phrase_index < 0) {
-    return jsonResponse({ error: "Invalid phrase_index" }, 400);
+    return jsonResponse({ error: "Invalid phrase_index" }, 400, req);
   }
 
   if (typeof body.typed_text !== "string") {
-    return jsonResponse({ error: "Missing typed_text" }, 400);
+    return jsonResponse({ error: "Missing typed_text" }, 400, req);
   }
 
   const finalize = body.finalize === true;
 
-  const auth = await requireLobbyPlayer(body.player_id);
+  const auth = await requireLobbyPlayer(
+    body.player_id,
+    getSessionTokenFromBody(body),
+  );
   if (!auth.ok) {
-    return jsonResponse({ error: auth.error }, auth.status);
+    return jsonResponse({ error: auth.error }, auth.status, req);
   }
 
   const { supabase, player, lobby } = auth;
@@ -84,17 +91,18 @@ Deno.serve(async (req) => {
     return jsonResponse(
       { error: "Too many requests. Please try again shortly." },
       429,
+      req,
     );
   }
 
   const effectiveStatus = getEffectiveLobbyStatus(lobby);
 
   if (!lobby.selected_youtube_video_id) {
-    return jsonResponse({ error: "No song is currently selected" }, 400);
+    return jsonResponse({ error: "No song is currently selected" }, 400, req);
   }
 
   if (effectiveStatus !== "playing" && !finalize) {
-    return jsonResponse({ error: "Scoring is only available while playing" }, 403);
+    return jsonResponse({ error: "Scoring is only available while playing" }, 403, req);
   }
 
   const { data: songRow, error: songError } = await supabase
@@ -104,13 +112,13 @@ Deno.serve(async (req) => {
     .maybeSingle();
 
   if (songError || !songRow) {
-    return jsonResponse({ error: "Failed to load song lyrics" }, 500);
+    return jsonResponse({ error: "Failed to load song lyrics" }, 500, req);
   }
 
   const phrases = (songRow.lyrics_phrases ?? []) as LyricPhrase[];
 
   if (body.phrase_index >= phrases.length) {
-    return jsonResponse({ error: "Invalid phrase_index" }, 400);
+    return jsonResponse({ error: "Invalid phrase_index" }, 400, req);
   }
 
   const expectedPhrase = phrases[body.phrase_index];
@@ -124,7 +132,7 @@ Deno.serve(async (req) => {
   const activePhraseIndex = getActivePhraseIndex(phrases, elapsedMs);
 
   if (body.phrase_index > activePhraseIndex) {
-    return jsonResponse({ error: "Cannot score a future phrase" }, 403);
+    return jsonResponse({ error: "Cannot score a future phrase" }, 403, req);
   }
 
   const { data: existingProgress, error: progressSelectError } = await supabase
@@ -137,7 +145,7 @@ Deno.serve(async (req) => {
     .maybeSingle();
 
   if (progressSelectError) {
-    return jsonResponse({ error: "Failed to load phrase progress" }, 500);
+    return jsonResponse({ error: "Failed to load phrase progress" }, 500, req);
   }
 
   const progressRow: ProgressRow = existingProgress ?? {
@@ -180,7 +188,7 @@ Deno.serve(async (req) => {
       phrases_completed: playerRow?.phrases_completed ?? 0,
       points_awarded: 0,
       phrase_bonus_awarded: false,
-    });
+    }, 200, req);
   }
 
   const progressUpdate = {
@@ -202,7 +210,7 @@ Deno.serve(async (req) => {
       .eq("id", existingProgress.id);
 
     if (progressUpdateError) {
-      return jsonResponse({ error: "Failed to update phrase progress" }, 500);
+      return jsonResponse({ error: "Failed to update phrase progress" }, 500, req);
     }
   } else {
     const { error: progressInsertError } = await supabase
@@ -210,7 +218,7 @@ Deno.serve(async (req) => {
       .insert(progressUpdate);
 
     if (progressInsertError) {
-      return jsonResponse({ error: "Failed to save phrase progress" }, 500);
+      return jsonResponse({ error: "Failed to save phrase progress" }, 500, req);
     }
   }
 
@@ -226,7 +234,7 @@ Deno.serve(async (req) => {
       phrases_completed: playerRow?.phrases_completed ?? 0,
       points_awarded: 0,
       phrase_bonus_awarded: scoreResult.phraseBonusAwarded,
-    });
+    }, 200, req);
   }
 
   const { data: playerRow, error: playerSelectError } = await supabase
@@ -236,7 +244,7 @@ Deno.serve(async (req) => {
     .maybeSingle();
 
   if (playerSelectError || !playerRow) {
-    return jsonResponse({ error: "Failed to load player score" }, 500);
+    return jsonResponse({ error: "Failed to load player score" }, 500, req);
   }
 
   const newScore = (playerRow.score ?? 0) + scoreResult.pointsAwarded;
@@ -252,7 +260,7 @@ Deno.serve(async (req) => {
     .eq("id", player.id);
 
   if (playerUpdateError) {
-    return jsonResponse({ error: "Failed to update player score" }, 500);
+    return jsonResponse({ error: "Failed to update player score" }, 500, req);
   }
 
   if (scoreResult.pointsAwarded > 0) {
@@ -273,5 +281,5 @@ Deno.serve(async (req) => {
     phrases_completed: newPhrasesCompleted,
     points_awarded: scoreResult.pointsAwarded,
     phrase_bonus_awarded: scoreResult.phraseBonusAwarded,
-  });
+  }, 200, req);
 });

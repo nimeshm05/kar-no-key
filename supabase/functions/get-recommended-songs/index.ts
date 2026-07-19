@@ -1,5 +1,8 @@
 import { handleCors, jsonResponse } from "../_shared/cors.ts";
-import { requireLobbyPlayer } from "../_shared/lobby-state.ts";
+import {
+  getSessionTokenFromBody,
+  requireLobbyPlayer,
+} from "../_shared/lobby-state.ts";
 import { isValidPlayerId } from "../_shared/player-id.ts";
 import { checkRateLimit } from "../_shared/rate-limit.ts";
 import { getRecommendedSongs } from "../_shared/song-providers/index.ts";
@@ -38,51 +41,55 @@ Deno.serve(async (req) => {
   }
 
   if (req.method !== "POST") {
-    return jsonResponse({ error: "Method not allowed" }, 405);
+    return jsonResponse({ error: "Method not allowed" }, 405, req);
   }
 
   let body: GetRecommendedSongsRequest;
   try {
     body = await req.json();
   } catch {
-    return jsonResponse({ error: "Invalid JSON body" }, 400);
+    return jsonResponse({ error: "Invalid JSON body" }, 400, req);
   }
 
   if (!body.player_id || typeof body.player_id !== "string") {
-    return jsonResponse({ error: "Missing player_id" }, 400);
+    return jsonResponse({ error: "Missing player_id" }, 400, req);
   }
 
   if (!isValidPlayerId(body.player_id)) {
-    return jsonResponse({ error: "Invalid player_id format" }, 400);
+    return jsonResponse({ error: "Invalid player_id format" }, 400, req);
   }
 
   if (body.offset !== undefined && typeof body.offset !== "number") {
-    return jsonResponse({ error: "offset must be a number" }, 400);
+    return jsonResponse({ error: "offset must be a number" }, 400, req);
   }
 
   if (body.limit !== undefined && typeof body.limit !== "number") {
-    return jsonResponse({ error: "limit must be a number" }, 400);
+    return jsonResponse({ error: "limit must be a number" }, 400, req);
   }
 
-  const auth = await requireLobbyPlayer(body.player_id);
+  const auth = await requireLobbyPlayer(
+    body.player_id,
+    getSessionTokenFromBody(body),
+  );
   if (!auth.ok) {
-    return jsonResponse({ error: auth.error }, auth.status);
+    return jsonResponse({ error: auth.error }, auth.status, req);
   }
 
   const { supabase, player, lobby } = auth;
 
   if (!player.is_host) {
-    return jsonResponse({ error: "Only the host can view recommended songs" }, 403);
+    return jsonResponse({ error: "Only the host can view recommended songs" }, 403, req);
   }
 
   if (!lobby.song_selection_started) {
-    return jsonResponse({ error: "Song selection has not started" }, 403);
+    return jsonResponse({ error: "Song selection has not started" }, 403, req);
   }
 
   if (lobby.status !== "waiting") {
     return jsonResponse(
       { error: "Recommended songs are only available during song selection" },
       403,
+      req,
     );
   }
 
@@ -99,6 +106,7 @@ Deno.serve(async (req) => {
         error: `Too many requests. Try again in ${playerRateLimit.retryAfterSec} seconds.`,
       },
       429,
+      req,
     );
   }
 
@@ -107,12 +115,13 @@ Deno.serve(async (req) => {
 
   try {
     const result = await getRecommendedSongs(offset, limit);
-    return jsonResponse(result);
+    return jsonResponse(result, 200, req);
   } catch (error) {
-    if (error instanceof Error) {
-      return jsonResponse({ error: error.message }, 500);
-    }
-
-    return jsonResponse({ error: "Failed to load recommended songs" }, 500);
+    console.error("get-recommended-songs failed", error);
+    return jsonResponse(
+      { error: "Failed to load recommended songs" },
+      500,
+      req,
+    );
   }
 });

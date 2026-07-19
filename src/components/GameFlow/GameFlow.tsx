@@ -138,6 +138,52 @@ export default function GameFlow() {
     [],
   );
 
+  // Realtime broadcasts are untrusted hints; only apply monotonic updates for known players.
+  // Authoritative scores arrive via get-lobby-state polling (~1s).
+  const handleBroadcastScoreUpdate = useCallback(
+    (payload: {
+      player_id: string;
+      score: number;
+      phrases_completed: number;
+    }) => {
+      setPlayers((current) => {
+        const existing = current.find(
+          (player) => player.player_id === payload.player_id,
+        );
+        if (!existing) {
+          return current;
+        }
+
+        const currentScore = existing.score ?? 0;
+        const currentPhrases = existing.phrases_completed ?? 0;
+        if (
+          payload.score < currentScore ||
+          payload.phrases_completed < currentPhrases
+        ) {
+          return current;
+        }
+
+        if (
+          payload.score === currentScore &&
+          payload.phrases_completed === currentPhrases
+        ) {
+          return current;
+        }
+
+        return current.map((player) =>
+          player.player_id === payload.player_id
+            ? {
+                ...player,
+                score: payload.score,
+                phrases_completed: payload.phrases_completed,
+              }
+            : player,
+        );
+      });
+    },
+    [],
+  );
+
   useLobbyStatePolling({
     playerId,
     enabled: isReady,
@@ -149,13 +195,8 @@ export default function GameFlow() {
   useLobbyScoreBroadcast({
     lobbyId,
     enabled: isReady,
-    onScoreUpdate: (payload) => {
-      handleScoreUpdate(
-        payload.player_id,
-        payload.score,
-        payload.phrases_completed,
-      );
-    },
+    knownPlayerIds: players.map((player) => player.player_id),
+    onScoreUpdate: handleBroadcastScoreUpdate,
   });
 
   useEffect(() => {

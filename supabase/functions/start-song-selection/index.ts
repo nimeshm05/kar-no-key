@@ -1,9 +1,13 @@
 import { handleCors, jsonResponse } from "../_shared/cors.ts";
+import {
+  getSessionTokenFromBody,
+  requireLobbyPlayer,
+} from "../_shared/lobby-state.ts";
 import { isValidPlayerId } from "../_shared/player-id.ts";
-import { createSupabaseAdmin } from "../_shared/supabase-admin.ts";
 
 type StartSongSelectionRequest = {
   player_id?: string;
+  session_token?: string;
 };
 
 Deno.serve(async (req) => {
@@ -13,71 +17,47 @@ Deno.serve(async (req) => {
   }
 
   if (req.method !== "POST") {
-    return jsonResponse({ error: "Method not allowed" }, 405);
+    return jsonResponse({ error: "Method not allowed" }, 405, req);
   }
 
   let body: StartSongSelectionRequest;
   try {
     body = await req.json();
   } catch {
-    return jsonResponse({ error: "Invalid JSON body" }, 400);
+    return jsonResponse({ error: "Invalid JSON body" }, 400, req);
   }
 
   if (!body.player_id || typeof body.player_id !== "string") {
-    return jsonResponse({ error: "Missing player_id" }, 400);
+    return jsonResponse({ error: "Missing player_id" }, 400, req);
   }
 
   if (!isValidPlayerId(body.player_id)) {
-    return jsonResponse({ error: "Invalid player_id format" }, 400);
+    return jsonResponse({ error: "Invalid player_id format" }, 400, req);
   }
 
-  let supabase;
-  try {
-    supabase = createSupabaseAdmin();
-  } catch {
-    return jsonResponse({ error: "Server configuration error" }, 500);
+  const auth = await requireLobbyPlayer(
+    body.player_id,
+    getSessionTokenFromBody(body),
+  );
+  if (!auth.ok) {
+    return jsonResponse({ error: auth.error }, auth.status, req);
   }
 
-  const { data: player, error: playerError } = await supabase
-    .from("players")
-    .select("id, lobby_id, is_host")
-    .eq("id", body.player_id)
-    .maybeSingle();
-
-  if (playerError) {
-    return jsonResponse({ error: "Failed to check player session" }, 500);
-  }
-
-  if (!player) {
-    return jsonResponse({ error: "Player is not in a lobby" }, 404);
-  }
+  const { supabase, player, lobby } = auth;
 
   if (!player.is_host) {
-    return jsonResponse({ error: "Only the host can start song selection" }, 403);
-  }
-
-  const { data: lobby, error: lobbyError } = await supabase
-    .from("lobbies")
-    .select("id, code, status, song_selection_started")
-    .eq("id", player.lobby_id)
-    .maybeSingle();
-
-  if (lobbyError) {
-    return jsonResponse({ error: "Failed to load lobby" }, 500);
-  }
-
-  if (!lobby) {
-    return jsonResponse({ error: "Lobby not found" }, 404);
-  }
-
-  if (lobby.status === "closed") {
-    return jsonResponse({ error: "Lobby is closed" }, 403);
+    return jsonResponse(
+      { error: "Only the host can start song selection" },
+      403,
+      req,
+    );
   }
 
   if (lobby.status !== "waiting") {
     return jsonResponse(
       { error: "Song selection can only be started from the waiting state" },
       403,
+      req,
     );
   }
 
@@ -86,7 +66,7 @@ Deno.serve(async (req) => {
       lobby_id: lobby.id,
       code: lobby.code,
       song_selection_started: true,
-    });
+    }, 200, req);
   }
 
   const { error: updateError } = await supabase
@@ -98,12 +78,12 @@ Deno.serve(async (req) => {
     .eq("id", lobby.id);
 
   if (updateError) {
-    return jsonResponse({ error: "Failed to start song selection" }, 500);
+    return jsonResponse({ error: "Failed to start song selection" }, 500, req);
   }
 
   return jsonResponse({
     lobby_id: lobby.id,
     code: lobby.code,
     song_selection_started: true,
-  });
+  }, 200, req);
 });

@@ -1,11 +1,16 @@
 import { handleCors, jsonResponse } from "../_shared/cors.ts";
 import { isValidPlayerId } from "../_shared/player-id.ts";
+import {
+  readSessionToken,
+  verifyPlayerSessionToken,
+} from "../_shared/player-session.ts";
 import { clearPlayerGameData } from "../_shared/scoring/reset.ts";
 import { createSupabaseAdmin } from "../_shared/supabase-admin.ts";
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
 
 type LeaveLobbyRequest = {
   player_id?: string;
+  session_token?: string;
 };
 
 async function removePlayer(
@@ -37,29 +42,49 @@ Deno.serve(async (req) => {
   }
 
   if (req.method !== "POST") {
-    return jsonResponse({ error: "Method not allowed" }, 405);
+    return jsonResponse({ error: "Method not allowed" }, 405, req);
   }
 
   let body: LeaveLobbyRequest;
   try {
     body = await req.json();
   } catch {
-    return jsonResponse({ error: "Invalid JSON body" }, 400);
+    return jsonResponse({ error: "Invalid JSON body" }, 400, req);
   }
 
   if (!body.player_id || typeof body.player_id !== "string") {
-    return jsonResponse({ error: "Missing player_id" }, 400);
+    return jsonResponse({ error: "Missing player_id" }, 400, req);
   }
 
   if (!isValidPlayerId(body.player_id)) {
-    return jsonResponse({ error: "Invalid player_id format" }, 400);
+    return jsonResponse({ error: "Invalid player_id format" }, 400, req);
+  }
+
+  const sessionToken = readSessionToken(body);
+  if (!sessionToken) {
+    return jsonResponse({ error: "Missing session token" }, 401, req);
+  }
+
+  let claims;
+  try {
+    claims = await verifyPlayerSessionToken(sessionToken);
+  } catch {
+    return jsonResponse({ error: "Server configuration error" }, 500, req);
+  }
+
+  if (!claims || claims.playerId !== body.player_id) {
+    return jsonResponse(
+      { error: "Invalid or expired session token" },
+      401,
+      req,
+    );
   }
 
   let supabase;
   try {
     supabase = createSupabaseAdmin();
   } catch {
-    return jsonResponse({ error: "Server configuration error" }, 500);
+    return jsonResponse({ error: "Server configuration error" }, 500, req);
   }
 
   const { data: player, error: playerError } = await supabase
@@ -69,7 +94,7 @@ Deno.serve(async (req) => {
     .maybeSingle();
 
   if (playerError) {
-    return jsonResponse({ error: "Failed to check player session" }, 500);
+    return jsonResponse({ error: "Failed to check player session" }, 500, req);
   }
 
   if (!player) {
@@ -78,7 +103,15 @@ Deno.serve(async (req) => {
       left: true,
       lobby_closed: false,
       new_host_player_id: null,
-    });
+    }, 200, req);
+  }
+
+  if (player.lobby_id !== claims.lobbyId) {
+    return jsonResponse(
+      { error: "Session token does not match lobby" },
+      401,
+      req,
+    );
   }
 
   const { data: lobby, error: lobbyError } = await supabase
@@ -88,13 +121,13 @@ Deno.serve(async (req) => {
     .maybeSingle();
 
   if (lobbyError) {
-    return jsonResponse({ error: "Failed to check lobby" }, 500);
+    return jsonResponse({ error: "Failed to check lobby" }, 500, req);
   }
 
   if (!lobby) {
     const removeError = await removePlayer(supabase, body.player_id);
     if (removeError) {
-      return jsonResponse({ error: removeError }, 500);
+      return jsonResponse({ error: removeError }, 500, req);
     }
 
     return jsonResponse({
@@ -102,13 +135,13 @@ Deno.serve(async (req) => {
       left: true,
       lobby_closed: false,
       new_host_player_id: null,
-    });
+    }, 200, req);
   }
 
   if (lobby.status === "closed") {
     const removeError = await removePlayer(supabase, body.player_id);
     if (removeError) {
-      return jsonResponse({ error: removeError }, 500);
+      return jsonResponse({ error: removeError }, 500, req);
     }
 
     return jsonResponse({
@@ -117,7 +150,7 @@ Deno.serve(async (req) => {
       left: true,
       lobby_closed: true,
       new_host_player_id: null,
-    });
+    }, 200, req);
   }
 
   if (player.is_host) {
@@ -129,14 +162,14 @@ Deno.serve(async (req) => {
       .order("joined_at", { ascending: true });
 
     if (otherPlayersError) {
-      return jsonResponse({ error: "Failed to check lobby players" }, 500);
+      return jsonResponse({ error: "Failed to check lobby players" }, 500, req);
     }
 
     if (!otherPlayers || otherPlayers.length === 0) {
       try {
         await clearPlayerGameData(supabase, body.player_id);
       } catch {
-        return jsonResponse({ error: "Failed to clear player game data" }, 500);
+        return jsonResponse({ error: "Failed to clear player game data" }, 500, req);
       }
 
       const { error: deleteLobbyError } = await supabase
@@ -145,7 +178,7 @@ Deno.serve(async (req) => {
         .eq("id", lobby.id);
 
       if (deleteLobbyError) {
-        return jsonResponse({ error: "Failed to close lobby" }, 500);
+        return jsonResponse({ error: "Failed to close lobby" }, 500, req);
       }
 
       return jsonResponse({
@@ -154,7 +187,7 @@ Deno.serve(async (req) => {
         left: true,
         lobby_closed: true,
         new_host_player_id: null,
-      });
+      }, 200, req);
     }
 
     const successor = otherPlayers[0];
@@ -165,7 +198,7 @@ Deno.serve(async (req) => {
       .eq("id", lobby.id);
 
     if (updateLobbyError) {
-      return jsonResponse({ error: "Failed to transfer host" }, 500);
+      return jsonResponse({ error: "Failed to transfer host" }, 500, req);
     }
 
     const { error: clearHostFlagsError } = await supabase
@@ -174,7 +207,7 @@ Deno.serve(async (req) => {
       .eq("lobby_id", lobby.id);
 
     if (clearHostFlagsError) {
-      return jsonResponse({ error: "Failed to transfer host" }, 500);
+      return jsonResponse({ error: "Failed to transfer host" }, 500, req);
     }
 
     const { error: promoteError } = await supabase
@@ -183,12 +216,12 @@ Deno.serve(async (req) => {
       .eq("id", successor.id);
 
     if (promoteError) {
-      return jsonResponse({ error: "Failed to transfer host" }, 500);
+      return jsonResponse({ error: "Failed to transfer host" }, 500, req);
     }
 
     const removeError = await removePlayer(supabase, body.player_id);
     if (removeError) {
-      return jsonResponse({ error: removeError }, 500);
+      return jsonResponse({ error: removeError }, 500, req);
     }
 
     return jsonResponse({
@@ -197,12 +230,12 @@ Deno.serve(async (req) => {
       left: true,
       lobby_closed: false,
       new_host_player_id: successor.id,
-    });
+    }, 200, req);
   }
 
   const removeError = await removePlayer(supabase, body.player_id);
   if (removeError) {
-    return jsonResponse({ error: removeError }, 500);
+    return jsonResponse({ error: removeError }, 500, req);
   }
 
   return jsonResponse({
@@ -211,5 +244,5 @@ Deno.serve(async (req) => {
     left: true,
     lobby_closed: false,
     new_host_player_id: null,
-  });
+  }, 200, req);
 });

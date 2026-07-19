@@ -154,7 +154,7 @@ export default function Navbar({
                 >
                   <img
                     className="dropdown__menu-icon"
-                    src="/icons/message-square-heart.svg"
+                    src="/icons/message-square-quote.svg"
                     alt=""
                     aria-hidden="true"
                   />

@@ -2,6 +2,7 @@ import { handleCors, jsonResponse } from "../_shared/cors.ts";
 import { isValidPlayerId } from "../_shared/player-id.ts";
 import {
   getEffectiveLobbyStatus,
+  getSessionTokenFromBody,
   requireLobbyPlayer,
 } from "../_shared/lobby-state.ts";
 
@@ -16,27 +17,30 @@ Deno.serve(async (req) => {
   }
 
   if (req.method !== "POST") {
-    return jsonResponse({ error: "Method not allowed" }, 405);
+    return jsonResponse({ error: "Method not allowed" }, 405, req);
   }
 
   let body: GetLobbyStateRequest;
   try {
     body = await req.json();
   } catch {
-    return jsonResponse({ error: "Invalid JSON body" }, 400);
+    return jsonResponse({ error: "Invalid JSON body" }, 400, req);
   }
 
   if (!body.player_id || typeof body.player_id !== "string") {
-    return jsonResponse({ error: "Missing player_id" }, 400);
+    return jsonResponse({ error: "Missing player_id" }, 400, req);
   }
 
   if (!isValidPlayerId(body.player_id)) {
-    return jsonResponse({ error: "Invalid player_id format" }, 400);
+    return jsonResponse({ error: "Invalid player_id format" }, 400, req);
   }
 
-  const auth = await requireLobbyPlayer(body.player_id);
+  const auth = await requireLobbyPlayer(
+    body.player_id,
+    getSessionTokenFromBody(body),
+  );
   if (!auth.ok) {
-    return jsonResponse({ error: auth.error }, auth.status);
+    return jsonResponse({ error: auth.error }, auth.status, req);
   }
 
   const { supabase, lobby } = auth;
@@ -63,7 +67,7 @@ Deno.serve(async (req) => {
     .order("joined_at", { ascending: true });
 
   if (playersError) {
-    return jsonResponse({ error: "Failed to load lobby players" }, 500);
+    return jsonResponse({ error: "Failed to load lobby players" }, 500, req);
   }
 
   let song = null;
@@ -109,5 +113,5 @@ Deno.serve(async (req) => {
       score: row.score,
       phrases_completed: row.phrases_completed,
     })),
-  });
+  }, 200, req);
 });

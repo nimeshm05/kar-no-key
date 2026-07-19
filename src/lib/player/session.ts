@@ -5,6 +5,7 @@ export type LobbySession = {
   lobbyCode: string;
   lobbyId: string;
   isHost: boolean;
+  sessionToken: string;
 };
 
 export function saveLobbySession(session: LobbySession): void {
@@ -31,19 +32,24 @@ export function loadLobbySession(): LobbySession | null {
       typeof parsed.displayName === "string" &&
       typeof parsed.lobbyCode === "string" &&
       typeof parsed.lobbyId === "string" &&
-      typeof parsed.isHost === "boolean"
+      typeof parsed.isHost === "boolean" &&
+      typeof parsed.sessionToken === "string" &&
+      parsed.sessionToken.length > 0
     ) {
       return {
         displayName: parsed.displayName,
         lobbyCode: parsed.lobbyCode,
         lobbyId: parsed.lobbyId,
         isHost: parsed.isHost,
+        sessionToken: parsed.sessionToken,
       };
     }
   } catch {
     sessionStorage.removeItem(SESSION_KEY);
   }
 
+  // Invalidate pre-token sessions — they cannot call authenticated APIs.
+  sessionStorage.removeItem(SESSION_KEY);
   return null;
 }
 

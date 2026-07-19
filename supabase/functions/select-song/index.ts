@@ -1,6 +1,9 @@
 import { handleCors, jsonResponse } from "../_shared/cors.ts";
 import { isValidPlayerId } from "../_shared/player-id.ts";
-import { requireLobbyPlayer } from "../_shared/lobby-state.ts";
+import {
+  getSessionTokenFromBody,
+  requireLobbyPlayer,
+} from "../_shared/lobby-state.ts";
 import { resolveLyricsForVideo } from "../_shared/lyrics/lrclib.ts";
 import {
   fetchYouTubeVideoMetadata,
@@ -18,47 +21,51 @@ Deno.serve(async (req) => {
   }
 
   if (req.method !== "POST") {
-    return jsonResponse({ error: "Method not allowed" }, 405);
+    return jsonResponse({ error: "Method not allowed" }, 405, req);
   }
 
   let body: SelectSongRequest;
   try {
     body = await req.json();
   } catch {
-    return jsonResponse({ error: "Invalid JSON body" }, 400);
+    return jsonResponse({ error: "Invalid JSON body" }, 400, req);
   }
 
   if (!body.player_id || typeof body.player_id !== "string") {
-    return jsonResponse({ error: "Missing player_id" }, 400);
+    return jsonResponse({ error: "Missing player_id" }, 400, req);
   }
 
   if (!isValidPlayerId(body.player_id)) {
-    return jsonResponse({ error: "Invalid player_id format" }, 400);
+    return jsonResponse({ error: "Invalid player_id format" }, 400, req);
   }
 
   if (!body.youtube_video_id || typeof body.youtube_video_id !== "string") {
-    return jsonResponse({ error: "Missing youtube_video_id" }, 400);
+    return jsonResponse({ error: "Missing youtube_video_id" }, 400, req);
   }
 
-  const auth = await requireLobbyPlayer(body.player_id);
+  const auth = await requireLobbyPlayer(
+    body.player_id,
+    getSessionTokenFromBody(body),
+  );
   if (!auth.ok) {
-    return jsonResponse({ error: auth.error }, auth.status);
+    return jsonResponse({ error: auth.error }, auth.status, req);
   }
 
   const { supabase, player, lobby } = auth;
 
   if (!player.is_host) {
-    return jsonResponse({ error: "Only the host can select a song" }, 403);
+    return jsonResponse({ error: "Only the host can select a song" }, 403, req);
   }
 
   if (!lobby.song_selection_started) {
-    return jsonResponse({ error: "Song selection has not started" }, 403);
+    return jsonResponse({ error: "Song selection has not started" }, 403, req);
   }
 
   if (lobby.status !== "waiting" && lobby.status !== "ready") {
     return jsonResponse(
       { error: "Song can only be selected before the game starts" },
       403,
+      req,
     );
   }
 
@@ -77,7 +84,7 @@ Deno.serve(async (req) => {
   if (!song) {
     const metadata = await fetchYouTubeVideoMetadata(videoId);
     if (!metadata || !metadata.duration_sec) {
-      return jsonResponse({ error: "Could not load video metadata" }, 404);
+      return jsonResponse({ error: "Could not load video metadata" }, 404, req);
     }
 
     const lyrics = await resolveLyricsForVideo(
@@ -92,6 +99,7 @@ Deno.serve(async (req) => {
           has_lyrics: false,
         },
         422,
+        req,
       );
     }
 
@@ -112,7 +120,7 @@ Deno.serve(async (req) => {
       .single();
 
     if (insertError || !insertedSong) {
-      return jsonResponse({ error: "Failed to cache song" }, 500);
+      return jsonResponse({ error: "Failed to cache song" }, 500, req);
     }
 
     song = insertedSong;
@@ -126,6 +134,7 @@ Deno.serve(async (req) => {
         has_lyrics: false,
       },
       422,
+      req,
     );
   }
 
@@ -142,7 +151,7 @@ Deno.serve(async (req) => {
     .eq("id", lobby.id);
 
   if (updateError) {
-    return jsonResponse({ error: "Failed to update lobby" }, 500);
+    return jsonResponse({ error: "Failed to update lobby" }, 500, req);
   }
 
   return jsonResponse({
@@ -158,5 +167,5 @@ Deno.serve(async (req) => {
       lyrics_phrases: song.lyrics_phrases,
       lyrics_source: song.lyrics_source,
     },
-  });
+  }, 200, req);
 });

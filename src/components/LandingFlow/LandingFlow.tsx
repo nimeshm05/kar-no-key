@@ -215,6 +215,11 @@ export default function LandingFlow() {
         return;
       }
 
+      if (!data.session_token) {
+        setError("Server did not return a session token");
+        return;
+      }
+
       setDisplayName(data.display_name);
       setLobbyCode(data.code);
       setLobbyId(data.lobby_id);
@@ -224,6 +229,7 @@ export default function LandingFlow() {
         lobbyCode: data.code,
         lobbyId: data.lobby_id,
         isHost: true,
+        sessionToken: data.session_token,
       });
       setStep("lobby");
       await fetchLobbyRoster(playerId, true);
@@ -317,6 +323,10 @@ export default function LandingFlow() {
           return false;
         }
 
+        if (!joinData.session_token) {
+          return false;
+        }
+
         setDisplayName(joinData.display_name);
         setLobbyCode(joinData.code);
         setLobbyId(joinData.lobby_id);
@@ -326,6 +336,7 @@ export default function LandingFlow() {
           lobbyCode: joinData.code,
           lobbyId: joinData.lobby_id,
           isHost: joinData.is_host,
+          sessionToken: joinData.session_token,
         });
       }
 

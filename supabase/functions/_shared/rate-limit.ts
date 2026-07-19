@@ -4,6 +4,8 @@ export type RateLimitResult =
   | { ok: true }
   | { ok: false; retryAfterSec: number };
 
+const FAIL_CLOSED_RETRY_SEC = 60;
+
 export async function checkRateLimit(
   supabase: SupabaseClient,
   key: string,
@@ -19,7 +21,8 @@ export async function checkRateLimit(
     .maybeSingle();
 
   if (selectError) {
-    return { ok: true };
+    console.error("rate_limit select failed", selectError.message);
+    return { ok: false, retryAfterSec: FAIL_CLOSED_RETRY_SEC };
   }
 
   if (!existing) {
@@ -30,7 +33,8 @@ export async function checkRateLimit(
     });
 
     if (insertError) {
-      return { ok: true };
+      console.error("rate_limit insert failed", insertError.message);
+      return { ok: false, retryAfterSec: FAIL_CLOSED_RETRY_SEC };
     }
 
     return { ok: true };
@@ -49,7 +53,8 @@ export async function checkRateLimit(
       .eq("key", key);
 
     if (resetError) {
-      return { ok: true };
+      console.error("rate_limit reset failed", resetError.message);
+      return { ok: false, retryAfterSec: FAIL_CLOSED_RETRY_SEC };
     }
 
     return { ok: true };
@@ -69,7 +74,8 @@ export async function checkRateLimit(
     .eq("key", key);
 
   if (updateError) {
-    return { ok: true };
+    console.error("rate_limit update failed", updateError.message);
+    return { ok: false, retryAfterSec: FAIL_CLOSED_RETRY_SEC };
   }
 
   return { ok: true };

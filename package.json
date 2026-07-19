@@ -15,6 +15,7 @@
     "test:display-name": "node supabase/functions/_shared/display-name.node.test.mjs",
     "test:scoring": "node --experimental-strip-types supabase/functions/_shared/scoring/scoring.node.test.mjs",
     "test:format-lobby-code": "node src/lib/lobby/formatLobbyCode.test.mjs",
+    "test:player-session": "node --test supabase/functions/_shared/player-session.node.test.mjs",
     "supabase:deploy": "bash scripts/deploy-hosted-supabase.sh"
   },
   "dependencies": {

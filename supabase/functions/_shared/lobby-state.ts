@@ -1,4 +1,8 @@
 import { createSupabaseAdmin } from "./supabase-admin.ts";
+import {
+  readSessionToken,
+  verifyPlayerSessionToken,
+} from "./player-session.ts";
 
 type PlayerRow = {
   id: string;
@@ -24,7 +28,27 @@ export type LobbyAuthResult =
 
 export async function requireLobbyPlayer(
   playerId: string,
+  sessionToken: string | null | undefined,
 ): Promise<LobbyAuthResult> {
+  if (!sessionToken) {
+    return { ok: false, status: 401, error: "Missing session token" };
+  }
+
+  let claims;
+  try {
+    claims = await verifyPlayerSessionToken(sessionToken);
+  } catch {
+    return { ok: false, status: 500, error: "Server configuration error" };
+  }
+
+  if (!claims) {
+    return { ok: false, status: 401, error: "Invalid or expired session token" };
+  }
+
+  if (claims.playerId !== playerId) {
+    return { ok: false, status: 401, error: "Session token does not match player" };
+  }
+
   let supabase;
   try {
     supabase = createSupabaseAdmin();
@@ -44,6 +68,10 @@ export async function requireLobbyPlayer(
 
   if (!player) {
     return { ok: false, status: 404, error: "Player is not in a lobby" };
+  }
+
+  if (player.lobby_id !== claims.lobbyId) {
+    return { ok: false, status: 401, error: "Session token does not match lobby" };
   }
 
   const { data: lobby, error: lobbyError } = await supabase
@@ -72,6 +100,12 @@ export async function requireLobbyPlayer(
     player: player as PlayerRow,
     lobby: lobby as LobbyRow,
   };
+}
+
+export function getSessionTokenFromBody(body: {
+  session_token?: unknown;
+}): string | null {
+  return readSessionToken(body);
 }
 
 export function getEffectiveLobbyStatus(

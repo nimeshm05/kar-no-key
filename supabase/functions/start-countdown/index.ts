@@ -1,6 +1,9 @@
 import { handleCors, jsonResponse } from "../_shared/cors.ts";
 import { isValidPlayerId } from "../_shared/player-id.ts";
-import { requireLobbyPlayer } from "../_shared/lobby-state.ts";
+import {
+  getSessionTokenFromBody,
+  requireLobbyPlayer,
+} from "../_shared/lobby-state.ts";
 
 const COUNTDOWN_SECONDS = 3;
 
@@ -15,33 +18,36 @@ Deno.serve(async (req) => {
   }
 
   if (req.method !== "POST") {
-    return jsonResponse({ error: "Method not allowed" }, 405);
+    return jsonResponse({ error: "Method not allowed" }, 405, req);
   }
 
   let body: StartCountdownRequest;
   try {
     body = await req.json();
   } catch {
-    return jsonResponse({ error: "Invalid JSON body" }, 400);
+    return jsonResponse({ error: "Invalid JSON body" }, 400, req);
   }
 
   if (!body.player_id || typeof body.player_id !== "string") {
-    return jsonResponse({ error: "Missing player_id" }, 400);
+    return jsonResponse({ error: "Missing player_id" }, 400, req);
   }
 
   if (!isValidPlayerId(body.player_id)) {
-    return jsonResponse({ error: "Invalid player_id format" }, 400);
+    return jsonResponse({ error: "Invalid player_id format" }, 400, req);
   }
 
-  const auth = await requireLobbyPlayer(body.player_id);
+  const auth = await requireLobbyPlayer(
+    body.player_id,
+    getSessionTokenFromBody(body),
+  );
   if (!auth.ok) {
-    return jsonResponse({ error: auth.error }, auth.status);
+    return jsonResponse({ error: auth.error }, auth.status, req);
   }
 
   const { supabase, player, lobby } = auth;
 
   if (!player.is_host) {
-    return jsonResponse({ error: "Only the host can start the countdown" }, 403);
+    return jsonResponse({ error: "Only the host can start the countdown" }, 403, req);
   }
 
   if (
@@ -52,11 +58,12 @@ Deno.serve(async (req) => {
     return jsonResponse(
       { error: "Countdown can only start when a song is selected" },
       403,
+      req,
     );
   }
 
   if (!lobby.selected_youtube_video_id) {
-    return jsonResponse({ error: "No song selected" }, 400);
+    return jsonResponse({ error: "No song selected" }, 400, req);
   }
 
   const now = new Date();
@@ -74,7 +81,7 @@ Deno.serve(async (req) => {
     .eq("id", lobby.id);
 
   if (updateError) {
-    return jsonResponse({ error: "Failed to start countdown" }, 500);
+    return jsonResponse({ error: "Failed to start countdown" }, 500, req);
   }
 
   return jsonResponse({
@@ -85,5 +92,5 @@ Deno.serve(async (req) => {
     playback_start_at: playbackStart.toISOString(),
     playback_elapsed_ms: playbackElapsedMs,
     server_now: now.toISOString(),
-  });
+  }, 200, req);
 });

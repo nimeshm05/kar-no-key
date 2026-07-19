@@ -1,3 +1,4 @@
+import { loadLobbySession } from "@/lib/player/session";
 import { getSupabaseClient } from "./client";
 
 export type ValidateLobbyCodeResult =
@@ -15,6 +16,7 @@ export type CreateLobbyResult =
       lobby_id: string;
       player_id: string;
       display_name: string;
+      session_token: string;
     }
   | { error: string };
 
@@ -25,6 +27,7 @@ export type JoinLobbyResult =
       player_id: string;
       display_name: string;
       is_host: boolean;
+      session_token: string;
     }
   | { error: string };
 
@@ -176,9 +179,19 @@ export type FunctionInvokeResult<T> = {
 async function invokeFunction<T>(
   functionName: string,
   body: Record<string, unknown>,
+  options?: { includeSessionToken?: boolean },
 ): Promise<FunctionInvokeResult<T>> {
+  const payload = { ...body };
+
+  if (options?.includeSessionToken !== false) {
+    const session = loadLobbySession();
+    if (session?.sessionToken) {
+      payload.session_token = session.sessionToken;
+    }
+  }
+
   const { data, error } = await getSupabaseClient().functions.invoke(functionName, {
-    body,
+    body: payload,
   });
 
   return {
@@ -190,21 +203,33 @@ async function invokeFunction<T>(
 export async function validateLobbyCode(
   code: string,
 ): Promise<FunctionInvokeResult<ValidateLobbyCodeResult>> {
-  return invokeFunction<ValidateLobbyCodeResult>("validate-lobby-code", { code });
+  return invokeFunction<ValidateLobbyCodeResult>(
+    "validate-lobby-code",
+    { code },
+    { includeSessionToken: false },
+  );
 }
 
 export async function generateLobbyCode(): Promise<FunctionInvokeResult<GenerateLobbyCodeResult>> {
-  return invokeFunction<GenerateLobbyCodeResult>("generate-lobby-code", {});
+  return invokeFunction<GenerateLobbyCodeResult>(
+    "generate-lobby-code",
+    {},
+    { includeSessionToken: false },
+  );
 }
 
 export async function createLobby(
   playerId: string,
   displayName: string,
 ): Promise<FunctionInvokeResult<CreateLobbyResult>> {
-  return invokeFunction<CreateLobbyResult>("create-lobby", {
-    player_id: playerId,
-    display_name: displayName,
-  });
+  return invokeFunction<CreateLobbyResult>(
+    "create-lobby",
+    {
+      player_id: playerId,
+      display_name: displayName,
+    },
+    { includeSessionToken: false },
+  );
 }
 
 export async function joinLobby(
@@ -212,11 +237,15 @@ export async function joinLobby(
   displayName: string,
   code: string,
 ): Promise<FunctionInvokeResult<JoinLobbyResult>> {
-  return invokeFunction<JoinLobbyResult>("join-lobby", {
-    player_id: playerId,
-    display_name: displayName,
-    code,
-  });
+  return invokeFunction<JoinLobbyResult>(
+    "join-lobby",
+    {
+      player_id: playerId,
+      display_name: displayName,
+      code,
+    },
+    { includeSessionToken: false },
+  );
 }
 
 export async function leaveLobby(

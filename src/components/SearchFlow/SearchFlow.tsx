@@ -12,12 +12,29 @@ import { getPlayerId } from "@/lib/player/identity";
 import { loadLobbySession, clearLobbySession } from "@/lib/player/session";
 import type { SongResult } from "@/lib/songs/searchSongs";
 import { getRecommendedSongs } from "@/lib/songs/getRecommendedSongs";
+import { searchSongs } from "@/lib/songs/searchSongs";
 import {
   getLobbyState,
   leaveLobby,
   selectSong,
   type LobbyPlayer,
 } from "@/lib/supabase/functions";
+
+const PAGE_SIZE = 6;
+
+function appendSongs(existing: SongResult[], incoming: SongResult[]): SongResult[] {
+  const seen = new Set(existing.map((song) => song.id));
+  const merged = [...existing];
+
+  for (const song of incoming) {
+    if (!seen.has(song.id)) {
+      merged.push(song);
+      seen.add(song.id);
+    }
+  }
+
+  return merged;
+}
 
 export default function SearchFlow() {
   const router = useRouter();
@@ -33,11 +50,22 @@ export default function SearchFlow() {
   const [lyricsStatusBySongId, setLyricsStatusBySongId] = useState<
     Record<string, "available" | "unavailable">
   >({});
-  const [recommendedSongs, setRecommendedSongs] = useState<SongResult[]>([]);
+  const [displaySongs, setDisplaySongs] = useState<SongResult[]>([]);
   const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(false);
   const [recommendationsError, setRecommendationsError] = useState<string | null>(
     null,
   );
+  const [hasSearched, setHasSearched] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
+  const [hasMoreSongs, setHasMoreSongs] = useState(false);
+  const [paginationOffset, setPaginationOffset] = useState(0);
+  const [searchNextPageToken, setSearchNextPageToken] = useState<
+    string | undefined
+  >(undefined);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [loadMoreError, setLoadMoreError] = useState<string | null>(null);
 
   const handleRouteFromStatus = useCallback(
     (status: string, songSelectionStarted: boolean) => {
@@ -148,8 +176,16 @@ export default function SearchFlow() {
     async function fetchRecommendations() {
       setIsLoadingRecommendations(true);
       setRecommendationsError(null);
+      setHasSearched(false);
+      setSearchQuery("");
+      setSearchError(null);
+      setLoadMoreError(null);
+      setSearchNextPageToken(undefined);
 
-      const result = await getRecommendedSongs(activePlayerId);
+      const result = await getRecommendedSongs(activePlayerId, {
+        offset: 0,
+        limit: PAGE_SIZE,
+      });
 
       if (cancelled) {
         return;
@@ -159,11 +195,15 @@ export default function SearchFlow() {
 
       if ("error" in result) {
         setRecommendationsError(result.error);
-        setRecommendedSongs([]);
+        setDisplaySongs([]);
+        setHasMoreSongs(false);
+        setPaginationOffset(0);
         return;
       }
 
-      setRecommendedSongs(result.songs);
+      setDisplaySongs(result.songs);
+      setHasMoreSongs(result.hasMore);
+      setPaginationOffset(result.songs.length);
     }
 
     void fetchRecommendations();
@@ -190,6 +230,86 @@ export default function SearchFlow() {
 
     clearLobbySession();
     router.replace("/");
+  }
+
+  async function handleSearch(query: string) {
+    if (!playerId || !isHost) {
+      return;
+    }
+
+    setIsSearching(true);
+    setSearchError(null);
+    setLoadMoreError(null);
+    setConfirmError(null);
+    setHasSearched(true);
+    setSearchQuery(query);
+    setSearchNextPageToken(undefined);
+    setPaginationOffset(0);
+
+    const result = await searchSongs(playerId, query, {
+      limit: PAGE_SIZE,
+      offset: 0,
+    });
+
+    setIsSearching(false);
+
+    if ("error" in result) {
+      setSearchError(result.error);
+      setDisplaySongs([]);
+      setHasMoreSongs(false);
+      return;
+    }
+
+    setDisplaySongs(result.songs);
+    setHasMoreSongs(result.hasMore);
+    setSearchNextPageToken(result.nextPageToken);
+    setPaginationOffset(result.songs.length);
+  }
+
+  async function handleLoadMore() {
+    if (!playerId || !isHost || isLoadingMore || !hasMoreSongs) {
+      return;
+    }
+
+    setIsLoadingMore(true);
+    setLoadMoreError(null);
+
+    if (hasSearched) {
+      const result = await searchSongs(playerId, searchQuery, {
+        limit: PAGE_SIZE,
+        offset: searchNextPageToken ? undefined : paginationOffset,
+        pageToken: searchNextPageToken,
+      });
+
+      setIsLoadingMore(false);
+
+      if ("error" in result) {
+        setLoadMoreError(result.error);
+        return;
+      }
+
+      setDisplaySongs((current) => appendSongs(current, result.songs));
+      setHasMoreSongs(result.hasMore);
+      setSearchNextPageToken(result.nextPageToken);
+      setPaginationOffset((current) => current + result.songs.length);
+      return;
+    }
+
+    const result = await getRecommendedSongs(playerId, {
+      offset: paginationOffset,
+      limit: PAGE_SIZE,
+    });
+
+    setIsLoadingMore(false);
+
+    if ("error" in result) {
+      setLoadMoreError(result.error);
+      return;
+    }
+
+    setDisplaySongs((current) => appendSongs(current, result.songs));
+    setHasMoreSongs(result.hasMore);
+    setPaginationOffset((current) => current + result.songs.length);
   }
 
   async function handleConfirmSelection(song: SongResult) {
@@ -241,16 +361,23 @@ export default function SearchFlow() {
     <SearchScreen
       displayName={displayName}
       isHost={isHost}
-      playerId={playerId ?? ""}
       players={players}
       isRosterLoading={isRosterLoading}
       rosterError={rosterError}
-      recommendedSongs={recommendedSongs}
+      displaySongs={displaySongs}
+      hasSearched={hasSearched}
+      isSearching={isSearching}
+      searchError={searchError}
       isLoadingRecommendations={isLoadingRecommendations}
       recommendationsError={recommendationsError}
+      hasMoreSongs={hasMoreSongs}
+      isLoadingMore={isLoadingMore}
+      loadMoreError={loadMoreError}
       isConfirming={isConfirming}
       confirmError={confirmError}
       lyricsStatusBySongId={lyricsStatusBySongId}
+      onSearch={handleSearch}
+      onLoadMore={handleLoadMore}
       onConfirmSelection={handleConfirmSelection}
       onExitLobby={handleExitLobby}
     />

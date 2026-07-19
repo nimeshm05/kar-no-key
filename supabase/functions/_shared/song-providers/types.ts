@@ -8,6 +8,16 @@ export type SongResult = {
   has_lyrics?: boolean;
 };
 
+export type PaginatedSongResults = {
+  songs: SongResult[];
+  has_more: boolean;
+  next_page_token?: string;
+};
+
 export type SongSearchProvider = {
-  searchSongs(query: string, limit: number): Promise<SongResult[]>;
+  searchSongs(
+    query: string,
+    limit: number,
+    options?: { offset?: number; pageToken?: string },
+  ): Promise<PaginatedSongResults>;
 };

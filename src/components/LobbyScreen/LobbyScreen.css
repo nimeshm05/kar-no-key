@@ -12,6 +12,7 @@
   justify-content: center;
   width: 100%;
   padding: 60px 0;
+  padding-top: calc(var(--navbar-height) + 60px);
 }
 
 .lobby-screen__align {
@@ -105,13 +106,6 @@
   width: 100%;
 }
 
-.lobby-screen__roster {
-  position: absolute;
-  right: var(--layout-content-inset);
-  top: 0;
-  width: 248px;
-}
-
 .lobby-screen--modal-open .lobby-screen__body,
 .lobby-screen--modal-open .navbar {
   pointer-events: none;
@@ -119,7 +113,7 @@
 
 @media (max-width: 720px) {
   .lobby-screen__body {
-    padding: 40px var(--size-20);
+    padding: calc(var(--navbar-height) + 40px) var(--size-20) 40px;
   }
 
   .lobby-screen__align {
@@ -135,13 +129,5 @@
   .lobby-screen__main {
     width: 100%;
     max-width: 292px;
-  }
-
-  .lobby-screen__roster {
-    position: static;
-    right: auto;
-    top: auto;
-    width: 100%;
-    margin-top: 40px;
   }
 }

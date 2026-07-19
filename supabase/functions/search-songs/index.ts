@@ -11,12 +11,32 @@ const PLAYER_LIMIT = 10;
 const PLAYER_WINDOW_MS = 60_000;
 const IP_LIMIT = 30;
 const IP_WINDOW_MS = 60_000;
+const DEFAULT_PAGE_SIZE = 6;
+const MAX_PAGE_SIZE = 25;
 
 type SearchSongsRequest = {
   player_id?: string;
   query?: string;
   limit?: number;
+  offset?: number;
+  page_token?: string;
 };
+
+function clampLimit(limit: number | undefined): number {
+  if (limit === undefined) {
+    return DEFAULT_PAGE_SIZE;
+  }
+
+  return Math.min(Math.max(limit, 1), MAX_PAGE_SIZE);
+}
+
+function clampOffset(offset: number | undefined): number {
+  if (offset === undefined) {
+    return 0;
+  }
+
+  return Math.max(offset, 0);
+}
 
 Deno.serve(async (req) => {
   const corsResponse = handleCors(req);
@@ -49,6 +69,14 @@ Deno.serve(async (req) => {
 
   if (body.limit !== undefined && typeof body.limit !== "number") {
     return jsonResponse({ error: "limit must be a number" }, 400);
+  }
+
+  if (body.offset !== undefined && typeof body.offset !== "number") {
+    return jsonResponse({ error: "offset must be a number" }, 400);
+  }
+
+  if (body.page_token !== undefined && typeof body.page_token !== "string") {
+    return jsonResponse({ error: "page_token must be a string" }, 400);
   }
 
   const auth = await requireLobbyPlayer(body.player_id);
@@ -109,15 +137,19 @@ Deno.serve(async (req) => {
   }
 
   const query = body.query ?? "";
-  const limit = body.limit ?? 10;
+  const limit = clampLimit(body.limit);
+  const offset = clampOffset(body.offset);
 
   if (!query.trim()) {
     return jsonResponse({ error: "Search query is required" }, 400);
   }
 
   try {
-    const songs = await searchSongs(query, limit);
-    return jsonResponse({ songs });
+    const result = await searchSongs(query, limit, {
+      offset,
+      pageToken: body.page_token,
+    });
+    return jsonResponse(result);
   } catch (error) {
     if (error instanceof Error) {
       return jsonResponse({ error: error.message }, 500);

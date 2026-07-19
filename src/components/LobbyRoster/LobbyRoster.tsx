@@ -37,51 +37,76 @@ export default function LobbyRoster({
   return (
     <aside className={rosterClasses}>
       {isGameVariant ? (
-        <div className="lobby-roster__header lobby-roster__header--game text-body">
-          <span>players</span>
-          <span>score</span>
-        </div>
+        <>
+          <p className="lobby-roster__title text-body">Score Card</p>
+          <div className="lobby-roster__game-table">
+            <div className="lobby-roster__header lobby-roster__header--game text-body">
+              <span>players</span>
+              <span>score</span>
+            </div>
+
+            {error ? (
+              <p className="lobby-roster__error text-body" role="alert">
+                {error}
+              </p>
+            ) : null}
+
+            {showRosterList ? (
+              <ul className="lobby-roster__list">
+                {sortedPlayers.map((player) => (
+                  <li
+                    key={player.player_id}
+                    className="lobby-roster__player text-button-label"
+                  >
+                    <span className="lobby-roster__name">
+                      {player.display_name.toLowerCase()}
+                    </span>
+                    <span
+                      key={`${player.player_id}-${player.score ?? 0}`}
+                      className="lobby-roster__score lobby-roster__score--updated"
+                    >
+                      {player.score ?? 0}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
+        </>
       ) : (
-        <div className="lobby-roster__header text-body">
-          <span>players joined</span>
-          <span>
-            {playerCount}/{LOBBY_MAX_PLAYERS}
-          </span>
-        </div>
-      )}
+        <>
+          <div className="lobby-roster__header text-body">
+            <span>players joined</span>
+            <span>
+              {playerCount}/{LOBBY_MAX_PLAYERS}
+            </span>
+          </div>
 
-      {error ? (
-        <p className="lobby-roster__error text-body" role="alert">
-          {error}
-        </p>
-      ) : null}
+          {error ? (
+            <p className="lobby-roster__error text-body" role="alert">
+              {error}
+            </p>
+          ) : null}
 
-      {showRosterList ? (
-        <ul className="lobby-roster__list">
-          {sortedPlayers.map((player) => (
-            <li
-              key={player.player_id}
-              className="lobby-roster__player text-button-label"
-            >
-              <span className="lobby-roster__name">
-                {player.display_name.toLowerCase()}
-              </span>
-              {isGameVariant ? (
-                <span
-                  key={`${player.player_id}-${player.score ?? 0}`}
-                  className="lobby-roster__score lobby-roster__score--updated"
+          {showRosterList ? (
+            <ul className="lobby-roster__list">
+              {sortedPlayers.map((player) => (
+                <li
+                  key={player.player_id}
+                  className="lobby-roster__player text-button-label"
                 >
-                  {player.score ?? 0}
-                </span>
-              ) : (
-                <span className="lobby-roster__role">
-                  {player.is_host ? "host" : "player"}
-                </span>
-              )}
-            </li>
-          ))}
-        </ul>
-      ) : null}
+                  <span className="lobby-roster__name">
+                    {player.display_name.toLowerCase()}
+                  </span>
+                  <span className="lobby-roster__role">
+                    {player.is_host ? "host" : "player"}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </>
+      )}
     </aside>
   );
 }

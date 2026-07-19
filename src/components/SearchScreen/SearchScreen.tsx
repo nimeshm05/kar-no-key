@@ -4,26 +4,32 @@ import { useState } from "react";
 import AnimatedEllipsis from "@/components/AnimatedEllipsis/AnimatedEllipsis";
 import Button from "@/components/Button/Button";
 import InputField from "@/components/InputField/InputField";
-import LobbyRoster from "@/components/LobbyRoster/LobbyRoster";
 import Navbar from "@/components/Navbar/Navbar";
 import SongCard from "@/components/SongCard/SongCard";
-import { searchSongs, type SongResult } from "@/lib/songs/searchSongs";
+import type { SongResult } from "@/lib/songs/searchSongs";
 import type { LobbyPlayer } from "@/lib/supabase/functions";
 import "./SearchScreen.css";
 
 type SearchScreenProps = {
   displayName: string;
   isHost: boolean;
-  playerId: string;
   players: LobbyPlayer[];
   isRosterLoading: boolean;
   rosterError: string | null;
-  recommendedSongs: SongResult[];
+  displaySongs: SongResult[];
+  hasSearched: boolean;
+  isSearching: boolean;
+  searchError: string | null;
   isLoadingRecommendations: boolean;
   recommendationsError: string | null;
+  hasMoreSongs: boolean;
+  isLoadingMore: boolean;
+  loadMoreError: string | null;
   isConfirming: boolean;
   confirmError: string | null;
   lyricsStatusBySongId?: Record<string, "available" | "unavailable">;
+  onSearch: (query: string) => void | Promise<void>;
+  onLoadMore: () => void | Promise<void>;
   onConfirmSelection: (song: SongResult) => void;
   onExitLobby: () => void;
 };
@@ -41,43 +47,36 @@ function formatDuration(seconds?: number): string | null {
 export default function SearchScreen({
   displayName,
   isHost,
-  playerId,
   players,
   isRosterLoading,
   rosterError,
-  recommendedSongs,
+  displaySongs,
+  hasSearched,
+  isSearching,
+  searchError,
   isLoadingRecommendations,
   recommendationsError,
+  hasMoreSongs,
+  isLoadingMore,
+  loadMoreError,
   isConfirming,
   confirmError,
   lyricsStatusBySongId = {},
+  onSearch,
+  onLoadMore,
   onConfirmSelection,
   onExitLobby,
 }: SearchScreenProps) {
   const [query, setQuery] = useState("");
-  const [songs, setSongs] = useState<SongResult[]>([]);
   const [selectedSong, setSelectedSong] = useState<SongResult | null>(null);
-  const [isSearching, setIsSearching] = useState(false);
-  const [searchError, setSearchError] = useState<string | null>(null);
-  const [hasSearched, setHasSearched] = useState(false);
 
   async function handleSearch() {
-    setIsSearching(true);
-    setSearchError(null);
-    setSelectedSong(null);
-
-    const result = await searchSongs(playerId, query);
-
-    setIsSearching(false);
-    setHasSearched(true);
-
-    if ("error" in result) {
-      setSearchError(result.error);
-      setSongs([]);
+    if (isSearching) {
       return;
     }
 
-    setSongs(result.songs);
+    setSelectedSong(null);
+    await onSearch(query);
   }
 
   function handleQueryKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
@@ -95,30 +94,41 @@ export default function SearchScreen({
     onConfirmSelection(song);
   }
 
-  const displaySongs = hasSearched ? songs : recommendedSongs;
   const showRecommendationsLoading = !hasSearched && isLoadingRecommendations;
   const showSongGrid =
     !showRecommendationsLoading && displaySongs.length > 0;
+  const showLoadMore = isHost && showSongGrid && hasMoreSongs;
+  const subtitle =
+    players.length > 1
+      ? "Your frens are waiting for you to select a song."
+      : "Select song and start racing.";
 
   return (
     <main className="search-screen">
-      <Navbar displayName={displayName} onExitLobby={onExitLobby} />
+      <Navbar
+        displayName={displayName}
+        players={players}
+        isRosterLoading={isRosterLoading}
+        rosterError={rosterError}
+        onExitLobby={onExitLobby}
+      />
 
       <div className="search-screen__body">
         <div className="search-screen__container">
           {isHost ? (
             <section className="search-screen__main">
               <div className="search-screen__search-header">
-                <h2 className="search-screen__title text-heading-2">
-                  SEARCH A SONG
-                </h2>
+                <div className="search-screen__heading">
+                  <h2 className="search-screen__title text-heading-1">Song?</h2>
+                  <p className="search-screen__subtitle">{subtitle}</p>
+                </div>
                 <div className="search-screen__search-bar">
                   <InputField
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
                     onKeyDown={handleQueryKeyDown}
-                    placeholder="artists or songs"
-                    aria-label="artists or songs"
+                    placeholder="search for artists or songs"
+                    aria-label="search for artists or songs"
                     className="search-screen__search-input"
                     disabled={isSearching}
                   />
@@ -159,14 +169,14 @@ export default function SearchScreen({
                 />
               ) : null}
 
-              {!searchError && hasSearched && !isSearching && songs.length === 0 ? (
+              {!searchError && hasSearched && !isSearching && displaySongs.length === 0 ? (
                 <p className="search-screen__message text-body">
                   no songs found. try a different search.
                 </p>
               ) : null}
 
               {showSongGrid ? (
-                <>
+                <div className="search-screen__results-section">
                   <div
                     className={[
                       "search-screen__results",
@@ -186,12 +196,35 @@ export default function SearchScreen({
                       />
                     ))}
                   </div>
+
                   {confirmError ? (
                     <p className="search-screen__message text-body" role="alert">
                       {confirmError}
                     </p>
                   ) : null}
-                </>
+
+                  {loadMoreError ? (
+                    <p className="search-screen__message text-body" role="alert">
+                      {loadMoreError}
+                    </p>
+                  ) : null}
+
+                  {showLoadMore ? (
+                    <Button
+                      variant="secondary"
+                      type="button"
+                      className="search-screen__load-more"
+                      onClick={() => void onLoadMore()}
+                      disabled={isLoadingMore}
+                    >
+                      {isLoadingMore ? (
+                        <AnimatedEllipsis label="loading" />
+                      ) : (
+                        "load more"
+                      )}
+                    </Button>
+                  ) : null}
+                </div>
               ) : null}
             </section>
           ) : (
@@ -201,13 +234,6 @@ export default function SearchScreen({
               </p>
             </section>
           )}
-
-          <LobbyRoster
-            className="search-screen__roster"
-            players={players}
-            isLoading={isRosterLoading}
-            error={rosterError}
-          />
         </div>
       </div>
     </main>

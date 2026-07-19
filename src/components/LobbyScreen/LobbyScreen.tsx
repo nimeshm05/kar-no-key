@@ -5,7 +5,6 @@ import AnimatedEllipsis from "@/components/AnimatedEllipsis/AnimatedEllipsis";
 import Button from "@/components/Button/Button";
 import JoinCodeModal from "@/components/JoinCodeModal/JoinCodeModal";
 import type { JoinModalPhase } from "@/components/JoinCodeModal/JoinCodeModal";
-import LobbyRoster from "@/components/LobbyRoster/LobbyRoster";
 import Navbar from "@/components/Navbar/Navbar";
 import type { LobbyPlayer } from "@/lib/supabase/functions";
 import { normalizeLobbyCodeInput } from "@/lib/lobby/lobbyCode";
@@ -104,7 +103,13 @@ export default function LobbyScreen({
     <main
       className={`lobby-screen${isModalOpen ? " lobby-screen--modal-open" : ""}`}
     >
-      <Navbar displayName={displayName} onExitLobby={onExitLobby} />
+      <Navbar
+        displayName={displayName}
+        players={players}
+        isRosterLoading={isRosterLoading}
+        rosterError={rosterError}
+        onExitLobby={onExitLobby}
+      />
 
       <div className="lobby-screen__body">
         <div className="lobby-screen__align">
@@ -161,13 +166,6 @@ export default function LobbyScreen({
               </div>
             </section>
           </div>
-
-          <LobbyRoster
-            className="lobby-screen__roster"
-            players={players}
-            isLoading={isRosterLoading}
-            error={rosterError}
-          />
         </div>
       </div>
 

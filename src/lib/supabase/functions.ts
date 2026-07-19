@@ -77,11 +77,11 @@ export type SongResult = {
 };
 
 export type SearchSongsResult =
-  | { songs: SongResult[] }
+  | { songs: SongResult[]; has_more: boolean; next_page_token?: string }
   | { error: string };
 
 export type GetRecommendedSongsResult =
-  | { songs: SongResult[] }
+  | { songs: SongResult[]; has_more: boolean }
   | { error: string };
 
 export type LyricPhrase = {
@@ -254,20 +254,32 @@ export async function startSongSelection(
 export async function searchSongs(
   playerId: string,
   query: string,
-  limit?: number,
+  options?: {
+    limit?: number;
+    offset?: number;
+    pageToken?: string;
+  },
 ): Promise<FunctionInvokeResult<SearchSongsResult>> {
   return invokeFunction<SearchSongsResult>("search-songs", {
     player_id: playerId,
     query,
-    limit,
+    limit: options?.limit,
+    offset: options?.offset,
+    page_token: options?.pageToken,
   });
 }
 
 export async function getRecommendedSongs(
   playerId: string,
+  options?: {
+    offset?: number;
+    limit?: number;
+  },
 ): Promise<FunctionInvokeResult<GetRecommendedSongsResult>> {
   return invokeFunction<GetRecommendedSongsResult>("get-recommended-songs", {
     player_id: playerId,
+    offset: options?.offset,
+    limit: options?.limit,
   });
 }
 

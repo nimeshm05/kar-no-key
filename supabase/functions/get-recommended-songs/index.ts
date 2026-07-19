@@ -6,10 +6,30 @@ import { getRecommendedSongs } from "../_shared/song-providers/index.ts";
 
 const PLAYER_LIMIT = 10;
 const PLAYER_WINDOW_MS = 60_000;
+const DEFAULT_PAGE_SIZE = 6;
+const MAX_PAGE_SIZE = 25;
 
 type GetRecommendedSongsRequest = {
   player_id?: string;
+  offset?: number;
+  limit?: number;
 };
+
+function clampLimit(limit: number | undefined): number {
+  if (limit === undefined) {
+    return DEFAULT_PAGE_SIZE;
+  }
+
+  return Math.min(Math.max(limit, 1), MAX_PAGE_SIZE);
+}
+
+function clampOffset(offset: number | undefined): number {
+  if (offset === undefined) {
+    return 0;
+  }
+
+  return Math.max(offset, 0);
+}
 
 Deno.serve(async (req) => {
   const corsResponse = handleCors(req);
@@ -34,6 +54,14 @@ Deno.serve(async (req) => {
 
   if (!isValidPlayerId(body.player_id)) {
     return jsonResponse({ error: "Invalid player_id format" }, 400);
+  }
+
+  if (body.offset !== undefined && typeof body.offset !== "number") {
+    return jsonResponse({ error: "offset must be a number" }, 400);
+  }
+
+  if (body.limit !== undefined && typeof body.limit !== "number") {
+    return jsonResponse({ error: "limit must be a number" }, 400);
   }
 
   const auth = await requireLobbyPlayer(body.player_id);
@@ -74,9 +102,12 @@ Deno.serve(async (req) => {
     );
   }
 
+  const offset = clampOffset(body.offset);
+  const limit = clampLimit(body.limit);
+
   try {
-    const songs = await getRecommendedSongs();
-    return jsonResponse({ songs });
+    const result = await getRecommendedSongs(offset, limit);
+    return jsonResponse(result);
   } catch (error) {
     if (error instanceof Error) {
       return jsonResponse({ error: error.message }, 500);

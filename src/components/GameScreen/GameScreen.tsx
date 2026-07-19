@@ -295,15 +295,21 @@ export default function GameScreen({
   const showCountdown = isCountdown && countdownValue !== null && countdownValue > 0;
 
   const marqueeStyle: CSSProperties | undefined = isMarqueeActive
-    ? {
+    ? ({
         "--marquee-distance": `${marqueeDistance}px`,
         "--marquee-duration": `${marqueeDuration}s`,
-      }
+      } as CSSProperties)
     : undefined;
 
   return (
     <main className="game-screen">
-      <Navbar displayName={displayName} onExitLobby={onExitLobby} />
+      <Navbar
+        displayName={displayName}
+        players={players}
+        isRosterLoading={isRosterLoading}
+        rosterError={rosterError}
+        onExitLobby={onExitLobby}
+      />
 
       <YouTubePlayer
         videoId={song.youtube_video_id}
@@ -324,72 +330,71 @@ export default function GameScreen({
                 ) : (
                   <div className="game-screen__thumbnail-placeholder" aria-hidden="true" />
                 )}
-                <div
-                  ref={titleContainerRef}
-                  className="game-screen__song-title"
-                  title={song.title}
-                >
+                <div className="game-screen__song-info">
                   <div
-                    ref={titleTrackRef}
-                    className={[
-                      "game-screen__song-title-track",
-                      isMarqueeActive ? "game-screen__song-title-track--marquee" : "",
-                    ]
-                      .filter(Boolean)
-                      .join(" ")}
-                    style={marqueeStyle}
+                    ref={titleContainerRef}
+                    className="game-screen__song-title"
+                    title={song.title}
                   >
-                    <span
-                      ref={titleTextRef}
-                      className="game-screen__song-title-text text-heading-3"
+                    <div
+                      ref={titleTrackRef}
+                      className={[
+                        "game-screen__song-title-track",
+                        isMarqueeActive ? "game-screen__song-title-track--marquee" : "",
+                      ]
+                        .filter(Boolean)
+                        .join(" ")}
+                      style={marqueeStyle}
                     >
-                      {song.title}
-                    </span>
-                    {isMarqueeActive ? (
-                      <>
-                        <span
-                          className="game-screen__song-title-gap"
-                          aria-hidden="true"
-                        />
-                        <span
-                          className="game-screen__song-title-text text-heading-3"
-                          aria-hidden="true"
-                        >
-                          {song.title}
-                        </span>
-                      </>
-                    ) : null}
+                      <span
+                        ref={titleTextRef}
+                        className="game-screen__song-title-text text-heading-3"
+                      >
+                        {song.title}
+                      </span>
+                      {isMarqueeActive ? (
+                        <>
+                          <span
+                            className="game-screen__song-title-gap"
+                            aria-hidden="true"
+                          />
+                          <span
+                            className="game-screen__song-title-text text-heading-3"
+                            aria-hidden="true"
+                          >
+                            {song.title}
+                          </span>
+                        </>
+                      ) : null}
+                    </div>
                   </div>
+                  <p className="game-screen__timer text-button-label">
+                    {formatTime(elapsedSeconds)} / {formatTime(durationSeconds)}
+                  </p>
                 </div>
               </div>
 
-              <div className="game-screen__controls">
-                <p className="game-screen__timer text-button-label">
-                  {formatTime(elapsedSeconds)} / {formatTime(durationSeconds)}
-                </p>
-
-                {isHost ? (
-                  <div className="game-screen__host-controls">
-                    <IconButton
-                      variant="secondary"
-                      type="button"
-                      iconSrc={isPlaying ? "/icons/pause.svg" : "/icons/play_arrow.svg"}
-                      iconAlt={isPlaying ? "pause" : "play"}
-                      onClick={handleTransportClick}
-                      disabled={isControlPending || isCountdown}
-                    />
-                    <Button
-                      variant="primary"
-                      type="button"
-                      className="game-screen__end-song-button"
-                      onClick={onEndSong}
-                      disabled={isControlPending}
-                    >
-                      end song
-                    </Button>
-                  </div>
-                ) : null}
-              </div>
+              {isHost ? (
+                <div className="game-screen__host-controls">
+                  <IconButton
+                    variant="secondary"
+                    type="button"
+                    iconSrc={isPlaying ? "/icons/pause.svg" : "/icons/play_arrow.svg"}
+                    iconAlt={isPlaying ? "pause" : "play"}
+                    onClick={handleTransportClick}
+                    disabled={isControlPending || isCountdown}
+                  />
+                  <Button
+                    variant="primary"
+                    type="button"
+                    className="game-screen__end-song-button"
+                    onClick={onEndSong}
+                    disabled={isControlPending}
+                  >
+                    end song
+                  </Button>
+                </div>
+              ) : null}
             </div>
 
             {controlError ? (
@@ -398,33 +403,35 @@ export default function GameScreen({
               </p>
             ) : null}
 
-            <div className="game-screen__panel">
-              {showCountdown ? (
-                <p className="game-screen__countdown text-heading-1" aria-live="polite">
-                  {countdownValue}
-                </p>
-              ) : isPlaying && activePhrase ? (
-                <PhraseTypingArea
-                  phraseText={activePhrase.text}
-                  typedText={typedText}
-                  onTypedTextChange={setTypedText}
-                  isLocked={isPhraseLocked}
-                />
-              ) : (
-                <p className="game-screen__ready-message text-heading-2">
-                  get ready...
-                </p>
-              )}
+            <div className="game-screen__content">
+              <div className="game-screen__panel">
+                {showCountdown ? (
+                  <p className="game-screen__countdown text-heading-1" aria-live="polite">
+                    {countdownValue}
+                  </p>
+                ) : isPlaying && activePhrase ? (
+                  <PhraseTypingArea
+                    phraseText={activePhrase.text}
+                    typedText={typedText}
+                    onTypedTextChange={setTypedText}
+                    isLocked={isPhraseLocked}
+                  />
+                ) : (
+                  <p className="game-screen__ready-message text-body">
+                    get ready...
+                  </p>
+                )}
+              </div>
+
+              <LobbyRoster
+                className="game-screen__roster"
+                variant="game"
+                players={players}
+                isLoading={isRosterLoading}
+                error={rosterError}
+              />
             </div>
           </section>
-
-          <LobbyRoster
-            className="game-screen__roster"
-            variant="game"
-            players={players}
-            isLoading={isRosterLoading}
-            error={rosterError}
-          />
         </div>
       </div>
     </main>

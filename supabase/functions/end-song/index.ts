@@ -1,6 +1,7 @@
 import { handleCors, jsonResponse } from "../_shared/cors.ts";
 import { isValidPlayerId } from "../_shared/player-id.ts";
 import { requireLobbyPlayer } from "../_shared/lobby-state.ts";
+import { clearLobbyGameData } from "../_shared/scoring/reset.ts";
 
 type EndSongRequest = {
   player_id?: string;
@@ -46,7 +47,14 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: "No song is currently selected" }, 400);
   }
 
+  const endedVideoId = lobby.selected_youtube_video_id;
   const now = new Date();
+
+  try {
+    await clearLobbyGameData(supabase, lobby.id, endedVideoId);
+  } catch {
+    return jsonResponse({ error: "Failed to reset game scores" }, 500);
+  }
 
   const { error: updateError } = await supabase
     .from("lobbies")

@@ -62,7 +62,7 @@
 
 .song-card__title {
   margin: 0;
-  color: var(--color-text-primary);
+  color: var(--color-accent-green);
   word-break: break-word;
 }
 

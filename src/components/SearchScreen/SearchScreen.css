@@ -11,11 +11,11 @@
   justify-content: center;
   width: 100%;
   padding: 0;
+  padding-top: var(--navbar-height);
 }
 
 .search-screen__container {
   display: flex;
-  gap: 120px;
   align-items: flex-start;
   width: var(--layout-content-width);
   max-width: 100%;
@@ -27,7 +27,7 @@
   flex-direction: column;
   gap: 60px;
   min-width: 0;
-  padding: 80px 0;
+  padding: 60px 0;
   width: 100%;
 }
 
@@ -39,8 +39,15 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 8px;
+  gap: 20px;
   width: 100%;
+}
+
+.search-screen__heading {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
 }
 
 .search-screen__title {
@@ -48,10 +55,19 @@
   margin: 0;
 }
 
+.search-screen__subtitle {
+  margin: 0;
+  font-family: var(--family-mono);
+  font-size: var(--size-18);
+  font-weight: var(--weight-regular);
+  line-height: var(--line-18);
+  color: var(--color-text-primary);
+}
+
 .search-screen__search-bar {
   display: flex;
   gap: 12px;
-  align-items: flex-start;
+  align-items: stretch;
   width: 100%;
 }
 
@@ -64,11 +80,21 @@
 .search-screen__search-button {
   flex-shrink: 0;
   width: 216px;
+  white-space: nowrap;
+  min-height: calc(var(--size-16) * 2 + var(--line-16));
+}
+
+.search-screen__results-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 40px;
+  width: 100%;
 }
 
 .search-screen__results {
   display: grid;
-  grid-template-columns: repeat(1, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 20px;
   width: 100%;
 }
@@ -76,6 +102,10 @@
 .search-screen__results--searching {
   opacity: 0.5;
   pointer-events: none;
+}
+
+.search-screen__load-more {
+  flex-shrink: 0;
 }
 
 .search-screen__message {
@@ -89,30 +119,16 @@
   width: 100%;
 }
 
-.search-screen__roster {
-  flex-shrink: 0;
-  width: 248px;
-  padding: 80px 0;
-}
-
 @media (max-width: 720px) {
   .search-screen__body {
-    padding: 40px var(--size-20);
+    padding: calc(var(--navbar-height) + 40px) var(--size-20) 40px;
   }
 
   .search-screen__container {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 40px;
     width: 100%;
   }
 
   .search-screen__main {
-    padding: 0;
-  }
-
-  .search-screen__roster {
-    width: 100%;
     padding: 0;
   }
 

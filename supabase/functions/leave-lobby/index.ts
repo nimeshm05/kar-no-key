@@ -1,10 +1,34 @@
 import { handleCors, jsonResponse } from "../_shared/cors.ts";
 import { isValidPlayerId } from "../_shared/player-id.ts";
+import { clearPlayerGameData } from "../_shared/scoring/reset.ts";
 import { createSupabaseAdmin } from "../_shared/supabase-admin.ts";
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
 
 type LeaveLobbyRequest = {
   player_id?: string;
 };
+
+async function removePlayer(
+  supabase: SupabaseClient,
+  playerId: string,
+): Promise<string | null> {
+  try {
+    await clearPlayerGameData(supabase, playerId);
+  } catch {
+    return "Failed to clear player game data";
+  }
+
+  const { error: deletePlayerError } = await supabase
+    .from("players")
+    .delete()
+    .eq("id", playerId);
+
+  if (deletePlayerError) {
+    return "Failed to leave lobby";
+  }
+
+  return null;
+}
 
 Deno.serve(async (req) => {
   const corsResponse = handleCors(req);
@@ -68,13 +92,9 @@ Deno.serve(async (req) => {
   }
 
   if (!lobby) {
-    const { error: deletePlayerError } = await supabase
-      .from("players")
-      .delete()
-      .eq("id", body.player_id);
-
-    if (deletePlayerError) {
-      return jsonResponse({ error: "Failed to leave lobby" }, 500);
+    const removeError = await removePlayer(supabase, body.player_id);
+    if (removeError) {
+      return jsonResponse({ error: removeError }, 500);
     }
 
     return jsonResponse({
@@ -86,13 +106,9 @@ Deno.serve(async (req) => {
   }
 
   if (lobby.status === "closed") {
-    const { error: deletePlayerError } = await supabase
-      .from("players")
-      .delete()
-      .eq("id", body.player_id);
-
-    if (deletePlayerError) {
-      return jsonResponse({ error: "Failed to leave lobby" }, 500);
+    const removeError = await removePlayer(supabase, body.player_id);
+    if (removeError) {
+      return jsonResponse({ error: removeError }, 500);
     }
 
     return jsonResponse({
@@ -117,6 +133,12 @@ Deno.serve(async (req) => {
     }
 
     if (!otherPlayers || otherPlayers.length === 0) {
+      try {
+        await clearPlayerGameData(supabase, body.player_id);
+      } catch {
+        return jsonResponse({ error: "Failed to clear player game data" }, 500);
+      }
+
       const { error: deleteLobbyError } = await supabase
         .from("lobbies")
         .delete()
@@ -164,13 +186,9 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Failed to transfer host" }, 500);
     }
 
-    const { error: deleteHostError } = await supabase
-      .from("players")
-      .delete()
-      .eq("id", body.player_id);
-
-    if (deleteHostError) {
-      return jsonResponse({ error: "Failed to leave lobby" }, 500);
+    const removeError = await removePlayer(supabase, body.player_id);
+    if (removeError) {
+      return jsonResponse({ error: removeError }, 500);
     }
 
     return jsonResponse({
@@ -182,13 +200,9 @@ Deno.serve(async (req) => {
     });
   }
 
-  const { error: deletePlayerError } = await supabase
-    .from("players")
-    .delete()
-    .eq("id", body.player_id);
-
-  if (deletePlayerError) {
-    return jsonResponse({ error: "Failed to leave lobby" }, 500);
+  const removeError = await removePlayer(supabase, body.player_id);
+  if (removeError) {
+    return jsonResponse({ error: removeError }, 500);
   }
 
   return jsonResponse({

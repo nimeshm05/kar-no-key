@@ -1,5 +1,9 @@
 import { RECOMMENDED_VIDEO_IDS } from "../recommended-songs.ts";
-import type { SongResult, SongSearchProvider } from "./types.ts";
+import type {
+  PaginatedSongResults,
+  SongResult,
+  SongSearchProvider,
+} from "./types.ts";
 
 const YOUTUBE_API_BASE = "https://www.googleapis.com/youtube/v3";
 
@@ -141,15 +145,33 @@ async function fetchVideoDurations(
   return durations;
 }
 
-export async function getYouTubeRecommendedSongs(): Promise<SongResult[]> {
-  return fetchYouTubeVideosMetadata([...RECOMMENDED_VIDEO_IDS]);
+export async function getYouTubeRecommendedSongs(
+  offset = 0,
+  limit = 6,
+): Promise<PaginatedSongResults> {
+  const clampedOffset = Math.max(offset, 0);
+  const clampedLimit = Math.min(Math.max(limit, 1), 25);
+  const videoIds = [...RECOMMENDED_VIDEO_IDS].slice(
+    clampedOffset,
+    clampedOffset + clampedLimit,
+  );
+  const songs = await fetchYouTubeVideosMetadata(videoIds);
+
+  return {
+    songs,
+    has_more: clampedOffset + videoIds.length < RECOMMENDED_VIDEO_IDS.length,
+  };
 }
 
 export const youtubeSongProvider: SongSearchProvider = {
-  async searchSongs(query: string, limit: number): Promise<SongResult[]> {
+  async searchSongs(
+    query: string,
+    limit: number,
+    options: { offset?: number; pageToken?: string } = {},
+  ): Promise<PaginatedSongResults> {
     const trimmed = query.trim();
     if (!trimmed) {
-      return [];
+      return { songs: [], has_more: false };
     }
 
     const searchQuery = trimmed.toLowerCase().includes("lyric")
@@ -164,6 +186,10 @@ export const youtubeSongProvider: SongSearchProvider = {
       maxResults: String(Math.min(limit, 25)),
       key: getApiKey(),
     });
+
+    if (options.pageToken) {
+      params.set("pageToken", options.pageToken);
+    }
 
     const response = await fetch(
       `${YOUTUBE_API_BASE}/search?${params.toString()}`,
@@ -184,7 +210,7 @@ export const youtubeSongProvider: SongSearchProvider = {
 
     const durations = await fetchVideoDurations(videoIds);
 
-    return items
+    const songs = items
       .map((item) => {
         const videoId = item.id?.videoId;
         if (!videoId || !item.snippet?.title) {
@@ -202,5 +228,14 @@ export const youtubeSongProvider: SongSearchProvider = {
         } satisfies SongResult;
       })
       .filter((song): song is SongResult => song !== null);
+
+    const nextPageToken =
+      typeof data.nextPageToken === "string" ? data.nextPageToken : undefined;
+
+    return {
+      songs,
+      has_more: Boolean(nextPageToken),
+      next_page_token: nextPageToken,
+    };
   },
 };

@@ -3,6 +3,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import SearchScreen from "@/components/SearchScreen/SearchScreen";
+import {
+  identifyPlayer,
+  setLobbyGroup,
+  trackEvent,
+} from "@/lib/analytics/amplitude";
+import { AnalyticsEvent } from "@/lib/analytics/events";
 import { getRouteForLobbyStatus, getErrorMessage } from "@/lib/lobby/lobbyRoute";
 import {
   useLobbyStatePolling,
@@ -235,6 +241,15 @@ export default function SearchFlow() {
           setRosterError(getErrorMessage(invokeError, data));
           return;
         }
+
+        trackEvent(AnalyticsEvent.LobbyLeft, {
+          source_screen: "search",
+          lobby_closed: data.lobby_closed,
+          is_host: isHost,
+          player_count: players.length,
+        });
+        identifyPlayer(playerId, { has_active_lobby: false, is_host: false });
+        setLobbyGroup(null);
       } catch (caughtError) {
         setRosterError(getErrorMessage(caughtError, null));
         return;
@@ -267,12 +282,26 @@ export default function SearchFlow() {
     setIsSearching(false);
 
     if ("error" in result) {
+      trackEvent(AnalyticsEvent.SongSearchFailed, {
+        query_length: query.trim().length,
+        is_host: true,
+        source_screen: "search",
+        player_count: players.length,
+      });
       setSearchError(result.error);
       setDisplaySongs([]);
       setHasMoreSongs(false);
       return;
     }
 
+    trackEvent(AnalyticsEvent.SongSearched, {
+      query_length: query.trim().length,
+      result_count: result.songs.length,
+      has_more: result.hasMore,
+      is_host: true,
+      source_screen: "search",
+      player_count: players.length,
+    });
     setDisplaySongs(result.songs);
     setHasMoreSongs(result.hasMore);
     setSearchNextPageToken(result.nextPageToken);
@@ -301,6 +330,13 @@ export default function SearchFlow() {
         return;
       }
 
+      trackEvent(AnalyticsEvent.SongsLoadedMore, {
+        mode: "search",
+        result_count: result.songs.length,
+        is_host: true,
+        source_screen: "search",
+        player_count: players.length,
+      });
       setDisplaySongs((current) => appendSongs(current, result.songs));
       setHasMoreSongs(result.hasMore);
       setSearchNextPageToken(result.nextPageToken);
@@ -320,6 +356,13 @@ export default function SearchFlow() {
       return;
     }
 
+    trackEvent(AnalyticsEvent.SongsLoadedMore, {
+      mode: "recommended",
+      result_count: result.songs.length,
+      is_host: true,
+      source_screen: "search",
+      player_count: players.length,
+    });
     setDisplaySongs((current) => appendSongs(current, result.songs));
     setHasMoreSongs(result.hasMore);
     setPaginationOffset((current) => current + result.songs.length);
@@ -349,6 +392,13 @@ export default function SearchFlow() {
           }));
         }
 
+        trackEvent(AnalyticsEvent.SongSelectionFailed, {
+          song_id: song.id,
+          has_lyrics: hasLyrics,
+          is_host: true,
+          source_screen: "search",
+          player_count: players.length,
+        });
         setConfirmError(getErrorMessage(invokeError, data));
         return;
       }
@@ -358,8 +408,24 @@ export default function SearchFlow() {
         [song.id]: "available",
       }));
 
+      trackEvent(AnalyticsEvent.SongSelected, {
+        song_id: song.id,
+        song_title: data.song.title,
+        duration_sec: data.song.duration_sec,
+        lyrics_source: data.song.lyrics_source,
+        lobby_id: data.lobby_id,
+        is_host: true,
+        source_screen: "search",
+        player_count: players.length,
+      });
       router.replace("/game");
     } catch (caughtError) {
+      trackEvent(AnalyticsEvent.SongSelectionFailed, {
+        song_id: song.id,
+        is_host: true,
+        source_screen: "search",
+        player_count: players.length,
+      });
       setConfirmError(getErrorMessage(caughtError, null));
     } finally {
       setIsConfirming(false);

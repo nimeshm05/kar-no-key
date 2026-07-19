@@ -3,6 +3,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import GameScreen from "@/components/GameScreen/GameScreen";
+import {
+  identifyPlayer,
+  setLobbyGroup,
+  trackEvent,
+} from "@/lib/analytics/amplitude";
+import { AnalyticsEvent } from "@/lib/analytics/events";
 import { getRouteForLobbyStatus, getErrorMessage } from "@/lib/lobby/lobbyRoute";
 import {
   useLobbyStatePolling,
@@ -241,6 +247,17 @@ export default function GameFlow() {
           setRosterError(getErrorMessage(invokeError, data));
           return;
         }
+
+        trackEvent(AnalyticsEvent.LobbyLeft, {
+          lobby_id: lobbyId ?? undefined,
+          source_screen: "game",
+          lobby_closed: data.lobby_closed,
+          is_host: isHost,
+          player_count: players.length,
+          lobby_status: lobbyStatus,
+        });
+        identifyPlayer(playerId, { has_active_lobby: false, is_host: false });
+        setLobbyGroup(null);
       } catch (caughtError) {
         setRosterError(getErrorMessage(caughtError, null));
         return;
@@ -252,7 +269,7 @@ export default function GameFlow() {
   }
 
   async function handlePlay() {
-    if (!playerId || !isHost) {
+    if (!playerId || !isHost || !lobbyId || !song) {
       return;
     }
 
@@ -267,6 +284,14 @@ export default function GameFlow() {
         return;
       }
 
+      trackEvent(AnalyticsEvent.PlaybackStarted, {
+        lobby_id: lobbyId,
+        song_id: song.youtube_video_id,
+        player_count: players.length,
+        is_host: true,
+        source_screen: "game",
+        lobby_status: data.status,
+      });
       setLobbyStatus(data.status);
       setCountdownStartAt(data.countdown_start_at);
       setPlaybackStartAt(data.playback_start_at);
@@ -280,7 +305,7 @@ export default function GameFlow() {
   }
 
   async function handlePause() {
-    if (!playerId || !isHost) {
+    if (!playerId || !isHost || !lobbyId) {
       return;
     }
 
@@ -295,6 +320,14 @@ export default function GameFlow() {
         return;
       }
 
+      trackEvent(AnalyticsEvent.PlaybackPaused, {
+        lobby_id: lobbyId,
+        playback_elapsed_ms: data.playback_elapsed_ms,
+        is_host: true,
+        source_screen: "game",
+        lobby_status: data.status,
+        player_count: players.length,
+      });
       setLobbyStatus(data.status);
       setCountdownStartAt(null);
       setPlaybackStartAt(null);
@@ -308,12 +341,14 @@ export default function GameFlow() {
   }
 
   async function handleEndSong() {
-    if (!playerId || !isHost) {
+    if (!playerId || !isHost || !lobbyId || !song) {
       return;
     }
 
     setIsControlPending(true);
     setControlError(null);
+
+    const currentPlayer = players.find((player) => player.player_id === playerId);
 
     try {
       const { data, error: invokeError } = await endSong(playerId);
@@ -323,6 +358,15 @@ export default function GameFlow() {
         return;
       }
 
+      trackEvent(AnalyticsEvent.SongEnded, {
+        lobby_id: lobbyId,
+        song_id: song.youtube_video_id,
+        final_score: currentPlayer?.score ?? 0,
+        phrases_completed: currentPlayer?.phrases_completed ?? 0,
+        player_count: players.length,
+        is_host: true,
+        source_screen: "game",
+      });
       router.replace("/search");
     } catch (caughtError) {
       setControlError(getErrorMessage(caughtError, null));

@@ -19,6 +19,7 @@
     "supabase:deploy": "bash scripts/deploy-hosted-supabase.sh"
   },
   "dependencies": {
+    "@amplitude/unified": "^1.1.25",
     "@supabase/supabase-js": "^2.110.5",
     "motion": "^12.42.2",
     "next": "16.2.10",

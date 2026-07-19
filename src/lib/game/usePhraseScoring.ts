@@ -1,4 +1,6 @@
 import { useEffect, useRef } from "react";
+import { trackEvent } from "@/lib/analytics/amplitude";
+import { AnalyticsEvent } from "@/lib/analytics/events";
 import { submitPhraseProgress } from "@/lib/supabase/functions";
 
 const SUBMIT_DEBOUNCE_MS = 250;
@@ -85,6 +87,13 @@ export function usePhraseScoring({
 
         if (finalize) {
           finalizedPhrasesRef.current.add(phraseIndex);
+          trackEvent(AnalyticsEvent.PhraseFinalized, {
+            phrase_index: phraseIndex,
+            points_awarded: data.points_awarded,
+            score: data.score,
+            phrases_completed: data.phrases_completed,
+            source_screen: "game",
+          });
         }
       } finally {
         inFlightRef.current = false;
@@ -149,6 +158,13 @@ export function usePhraseScoring({
           data.phrases_completed,
         );
         finalizedPhrasesRef.current.add(phraseIndex);
+        trackEvent(AnalyticsEvent.PhraseFinalized, {
+          phrase_index: phraseIndex,
+          points_awarded: data.points_awarded,
+          score: data.score,
+          phrases_completed: data.phrases_completed,
+          source_screen: "game",
+        });
       } finally {
         inFlightRef.current = false;
 

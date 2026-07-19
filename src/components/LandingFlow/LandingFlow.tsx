@@ -9,6 +9,13 @@ import Button from "@/components/Button/Button";
 import InputField from "@/components/InputField/InputField";
 import LobbyScreen from "@/components/LobbyScreen/LobbyScreen";
 import type { JoinModalPhase } from "@/components/JoinCodeModal/JoinCodeModal";
+import {
+  identifyPlayer,
+  sanitizeErrorMessage,
+  setLobbyGroup,
+  trackEvent,
+} from "@/lib/analytics/amplitude";
+import { AnalyticsEvent } from "@/lib/analytics/events";
 import { getRouteForLobbyStatus } from "@/lib/lobby/lobbyRoute";
 import { normalizeLobbyCodeInput } from "@/lib/lobby/lobbyCode";
 import { useLobbyRosterPolling } from "@/lib/lobby/useLobbyRosterPolling";
@@ -217,6 +224,12 @@ export default function LandingFlow() {
       return;
     }
 
+    trackEvent(AnalyticsEvent.NameEntered, {
+      name_length: trimmedName.length,
+      source_screen: "landing",
+    });
+    identifyPlayer(playerId, { has_display_name: true });
+
     setIsLoading(true);
     setError(null);
 
@@ -224,11 +237,19 @@ export default function LandingFlow() {
       const { data, error: invokeError } = await createLobby(playerId, trimmedName);
 
       if (invokeError || !data || "error" in data) {
+        trackEvent(AnalyticsEvent.LobbyCreateFailed, {
+          error_message: sanitizeErrorMessage(invokeError, data),
+          source_screen: "landing",
+        });
         setError(getErrorMessage(invokeError, data));
         return;
       }
 
       if (!data.session_token) {
+        trackEvent(AnalyticsEvent.LobbyCreateFailed, {
+          error_message: "Server did not return a session token",
+          source_screen: "landing",
+        });
         setError("Server did not return a session token");
         return;
       }
@@ -244,9 +265,25 @@ export default function LandingFlow() {
         isHost: true,
         sessionToken: data.session_token,
       });
+      identifyPlayer(playerId, {
+        is_host: true,
+        has_active_lobby: true,
+        last_lobby_id: data.lobby_id,
+        has_display_name: true,
+      });
+      setLobbyGroup(data.lobby_id);
+      trackEvent(AnalyticsEvent.LobbyCreated, {
+        lobby_id: data.lobby_id,
+        is_host: true,
+        source_screen: "landing",
+      });
       setStep("lobby");
       await fetchLobbyRoster(playerId, true);
     } catch (caughtError) {
+      trackEvent(AnalyticsEvent.LobbyCreateFailed, {
+        error_message: sanitizeErrorMessage(caughtError, null),
+        source_screen: "landing",
+      });
       setError(getErrorMessage(caughtError, null));
     } finally {
       setIsLoading(false);
@@ -254,6 +291,8 @@ export default function LandingFlow() {
   }
 
   async function handleExitLobby() {
+    const previousLobbyId = lobbyId;
+
     if (playerId) {
       try {
         const { data, error: invokeError } = await leaveLobby(playerId);
@@ -262,6 +301,16 @@ export default function LandingFlow() {
           setError(getErrorMessage(invokeError, data));
           return;
         }
+
+        trackEvent(AnalyticsEvent.LobbyLeft, {
+          lobby_id: previousLobbyId || undefined,
+          source_screen: "lobby",
+          lobby_closed: data.lobby_closed,
+          is_host: isHost,
+          player_count: players.length,
+        });
+        identifyPlayer(playerId, { has_active_lobby: false, is_host: false });
+        setLobbyGroup(null);
       } catch (caughtError) {
         setError(getErrorMessage(caughtError, null));
         return;
@@ -297,6 +346,13 @@ export default function LandingFlow() {
         return;
       }
 
+      trackEvent(AnalyticsEvent.SongSelectionStarted, {
+        lobby_id: lobbyId,
+        player_count: players.length,
+        is_solo: players.length <= 1,
+        is_host: true,
+        source_screen: "lobby",
+      });
       navigateToSearch();
     } catch (caughtError) {
       setStartGameError(getErrorMessage(caughtError, null));
@@ -321,6 +377,10 @@ export default function LandingFlow() {
         const { data: leaveData, error: leaveError } = await leaveLobby(playerId);
 
         if (leaveError || !leaveData || "error" in leaveData) {
+          trackEvent(AnalyticsEvent.LobbyJoinFailed, {
+            error_message: sanitizeErrorMessage(leaveError, leaveData),
+            source_screen: "lobby",
+          });
           return false;
         }
       }
@@ -333,10 +393,18 @@ export default function LandingFlow() {
         );
 
         if (joinInvokeError || !joinData || "error" in joinData) {
+          trackEvent(AnalyticsEvent.LobbyJoinFailed, {
+            error_message: sanitizeErrorMessage(joinInvokeError, joinData),
+            source_screen: "lobby",
+          });
           return false;
         }
 
         if (!joinData.session_token) {
+          trackEvent(AnalyticsEvent.LobbyJoinFailed, {
+            error_message: "Server did not return a session token",
+            source_screen: "lobby",
+          });
           return false;
         }
 
@@ -351,6 +419,19 @@ export default function LandingFlow() {
           isHost: joinData.is_host,
           sessionToken: joinData.session_token,
         });
+        identifyPlayer(playerId, {
+          is_host: joinData.is_host,
+          has_active_lobby: true,
+          last_lobby_id: joinData.lobby_id,
+          has_display_name: true,
+        });
+        setLobbyGroup(joinData.lobby_id);
+        trackEvent(AnalyticsEvent.LobbyJoined, {
+          lobby_id: joinData.lobby_id,
+          join_code_length: normalizedJoinCode.length,
+          is_host: joinData.is_host,
+          source_screen: "lobby",
+        });
       }
 
       const success = await fetchLobbyRoster(playerId, false);
@@ -360,8 +441,16 @@ export default function LandingFlow() {
         return true;
       }
 
+      trackEvent(AnalyticsEvent.LobbyJoinFailed, {
+        error_message: "Failed to load lobby roster",
+        source_screen: "lobby",
+      });
       return false;
-    } catch {
+    } catch (caughtError) {
+      trackEvent(AnalyticsEvent.LobbyJoinFailed, {
+        error_message: sanitizeErrorMessage(caughtError, null),
+        source_screen: "lobby",
+      });
       return false;
     } finally {
       setIsLoading(false);

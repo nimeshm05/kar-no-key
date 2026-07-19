@@ -22,7 +22,7 @@
 }
 
 .icon-button--primary:active:not(:disabled) {
-  background: var(--color-button-background-active);
+  background: var(--color-button-background-hover);
 }
 
 .icon-button--secondary {
@@ -34,7 +34,7 @@
 }
 
 .icon-button--secondary:active:not(:disabled) {
-  background: var(--color-button-secondary-background-active);
+  background: var(--color-button-secondary-background-hover);
 }
 
 .icon-button:disabled {

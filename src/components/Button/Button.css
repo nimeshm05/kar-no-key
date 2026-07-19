@@ -19,7 +19,7 @@
 }
 
 .button--primary:active:not(:disabled) {
-  background: var(--color-button-background-active);
+  background: var(--color-button-background-hover);
   color: var(--color-button-foreground);
 }
 
@@ -46,8 +46,8 @@
 }
 
 .button--secondary:active:not(:disabled) {
-  background: var(--color-button-secondary-background-active);
-  color: var(--color-button-secondary-foreground);
+  background: var(--color-button-secondary-background-hover);
+  color: var(--color-button-secondary-foreground-hover);
 }
 
 .button--secondary:disabled {

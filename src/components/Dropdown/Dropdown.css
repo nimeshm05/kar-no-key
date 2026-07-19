@@ -22,7 +22,7 @@
 
 .dropdown__trigger:active:not(:disabled),
 .dropdown__trigger[aria-expanded="true"] {
-  background: var(--color-button-secondary-background-active);
+  background: var(--color-button-secondary-background-hover);
   color: var(--color-button-secondary-foreground);
 }
 

@@ -43,6 +43,9 @@ export function initAmplitude(): Promise<void> {
           fileDownloads: false,
         },
       },
+      sessionReplay: {
+        sampleRate: 1,
+      },
     })
     .then(() => {
       isInitialized = true;

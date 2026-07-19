@@ -9,7 +9,7 @@
   justify-content: center;
   height: var(--navbar-height);
   width: 100%;
-  background: var(--color-background);
+  background: transparent;
   border-bottom: 1px solid var(--neutral-100);
 }
 

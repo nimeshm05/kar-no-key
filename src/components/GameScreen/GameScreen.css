@@ -2,7 +2,6 @@
   min-height: 100svh;
   display: flex;
   flex-direction: column;
-  background: var(--color-background);
 }
 
 .game-screen__body {
@@ -173,8 +172,10 @@
 
 .game-screen__ready-message {
   margin: 0;
-  font-size: var(--size-24);
-  line-height: var(--line-18);
+  font-family: var(--family-primary);
+  font-size: var(--size-32);
+  font-weight: var(--weight-regular);
+  line-height: var(--line-32);
   color: var(--color-text-muted);
 }
 

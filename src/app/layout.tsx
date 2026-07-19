@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import AmplitudeInit from "@/components/AmplitudeInit/AmplitudeInit";
+import GradientBlob from "@/components/GradientBlob/GradientBlob";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -26,8 +28,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
       <body>
+        <GradientBlob />
         <AmplitudeInit />
-        {children}
+        <div className="app-shell">{children}</div>
+        <Analytics />
       </body>
     </html>
   );

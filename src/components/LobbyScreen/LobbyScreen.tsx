@@ -54,14 +54,8 @@ export default function LobbyScreen({
     : "share this code with your frens to begin the race.";
 
   function handleCloseModal() {
-    if (
-      joinModalPhase === "enter-code" ||
-      joinModalPhase === "error" ||
-      joinModalPhase === "own-code"
-    ) {
-      setIsJoinModalOpen(false);
-      onJoinModalPhaseChange("enter-code");
-    }
+    setIsJoinModalOpen(false);
+    onJoinModalPhaseChange("enter-code");
   }
 
   function handleRetry() {

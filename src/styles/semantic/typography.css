@@ -19,6 +19,13 @@
   line-height: var(--line-18);
 }
 
+.text-body-regular {
+  font-family: var(--family-mono);
+  font-size: var(--size-18);
+  font-weight: var(--weight-regular);
+  line-height: var(--line-18);
+}
+
 .text-heading-3 {
   font-family: var(--family-mono);
   font-size: var(--size-20);

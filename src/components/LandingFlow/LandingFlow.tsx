@@ -13,7 +13,12 @@ import { getRouteForLobbyStatus } from "@/lib/lobby/lobbyRoute";
 import { normalizeLobbyCodeInput } from "@/lib/lobby/lobbyCode";
 import { useLobbyRosterPolling } from "@/lib/lobby/useLobbyRosterPolling";
 import { getPlayerId } from "@/lib/player/identity";
-import { loadLobbySession, saveLobbySession, clearLobbySession } from "@/lib/player/session";
+import {
+  loadLobbySession,
+  saveLobbySession,
+  clearLobbySession,
+  syncHostRoleFromPlayers,
+} from "@/lib/player/session";
 import {
   createLobby,
   getLobbyPlayers,
@@ -89,13 +94,21 @@ export default function LandingFlow() {
       setPlayers(data.players);
       setLobbyRosterError(null);
 
+      const nextIsHost = syncHostRoleFromPlayers(
+        data.players,
+        playerId ?? getPlayerId(),
+      );
+      if (nextIsHost !== null) {
+        setIsHost(nextIsHost);
+      }
+
       if (data.song_selection_started) {
         if (!navigateToLobbyRoute(data.status, data.song_selection_started)) {
           navigateToSearch();
         }
       }
     },
-    [navigateToLobbyRoute, navigateToSearch],
+    [navigateToLobbyRoute, navigateToSearch, playerId],
   );
 
   const fetchLobbyRoster = useCallback(

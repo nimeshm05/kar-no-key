@@ -9,7 +9,11 @@ import {
   type LobbyStateUpdate,
 } from "@/lib/lobby/useLobbyStatePolling";
 import { getPlayerId } from "@/lib/player/identity";
-import { loadLobbySession, clearLobbySession } from "@/lib/player/session";
+import {
+  loadLobbySession,
+  clearLobbySession,
+  syncHostRoleFromPlayers,
+} from "@/lib/player/session";
 import type { SongResult } from "@/lib/songs/searchSongs";
 import { getRecommendedSongs } from "@/lib/songs/getRecommendedSongs";
 import { searchSongs } from "@/lib/songs/searchSongs";
@@ -90,9 +94,18 @@ export default function SearchFlow() {
     (data: LobbyStateUpdate) => {
       setPlayers(data.players);
       setRosterError(null);
+
+      const nextIsHost = syncHostRoleFromPlayers(
+        data.players,
+        playerId ?? getPlayerId(),
+      );
+      if (nextIsHost !== null) {
+        setIsHost(nextIsHost);
+      }
+
       handleRouteFromStatus(data.status, data.song_selection_started);
     },
-    [handleRouteFromStatus],
+    [handleRouteFromStatus, playerId],
   );
 
   const fetchLobbyState = useCallback(

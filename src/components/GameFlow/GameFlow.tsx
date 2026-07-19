@@ -10,7 +10,11 @@ import {
 } from "@/lib/lobby/useLobbyStatePolling";
 import { useLobbyScoreBroadcast } from "@/lib/lobby/useLobbyScoreBroadcast";
 import { getPlayerId } from "@/lib/player/identity";
-import { loadLobbySession, clearLobbySession } from "@/lib/player/session";
+import {
+  loadLobbySession,
+  clearLobbySession,
+  syncHostRoleFromPlayers,
+} from "@/lib/player/session";
 import {
   endSong,
   getLobbyState,
@@ -70,9 +74,18 @@ export default function GameFlow() {
       setPlaybackElapsedMs(data.playback_elapsed_ms);
       setServerNow(data.server_now);
       setRosterError(null);
+
+      const nextIsHost = syncHostRoleFromPlayers(
+        data.players,
+        playerId ?? getPlayerId(),
+      );
+      if (nextIsHost !== null) {
+        setIsHost(nextIsHost);
+      }
+
       handleRouteFromStatus(data.status, data.song_selection_started);
     },
-    [handleRouteFromStatus],
+    [handleRouteFromStatus, playerId],
   );
 
   const fetchLobbyState = useCallback(

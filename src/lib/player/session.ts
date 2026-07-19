@@ -60,3 +60,29 @@ export function clearLobbySession(): void {
 
   sessionStorage.removeItem(SESSION_KEY);
 }
+
+/**
+ * Derive the current player's host role from a roster/state poll.
+ * Persists to session when it changes (e.g. host transfer after leave).
+ * Returns null when the player is not found in the roster.
+ */
+export function syncHostRoleFromPlayers(
+  players: Array<{ player_id: string; is_host: boolean }>,
+  playerId: string | null | undefined,
+): boolean | null {
+  if (!playerId) {
+    return null;
+  }
+
+  const me = players.find((player) => player.player_id === playerId);
+  if (!me) {
+    return null;
+  }
+
+  const session = loadLobbySession();
+  if (session && session.isHost !== me.is_host) {
+    saveLobbySession({ ...session, isHost: me.is_host });
+  }
+
+  return me.is_host;
+}

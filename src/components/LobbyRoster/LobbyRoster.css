@@ -19,6 +19,7 @@
   flex-direction: column;
   gap: 12px;
   width: 100%;
+  overflow: visible;
 }
 
 .lobby-roster__header {
@@ -40,6 +41,7 @@
   margin: 0;
   padding: 0;
   list-style: none;
+  overflow: visible;
 }
 
 .lobby-roster--solo .lobby-roster__list {
@@ -56,6 +58,17 @@
   gap: 10px;
   width: 248px;
   color: var(--color-text-muted);
+  transform-origin: center center;
+}
+
+.lobby-roster__player--celebrate {
+  color: var(--color-accent-green);
+  animation: lobby-roster-leader-celebrate 1.5s ease;
+  z-index: 1;
+}
+
+.lobby-roster__player--celebrate-reduced {
+  animation: lobby-roster-leader-celebrate-reduced 1.5s ease;
 }
 
 .lobby-roster__name {
@@ -77,6 +90,10 @@
   animation: lobby-roster-score-pop 0.4s ease;
 }
 
+.lobby-roster__player--celebrate .lobby-roster__score--updated {
+  animation: none;
+}
+
 @keyframes lobby-roster-score-pop {
   from {
     color: var(--color-accent-green);
@@ -86,6 +103,64 @@
   to {
     color: inherit;
     transform: scale(1);
+  }
+}
+
+@keyframes lobby-roster-leader-celebrate {
+  0% {
+    color: var(--color-accent-green);
+    transform: scale(1) translateX(0);
+  }
+
+  12% {
+    transform: scale(1.08) translateX(-3px);
+  }
+
+  24% {
+    transform: scale(1.1) translateX(3px);
+  }
+
+  36% {
+    transform: scale(1.1) translateX(-2px);
+  }
+
+  48% {
+    transform: scale(1.08) translateX(2px);
+  }
+
+  60% {
+    transform: scale(1.06) translateX(-1px);
+  }
+
+  75% {
+    color: var(--color-accent-green);
+    transform: scale(1.04) translateX(0);
+  }
+
+  100% {
+    color: var(--color-text-muted);
+    transform: scale(1) translateX(0);
+  }
+}
+
+@keyframes lobby-roster-leader-celebrate-reduced {
+  0%,
+  75% {
+    color: var(--color-accent-green);
+  }
+
+  100% {
+    color: var(--color-text-muted);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lobby-roster__player--celebrate:not(.lobby-roster__player--celebrate-reduced) {
+    animation: lobby-roster-leader-celebrate-reduced 1.5s ease;
+  }
+
+  .lobby-roster__score--updated {
+    animation: none;
   }
 }
 

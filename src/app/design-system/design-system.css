@@ -1,0 +1,144 @@
+.design-system-page {
+  min-height: 100vh;
+  padding: 32px 24px 64px;
+}
+
+.design-system-unlock {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 360px;
+  margin: 80px auto 0;
+}
+
+.design-system-unlock__title {
+  color: var(--color-text-primary);
+}
+
+.design-system-unlock__hint {
+  color: var(--color-text-muted);
+}
+
+.design-system-unlock__form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.design-system-unlock__error {
+  margin: 0;
+  color: var(--color-text-error);
+}
+
+.design-system-gallery {
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.design-system-gallery__header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.design-system-gallery__title {
+  color: var(--color-text-primary);
+}
+
+.design-system-gallery__subtitle {
+  color: var(--color-text-muted);
+}
+
+.design-system-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.design-system-section__title {
+  color: var(--color-text-primary);
+}
+
+.design-system-section__subtitle {
+  margin-top: 8px;
+  color: var(--color-text-primary);
+}
+
+.design-system-swatches {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.design-system-swatch {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.design-system-swatch__chip {
+  width: 100%;
+  height: 56px;
+  border: 1px solid var(--neutral-200);
+}
+
+.design-system-swatch__name {
+  word-break: break-word;
+  color: var(--color-text-muted);
+}
+
+.design-system-type-samples {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.design-system-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.design-system-row--dropdown {
+  min-height: 120px;
+  align-items: flex-start;
+}
+
+.design-system-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 360px;
+}
+
+.design-system-song-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.design-system-navbar-frame {
+  border: 1px solid var(--neutral-200);
+  background: var(--color-background);
+}
+
+.design-system-phrase-frame {
+  max-width: 640px;
+  padding: 24px;
+  border: 1px solid var(--neutral-200);
+  background: var(--color-background);
+}
+
+@media (max-width: 720px) {
+  .design-system-page {
+    padding: 24px 16px 48px;
+  }
+
+  .design-system-gallery {
+    gap: 40px;
+  }
+}

@@ -466,7 +466,7 @@ export default function LandingFlow() {
             className="landing-page"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0, y: prefersReducedMotion ? 0 : -24 }}
+            exit={{ opacity: 0 }}
             transition={transition}
           >
             <div className="typewriter-container">
@@ -482,7 +482,13 @@ export default function LandingFlow() {
                 </p>
               </div>
             </div>
-            <div className="landing-form">
+            <form
+              className="landing-form"
+              onSubmit={(event) => {
+                event.preventDefault();
+                void handleGetStarted();
+              }}
+            >
               <InputField
                 value={displayName}
                 onChange={(event) => setDisplayName(event.target.value)}
@@ -492,9 +498,8 @@ export default function LandingFlow() {
                 disabled={isLoading}
               />
               <Button
-                type="button"
-                onClick={handleGetStarted}
-                disabled={isLoading}
+                type="submit"
+                disabled={isLoading || !displayName.trim()}
               >
                 {isLoading ? <AnimatedEllipsis label="creating" /> : "get started"}
               </Button>
@@ -503,13 +508,13 @@ export default function LandingFlow() {
                   {error}
                 </p>
               ) : null}
-            </div>
+            </form>
           </motion.main>
         ) : (
           <motion.div
             key="lobby"
-            initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 24 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={transition}
           >

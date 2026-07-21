@@ -119,8 +119,8 @@ export default function SearchScreen({
             <section className="search-screen__main">
               <div className="search-screen__search-header">
                 <div className="search-screen__heading">
-                  <h2 className="search-screen__title text-heading-1">Song?</h2>
-                  <p className="search-screen__subtitle">{subtitle}</p>
+                  <h2 className="search-screen__title text-heading-2">Select a song</h2>
+                  {/* <p className="search-screen__subtitle">{subtitle}</p> */}
                 </div>
                 <div className="search-screen__search-bar">
                   <InputField

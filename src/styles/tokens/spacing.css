@@ -3,6 +3,6 @@
   --spacing-content: calc(var(--size-20) * 2);
   --spacing-section: calc(var(--size-20) * 3);
   --navbar-height: 92px;
-  --layout-content-width: 80vw;
+  --layout-content-width: 70vw;
   --layout-content-inset: calc((100vw - var(--layout-content-width)) / 2);
 }

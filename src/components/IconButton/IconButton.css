@@ -26,15 +26,16 @@
 }
 
 .icon-button--secondary {
-  background: var(--color-button-secondary-background);
+  background: var(--color-dropdown-background);
+  border: 1px solid var(--color-dropdown-foreground);
 }
 
 .icon-button--secondary:hover:not(:disabled) {
-  background: var(--color-button-secondary-background-hover);
+  background: var(--color-dropdown-background-hover);
 }
 
 .icon-button--secondary:active:not(:disabled) {
-  background: var(--color-button-secondary-background-hover);
+  background: var(--color-dropdown-background-hover);
 }
 
 .icon-button:disabled {

@@ -12,6 +12,7 @@
 .lobby-roster__title {
   margin: 0;
   color: var(--color-text-primary);
+  font-weight: var(--weight-semibold) !important;
 }
 
 .lobby-roster__game-table {

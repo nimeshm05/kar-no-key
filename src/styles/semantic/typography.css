@@ -14,8 +14,8 @@
 
 .text-body {
   font-family: var(--family-mono);
-  font-size: var(--size-18);
-  font-weight: var(--weight-medium);
+  font-size: var(--size-16);
+  font-weight: var(--weight-regular);
   line-height: var(--line-18);
 }
 

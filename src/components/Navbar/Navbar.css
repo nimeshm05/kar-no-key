@@ -54,7 +54,7 @@
 }
 
 .navbar__more-button--open {
-  background: var(--color-button-secondary-background-hover);
+  background: var(--color-dropdown-background-hover);
 }
 
 @media (max-width: 720px) {

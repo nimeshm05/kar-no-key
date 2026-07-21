@@ -71,7 +71,7 @@ export default function SearchScreen({
   const [selectedSong, setSelectedSong] = useState<SongResult | null>(null);
 
   async function handleSearch() {
-    if (isSearching) {
+    if (isSearching || !query.trim()) {
       return;
     }
 
@@ -80,7 +80,7 @@ export default function SearchScreen({
   }
 
   function handleQueryKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
-    if (event.key === "Enter" && !isSearching) {
+    if (event.key === "Enter" && !isSearching && query.trim()) {
       void handleSearch();
     }
   }
@@ -98,6 +98,7 @@ export default function SearchScreen({
   const showSongGrid =
     !showRecommendationsLoading && displaySongs.length > 0;
   const showLoadMore = isHost && showSongGrid && hasMoreSongs;
+  const canSearch = Boolean(query.trim()) && !isSearching;
   const subtitle =
     players.length > 1
       ? "Your frens are waiting for you to select a song."
@@ -137,7 +138,7 @@ export default function SearchScreen({
                     type="button"
                     className="search-screen__search-button"
                     onClick={() => void handleSearch()}
-                    disabled={isSearching}
+                    disabled={!canSearch}
                   >
                     {isSearching ? (
                       <AnimatedEllipsis label="searching" />

@@ -183,6 +183,10 @@ export type SubmitPhraseProgressResult =
     }
   | { error: string };
 
+export type SubmitFeedbackResult =
+  | { ok: true }
+  | { error: string };
+
 export type GetLobbyStateResult =
   | {
       lobby_id: string;
@@ -399,5 +403,17 @@ export async function submitPhraseProgress(
     typed_text: payload.typed_text,
     finalize: payload.finalize ?? false,
     typing_ms_delta: payload.typing_ms_delta ?? 0,
+  });
+}
+
+export async function submitFeedback(
+  playerId: string,
+  message: string,
+  rating: number,
+): Promise<FunctionInvokeResult<SubmitFeedbackResult>> {
+  return invokeFunction<SubmitFeedbackResult>("submit-feedback", {
+    player_id: playerId,
+    message,
+    rating,
   });
 }

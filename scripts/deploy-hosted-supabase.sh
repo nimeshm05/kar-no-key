@@ -58,6 +58,7 @@ npx supabase functions deploy pause-playback --project-ref "$SUPABASE_PROJECT_RE
 npx supabase functions deploy end-song --project-ref "$SUPABASE_PROJECT_REF"
 npx supabase functions deploy restart-game --project-ref "$SUPABASE_PROJECT_REF"
 npx supabase functions deploy submit-phrase-progress --project-ref "$SUPABASE_PROJECT_REF"
+npx supabase functions deploy submit-feedback --project-ref "$SUPABASE_PROJECT_REF"
 
 echo "→ Verifying create-lobby + join-lobby + leave-lobby + get-lobby-players..."
 HOST_ID="$(node -e "console.log(crypto.randomUUID())")"

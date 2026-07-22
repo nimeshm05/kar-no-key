@@ -9,7 +9,7 @@ import {
   trackEvent,
 } from "@/lib/analytics/amplitude";
 import { AnalyticsEvent } from "@/lib/analytics/events";
-import { getRouteForLobbyStatus, getErrorMessage } from "@/lib/lobby/lobbyRoute";
+import { getErrorMessage } from "@/lib/lobby/lobbyRoute";
 import {
   useLobbyStatePolling,
   type LobbyStateUpdate,
@@ -44,18 +44,22 @@ export default function ResultsFlow() {
 
   const handleRouteFromStatus = useCallback(
     (status: string, songSelectionStarted: boolean) => {
-      const route = getRouteForLobbyStatus(status, songSelectionStarted);
+      // Stay on results until host restarts (waiting + song selection) or lobby closes.
+      if (status === "finished") {
+        return false;
+      }
 
-      if (route && route !== "/results") {
-        router.replace(route);
+      if (status === "waiting" && songSelectionStarted) {
+        router.replace("/search");
         return true;
       }
 
-      if (!songSelectionStarted && status === "waiting") {
+      if (status === "waiting" && !songSelectionStarted) {
         router.replace("/");
         return true;
       }
 
+      // Ignore stale playing/ready/countdown polls — do not bounce off results.
       return false;
     },
     [router],

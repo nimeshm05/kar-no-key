@@ -54,8 +54,14 @@ export default function GameFlow() {
     (status: string, songSelectionStarted: boolean) => {
       const route = getRouteForLobbyStatus(status, songSelectionStarted);
 
-      if (route === "/search" || route === "/results") {
-        router.replace(route);
+      // Prefer results over search so a finish never loses to a stale waiting poll.
+      if (route === "/results") {
+        router.replace("/results");
+        return true;
+      }
+
+      if (route === "/search") {
+        router.replace("/search");
         return true;
       }
 
@@ -355,6 +361,11 @@ export default function GameFlow() {
 
       if (invokeError || !data || "error" in data) {
         setControlError(getErrorMessage(invokeError, data));
+        return;
+      }
+
+      if (data.status !== "finished") {
+        setControlError("Race did not finish correctly. Please try ending the song again.");
         return;
       }
 

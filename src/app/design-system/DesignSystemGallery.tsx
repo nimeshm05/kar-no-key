@@ -7,6 +7,7 @@ import Dialog from "@/components/Dialog/Dialog";
 import Dropdown from "@/components/Dropdown/Dropdown";
 import IconButton from "@/components/IconButton/IconButton";
 import InputField from "@/components/InputField/InputField";
+import Loader from "@/components/Loader/Loader";
 import Navbar from "@/components/Navbar/Navbar";
 import PhraseTypingArea from "@/components/PhraseTypingArea/PhraseTypingArea";
 import SongCard from "@/components/SongCard/SongCard";
@@ -275,6 +276,46 @@ export default function DesignSystemGallery() {
           live
           as="p"
         />
+      </section>
+
+      <section className="design-system-section">
+        <h2 className="design-system-section__title text-heading-2">Loader</h2>
+        <p className="design-system-section__hint text-body">
+          4×4 pixel grid (Figma 2246:2075). Opacity-only pulse; pauses when
+          offscreen.
+        </p>
+        <div className="design-system-loader-row">
+          <div className="design-system-loader-demo">
+            <span className="design-system-loader-demo__label text-body">
+              default (38px)
+            </span>
+            <Loader />
+          </div>
+          <div className="design-system-loader-demo">
+            <span className="design-system-loader-demo__label text-body">
+              80px (boxSize=80)
+            </span>
+            <Loader boxSize={80} />
+          </div>
+          <div className="design-system-loader-demo">
+            <span className="design-system-loader-demo__label text-body">
+              slower (speed=0.5)
+            </span>
+            <Loader speed={0.5} />
+          </div>
+          <div className="design-system-loader-demo">
+            <span className="design-system-loader-demo__label text-body">
+              larger (size=12, gap=3)
+            </span>
+            <Loader size={12} gap={3} />
+          </div>
+          <div className="design-system-loader-demo">
+            <span className="design-system-loader-demo__label text-body">
+              paused
+            </span>
+            <Loader paused />
+          </div>
+        </div>
       </section>
 
       <section className="design-system-section">

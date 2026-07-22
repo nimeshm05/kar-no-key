@@ -31,19 +31,13 @@
   width: 100%;
 }
 
-.join-code-modal__status {
-  font-family: var(--family-mono);
-  font-size: var(--size-20);
-  font-weight: var(--weight-medium);
-  line-height: var(--line-16);
-  color: var(--color-text-primary);
-  margin: 0;
-  text-align: center;
-  width: 100%;
-}
-
+.join-code-modal__status,
 .join-code-modal__message {
-  color: var(--color-text-primary);
+  font-family: var(--family-mono);
+  font-size: var(--size-14);
+  font-weight: var(--weight-regular);
+  line-height: var(--line-18);
+  color: var(--color-text-muted);
   margin: 0;
   text-align: center;
   width: 100%;

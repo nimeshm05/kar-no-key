@@ -41,6 +41,10 @@
   flex: 1;
   min-width: 0;
   margin: 0;
+  font-family: var(--family-mono);
+  font-size: var(--size-14);
+  font-weight: var(--weight-medium);
+  line-height: var(--line-18);
   color: var(--color-text-primary);
 }
 

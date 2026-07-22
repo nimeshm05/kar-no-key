@@ -58,7 +58,7 @@ export default function Dialog({
         className={panelClassName}
       >
         <div className="dialog__header">
-          <h2 id={titleId} className="dialog__title text-body">
+          <h2 id={titleId} className="dialog__title">
             {title}
           </h2>
           <button

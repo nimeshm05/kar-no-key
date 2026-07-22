@@ -94,7 +94,7 @@ export default function JoinCodeModal({
 
   if (phase === "error") {
     body = (
-      <p className="join-code-modal__message text-body-regular">
+      <p className="join-code-modal__message">
         unable to connect. please enter the correct code.
       </p>
     );
@@ -112,7 +112,7 @@ export default function JoinCodeModal({
 
   if (phase === "own-code") {
     body = (
-      <p className="join-code-modal__message text-body-regular">
+      <p className="join-code-modal__message">
         you cannot input your own code. wanna play the game yourself?
       </p>
     );
@@ -140,7 +140,7 @@ export default function JoinCodeModal({
 
   if (phase === "waiting-for-host") {
     body = (
-      <div className="join-code-modal__message text-body-regular">
+      <div className="join-code-modal__message">
         <p>waiting for the host to start the race.</p>
         <p>patience my humble fren.</p>
       </div>

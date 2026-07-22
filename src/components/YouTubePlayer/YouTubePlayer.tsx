@@ -47,6 +47,7 @@ type YTPlayer = {
   pauseVideo: () => void;
   getPlayerState: () => number;
   getCurrentTime: () => number;
+  destroy: () => void;
 };
 
 let apiLoadPromise: Promise<void> | null = null;
@@ -141,6 +142,12 @@ export default function YouTubePlayer({
 
     return () => {
       destroyed = true;
+      try {
+        playerRef.current?.pauseVideo();
+        playerRef.current?.destroy();
+      } catch {
+        // Player may already be torn down.
+      }
       playerRef.current = null;
     };
   }, [videoId]);

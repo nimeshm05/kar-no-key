@@ -1,0 +1,113 @@
+.award-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+.award-section__header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.award-section__title {
+  margin: 0;
+  color: var(--color-text-primary);
+}
+
+.award-section__description {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.award-section__table {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.award-section__table-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  color: var(--color-accent-green);
+}
+
+.award-section__col-players {
+  display: flex;
+  align-items: center;
+  padding-left: 36px;
+}
+
+.award-section__col-score {
+  flex-shrink: 0;
+  text-align: right;
+  min-width: 60px;
+}
+
+.award-section__rows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.award-section__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 24px;
+}
+
+.award-section__row--top {
+  color: var(--color-text-primary);
+  font-weight: var(--weight-semibold);
+}
+
+.award-section__row--muted {
+  color: var(--color-text-muted);
+}
+
+.award-section__player {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.award-section__rank-slot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  overflow: clip;
+}
+
+.award-section__star {
+  width: 24px;
+  height: 24px;
+  display: block;
+}
+
+.award-section__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.award-section__metric {
+  flex-shrink: 0;
+  text-align: right;
+  min-width: 60px;
+  font-variant-numeric: tabular-nums;
+}

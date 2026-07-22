@@ -20,7 +20,15 @@ export async function resetLobbyPlayerScores(
 ): Promise<void> {
   const { error } = await supabase
     .from("players")
-    .update({ score: 0, phrases_completed: 0 })
+    .update({
+      score: 0,
+      phrases_completed: 0,
+      correct_chars: 0,
+      attempted_chars: 0,
+      typing_ms: 0,
+      wpm: 0,
+      accuracy: 0,
+    })
     .eq("lobby_id", lobbyId);
 
   if (error) {
@@ -46,6 +54,15 @@ export async function clearLobbyGameData(
 
   if (deleteError) {
     throw deleteError;
+  }
+
+  const { error: firstFinishError } = await supabase
+    .from("phrase_first_finish")
+    .delete()
+    .eq("lobby_id", lobbyId);
+
+  if (firstFinishError) {
+    throw firstFinishError;
   }
 
   await resetLobbyPlayerScores(supabase, lobbyId);

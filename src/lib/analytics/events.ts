@@ -20,7 +20,7 @@ export const AnalyticsEvent = {
 export type AnalyticsEventName =
   (typeof AnalyticsEvent)[keyof typeof AnalyticsEvent];
 
-export type SourceScreen = "landing" | "lobby" | "search" | "game";
+export type SourceScreen = "landing" | "lobby" | "search" | "game" | "results";
 
 export type SharedEventProps = {
   lobby_id?: string;

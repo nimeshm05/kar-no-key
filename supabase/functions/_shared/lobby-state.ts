@@ -20,6 +20,7 @@ type LobbyRow = {
   countdown_start_at: string | null;
   playback_start_at: string | null;
   playback_elapsed_ms: number;
+  awards_snapshot: import("./scoring/types.ts").AwardsSnapshot | null;
 };
 
 export type LobbyAuthResult =
@@ -77,7 +78,7 @@ export async function requireLobbyPlayer(
   const { data: lobby, error: lobbyError } = await supabase
     .from("lobbies")
     .select(
-      "id, code, status, max_players, song_selection_started, selected_youtube_video_id, countdown_start_at, playback_start_at, playback_elapsed_ms",
+      "id, code, status, max_players, song_selection_started, selected_youtube_video_id, countdown_start_at, playback_start_at, playback_elapsed_ms, awards_snapshot",
     )
     .eq("id", player.lobby_id)
     .maybeSingle();

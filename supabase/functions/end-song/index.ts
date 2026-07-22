@@ -1,10 +1,11 @@
 import { handleCors, jsonResponse } from "../_shared/cors.ts";
 import { isValidPlayerId } from "../_shared/player-id.ts";
 import {
+  getEffectiveLobbyStatus,
   getSessionTokenFromBody,
   requireLobbyPlayer,
 } from "../_shared/lobby-state.ts";
-import { clearLobbyGameData } from "../_shared/scoring/reset.ts";
+import { finishRace } from "../_shared/scoring/finish-race.ts";
 
 type EndSongRequest = {
   player_id?: string;
@@ -49,41 +50,40 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: "Only the host can end the song" }, 403, req);
   }
 
-  if (!lobby.selected_youtube_video_id) {
+  const effectiveStatus = getEffectiveLobbyStatus(lobby);
+
+  if (!lobby.selected_youtube_video_id && lobby.status !== "finished") {
     return jsonResponse({ error: "No song is currently selected" }, 400, req);
   }
 
-  const endedVideoId = lobby.selected_youtube_video_id;
-  const now = new Date();
+  if (
+    effectiveStatus !== "playing" &&
+    lobby.status !== "playing" &&
+    lobby.status !== "countdown" &&
+    lobby.status !== "finished"
+  ) {
+    return jsonResponse({ error: "No active race to finish" }, 400, req);
+  }
 
   try {
-    await clearLobbyGameData(supabase, lobby.id, endedVideoId);
+    const result = await finishRace(supabase, {
+      id: lobby.id,
+      code: lobby.code,
+      status: lobby.status === "countdown" ? "playing" : lobby.status,
+      selected_youtube_video_id: lobby.selected_youtube_video_id,
+      playback_start_at: lobby.playback_start_at,
+      playback_elapsed_ms: lobby.playback_elapsed_ms ?? 0,
+      awards_snapshot: lobby.awards_snapshot ?? null,
+    });
+
+    return jsonResponse({
+      lobby_id: result.lobby_id,
+      code: result.code,
+      status: result.status,
+      awards: result.awards,
+      server_now: result.server_now,
+    }, 200, req);
   } catch {
-    return jsonResponse({ error: "Failed to reset game scores" }, 500, req);
+    return jsonResponse({ error: "Failed to finish race" }, 500, req);
   }
-
-  const { error: updateError } = await supabase
-    .from("lobbies")
-    .update({
-      status: "waiting",
-      song_selection_started: true,
-      selected_youtube_video_id: null,
-      countdown_start_at: null,
-      playback_start_at: null,
-      playback_elapsed_ms: 0,
-      updated_at: now.toISOString(),
-    })
-    .eq("id", lobby.id);
-
-  if (updateError) {
-    return jsonResponse({ error: "Failed to end song" }, 500, req);
-  }
-
-  return jsonResponse({
-    lobby_id: lobby.id,
-    code: lobby.code,
-    status: "waiting",
-    song_selection_started: true,
-    server_now: now.toISOString(),
-  }, 200, req);
 });

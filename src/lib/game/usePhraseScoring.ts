@@ -1,9 +1,10 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { trackEvent } from "@/lib/analytics/amplitude";
 import { AnalyticsEvent } from "@/lib/analytics/events";
 import { submitPhraseProgress } from "@/lib/supabase/functions";
 
 const SUBMIT_DEBOUNCE_MS = 250;
+const TYPING_IDLE_MS = 1500;
 
 type UsePhraseScoringOptions = {
   playerId: string | null;
@@ -34,6 +35,48 @@ export function usePhraseScoring({
     null,
   );
   const playerIdRef = useRef(playerId);
+  const typingActiveStartedAtRef = useRef<number | null>(null);
+  const typingAccumulatedMsRef = useRef(0);
+  const typingIdleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const prevTypedTextRef = useRef(typedText);
+
+  const flushTypingMsDelta = useCallback(() => {
+    const now = Date.now();
+
+    if (typingActiveStartedAtRef.current != null) {
+      typingAccumulatedMsRef.current += Math.max(
+        0,
+        now - typingActiveStartedAtRef.current,
+      );
+      typingActiveStartedAtRef.current = null;
+    }
+
+    const delta = Math.floor(typingAccumulatedMsRef.current);
+    typingAccumulatedMsRef.current = 0;
+    return delta;
+  }, []);
+
+  const markTypingActivity = useCallback(() => {
+    const now = Date.now();
+
+    if (typingActiveStartedAtRef.current == null) {
+      typingActiveStartedAtRef.current = now;
+    }
+
+    if (typingIdleTimerRef.current) {
+      clearTimeout(typingIdleTimerRef.current);
+    }
+
+    typingIdleTimerRef.current = setTimeout(() => {
+      if (typingActiveStartedAtRef.current != null) {
+        typingAccumulatedMsRef.current += Math.max(
+          0,
+          Date.now() - typingActiveStartedAtRef.current,
+        );
+        typingActiveStartedAtRef.current = null;
+      }
+    }, TYPING_IDLE_MS);
+  }, []);
 
   useEffect(() => {
     onScoreUpdateRef.current = onScoreUpdate;
@@ -41,11 +84,25 @@ export function usePhraseScoring({
 
   useEffect(() => {
     typedTextRef.current = typedText;
-  }, [typedText]);
+
+    if (typedText !== prevTypedTextRef.current && isPlaying) {
+      markTypingActivity();
+    }
+
+    prevTypedTextRef.current = typedText;
+  }, [typedText, isPlaying, markTypingActivity]);
 
   useEffect(() => {
     playerIdRef.current = playerId;
   }, [playerId]);
+
+  useEffect(() => {
+    return () => {
+      if (typingIdleTimerRef.current) {
+        clearTimeout(typingIdleTimerRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     async function runSubmit(
@@ -65,12 +122,14 @@ export function usePhraseScoring({
       }
 
       inFlightRef.current = true;
+      const typingMsDelta = flushTypingMsDelta();
 
       try {
         const { data, error } = await submitPhraseProgress(activePlayerId, {
           phrase_index: phraseIndex,
           typed_text: text,
           finalize,
+          typing_ms_delta: typingMsDelta,
         });
 
         if (error || !data || "error" in data) {
@@ -124,7 +183,7 @@ export function usePhraseScoring({
         clearTimeout(debounceTimerRef.current);
       }
     };
-  }, [playerId, isPlaying, activePhraseIndex, typedText]);
+  }, [playerId, isPlaying, activePhraseIndex, typedText, flushTypingMsDelta]);
 
   useEffect(() => {
     async function finalizePhrase(phraseIndex: number, text: string) {
@@ -140,12 +199,14 @@ export function usePhraseScoring({
       }
 
       inFlightRef.current = true;
+      const typingMsDelta = flushTypingMsDelta();
 
       try {
         const { data, error } = await submitPhraseProgress(activePlayerId, {
           phrase_index: phraseIndex,
           typed_text: text,
           finalize: true,
+          typing_ms_delta: typingMsDelta,
         });
 
         if (error || !data || "error" in data) {
@@ -172,10 +233,12 @@ export function usePhraseScoring({
         pendingSubmitRef.current = null;
 
         if (pending) {
+          const pendingTypingMs = flushTypingMsDelta();
           const { data, error } = await submitPhraseProgress(activePlayerId, {
             phrase_index: pending.phraseIndex,
             typed_text: pending.typedText,
             finalize: false,
+            typing_ms_delta: pendingTypingMs,
           });
 
           if (!error && data && !("error" in data) && data.points_awarded > 0) {
@@ -200,5 +263,5 @@ export function usePhraseScoring({
     }
 
     prevActivePhraseIndexRef.current = activePhraseIndex;
-  }, [activePhraseIndex]);
+  }, [activePhraseIndex, flushTypingMsDelta]);
 }

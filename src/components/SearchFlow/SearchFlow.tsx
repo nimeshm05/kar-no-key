@@ -81,8 +81,8 @@ export default function SearchFlow() {
     (status: string, songSelectionStarted: boolean) => {
       const route = getRouteForLobbyStatus(status, songSelectionStarted);
 
-      if (route === "/game") {
-        router.replace("/game");
+      if (route === "/game" || route === "/results") {
+        router.replace(route);
         return true;
       }
 

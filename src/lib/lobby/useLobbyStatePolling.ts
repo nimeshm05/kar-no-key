@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import {
   getLobbyState,
+  type AwardsSnapshot,
   type GetLobbyStateResult,
   type LobbyPlayer,
   type LobbySong,
@@ -20,6 +21,7 @@ export type LobbyStateUpdate = {
   playback_elapsed_ms: number;
   server_now: string;
   song: LobbySong | null;
+  awards: AwardsSnapshot | null;
   players: LobbyPlayer[];
 };
 
@@ -59,6 +61,7 @@ function toLobbyStateUpdate(data: GetLobbyStateResult & { error?: never }): Lobb
     playback_elapsed_ms: data.playback_elapsed_ms,
     server_now: data.server_now,
     song: data.song,
+    awards: data.awards ?? null,
     players: data.players,
   };
 }

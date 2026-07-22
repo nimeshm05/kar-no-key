@@ -1,7 +1,9 @@
 import type { LyricPhrase, PhraseProgressRow, ScorePhraseResult } from "./types.ts";
 
 export const POINTS_PER_CHAR = 1;
-export const PHRASE_BONUS_POINTS = 10;
+export const PHRASE_BONUS_POINTS = 50;
+export const FIRST_FINISH_BONUS_POINTS = 20;
+export const WPM_EPSILON_MS = 1;
 
 export function normalizeChar(char: string): string {
   return char.toLowerCase().replace(/[^\p{L}\p{N}]/gu, "");
@@ -63,6 +65,19 @@ export function computePlaybackElapsedMs(
   return elapsed;
 }
 
+export function computeWpm(correctChars: number, typingMs: number): number {
+  const minutes = Math.max(typingMs, WPM_EPSILON_MS) / 60_000;
+  return (correctChars / 5) / minutes;
+}
+
+export function computeAccuracy(correctChars: number, attemptedChars: number): number {
+  if (attemptedChars <= 0) {
+    return 0;
+  }
+
+  return correctChars / attemptedChars;
+}
+
 export function scorePhraseProgress(
   expected: string,
   typed: string,
@@ -71,13 +86,25 @@ export function scorePhraseProgress(
   finalize: boolean,
 ): ScorePhraseResult {
   const scoredCharIndices = [...progress.scored_char_indices];
+  const attemptedCharIndices = [...(progress.attempted_char_indices ?? [])];
   let pointsAwarded = 0;
   let phraseBonusAwarded = false;
   let finalized = progress.finalized;
   let phrasesCompletedDelta = 0;
+  let correctCharsDelta = 0;
+  let attemptedCharsDelta = 0;
 
   if (canScoreChars && !progress.finalized) {
     for (let index = 0; index < expected.length; index += 1) {
+      if (typed[index] === undefined) {
+        continue;
+      }
+
+      if (!attemptedCharIndices.includes(index)) {
+        attemptedCharIndices.push(index);
+        attemptedCharsDelta += 1;
+      }
+
       if (scoredCharIndices.includes(index)) {
         continue;
       }
@@ -85,6 +112,7 @@ export function scorePhraseProgress(
       if (charMatches(expected[index], typed[index])) {
         scoredCharIndices.push(index);
         pointsAwarded += POINTS_PER_CHAR;
+        correctCharsDelta += 1;
       }
     }
   }
@@ -101,9 +129,12 @@ export function scorePhraseProgress(
 
   return {
     scoredCharIndices,
+    attemptedCharIndices,
     pointsAwarded,
     phraseBonusAwarded,
     finalized,
     phrasesCompletedDelta,
+    correctCharsDelta,
+    attemptedCharsDelta,
   };
 }

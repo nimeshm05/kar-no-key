@@ -19,6 +19,10 @@ export function getRouteForLobbyStatus(
   status: string,
   songSelectionStarted: boolean,
 ): string | null {
+  if (status === "finished") {
+    return "/results";
+  }
+
   if (status === "waiting" && songSelectionStarted) {
     return "/search";
   }

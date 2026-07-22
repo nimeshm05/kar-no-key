@@ -1,11 +1,18 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Button from "@/components/Button/Button";
 import Dropdown from "@/components/Dropdown/Dropdown";
 import IconButton from "@/components/IconButton/IconButton";
 import { sortLobbyPlayers } from "@/lib/lobby/sortLobbyPlayers";
 import type { LobbyPlayer } from "@/lib/supabase/functions";
 import "./Navbar.css";
+
+type NavbarPrimaryAction = {
+  label: string;
+  onClick: () => void;
+  disabled?: boolean;
+};
 
 type NavbarProps = {
   displayName: string;
@@ -13,6 +20,7 @@ type NavbarProps = {
   isRosterLoading?: boolean;
   rosterError?: string | null;
   onExitLobby: () => void;
+  primaryAction?: NavbarPrimaryAction | null;
 };
 
 type OpenMenu = "players" | "more" | null;
@@ -23,6 +31,7 @@ export default function Navbar({
   isRosterLoading = false,
   rosterError = null,
   onExitLobby,
+  primaryAction = null,
 }: NavbarProps) {
   const [openMenu, setOpenMenu] = useState<OpenMenu>(null);
   const moreMenuRef = useRef<HTMLDivElement>(null);
@@ -80,6 +89,18 @@ export default function Navbar({
         </div>
 
         <div className="navbar__section navbar__section--end">
+          {primaryAction ? (
+            <Button
+              type="button"
+              variant="primary"
+              className="navbar__primary-action"
+              disabled={primaryAction.disabled}
+              onClick={primaryAction.onClick}
+            >
+              {primaryAction.label}
+            </Button>
+          ) : null}
+
           <Dropdown
             label="players"
             countBadge={countBadge}

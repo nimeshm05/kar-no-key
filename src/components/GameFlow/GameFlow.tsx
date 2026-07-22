@@ -54,8 +54,8 @@ export default function GameFlow() {
     (status: string, songSelectionStarted: boolean) => {
       const route = getRouteForLobbyStatus(status, songSelectionStarted);
 
-      if (route === "/search") {
-        router.replace("/search");
+      if (route === "/search" || route === "/results") {
+        router.replace(route);
         return true;
       }
 
@@ -367,7 +367,7 @@ export default function GameFlow() {
         is_host: true,
         source_screen: "game",
       });
-      router.replace("/search");
+      router.replace("/results");
     } catch (caughtError) {
       setControlError(getErrorMessage(caughtError, null));
     } finally {

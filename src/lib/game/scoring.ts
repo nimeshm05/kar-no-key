@@ -1,7 +1,8 @@
 import type { LyricPhrase } from "@/lib/game/types";
 
 export const POINTS_PER_CHAR = 1;
-export const PHRASE_BONUS_POINTS = 10;
+export const PHRASE_BONUS_POINTS = 50;
+export const FIRST_FINISH_BONUS_POINTS = 20;
 
 export function normalizeChar(char: string): string {
   return char.toLowerCase().replace(/[^\p{L}\p{N}]/gu, "");

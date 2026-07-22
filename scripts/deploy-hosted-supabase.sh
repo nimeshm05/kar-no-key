@@ -56,6 +56,7 @@ npx supabase functions deploy start-countdown --project-ref "$SUPABASE_PROJECT_R
 npx supabase functions deploy get-lobby-state --project-ref "$SUPABASE_PROJECT_REF"
 npx supabase functions deploy pause-playback --project-ref "$SUPABASE_PROJECT_REF"
 npx supabase functions deploy end-song --project-ref "$SUPABASE_PROJECT_REF"
+npx supabase functions deploy restart-game --project-ref "$SUPABASE_PROJECT_REF"
 npx supabase functions deploy submit-phrase-progress --project-ref "$SUPABASE_PROJECT_REF"
 
 echo "→ Verifying create-lobby + join-lobby + leave-lobby + get-lobby-players..."

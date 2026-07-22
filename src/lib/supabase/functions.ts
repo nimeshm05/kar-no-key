@@ -48,6 +48,24 @@ export type LobbyPlayer = {
   is_connected: boolean;
   score?: number;
   phrases_completed?: number;
+  correct_chars?: number;
+  attempted_chars?: number;
+  typing_ms?: number;
+  wpm?: number;
+  accuracy?: number;
+};
+
+export type AwardEntry = {
+  player_id: string;
+  display_name: string;
+  metric: number;
+  rank: number;
+};
+
+export type AwardsSnapshot = {
+  champions: AwardEntry[];
+  sharpshooters: AwardEntry[];
+  speed_demons: AwardEntry[];
 };
 
 export type GetLobbyPlayersResult =
@@ -140,6 +158,16 @@ export type EndSongResult =
       lobby_id: string;
       code: string;
       status: string;
+      awards: AwardsSnapshot;
+      server_now: string;
+    }
+  | { error: string };
+
+export type RestartGameResult =
+  | {
+      lobby_id: string;
+      code: string;
+      status: string;
       song_selection_started: boolean;
       server_now: string;
     }
@@ -151,6 +179,7 @@ export type SubmitPhraseProgressResult =
       phrases_completed: number;
       points_awarded: number;
       phrase_bonus_awarded: boolean;
+      first_finish_bonus_awarded?: boolean;
     }
   | { error: string };
 
@@ -167,6 +196,7 @@ export type GetLobbyStateResult =
       playback_elapsed_ms: number;
       server_now: string;
       song: LobbySong | null;
+      awards: AwardsSnapshot | null;
       players: LobbyPlayer[];
     }
   | { error: string };
@@ -346,12 +376,21 @@ export async function endSong(
   });
 }
 
+export async function restartGame(
+  playerId: string,
+): Promise<FunctionInvokeResult<RestartGameResult>> {
+  return invokeFunction<RestartGameResult>("restart-game", {
+    player_id: playerId,
+  });
+}
+
 export async function submitPhraseProgress(
   playerId: string,
   payload: {
     phrase_index: number;
     typed_text: string;
     finalize?: boolean;
+    typing_ms_delta?: number;
   },
 ): Promise<FunctionInvokeResult<SubmitPhraseProgressResult>> {
   return invokeFunction<SubmitPhraseProgressResult>("submit-phrase-progress", {
@@ -359,5 +398,6 @@ export async function submitPhraseProgress(
     phrase_index: payload.phrase_index,
     typed_text: payload.typed_text,
     finalize: payload.finalize ?? false,
+    typing_ms_delta: payload.typing_ms_delta ?? 0,
   });
 }

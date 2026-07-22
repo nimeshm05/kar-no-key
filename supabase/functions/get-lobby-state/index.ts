@@ -5,6 +5,12 @@ import {
   getSessionTokenFromBody,
   requireLobbyPlayer,
 } from "../_shared/lobby-state.ts";
+import {
+  finishRace,
+  shouldAutoFinishRace,
+  songDurationSecFromPhrases,
+} from "../_shared/scoring/finish-race.ts";
+import type { AwardsSnapshot, LyricPhrase } from "../_shared/scoring/types.ts";
 
 type GetLobbyStateRequest = {
   player_id?: string;
@@ -45,7 +51,11 @@ Deno.serve(async (req) => {
 
   const { supabase, lobby } = auth;
   const serverNow = new Date();
-  const effectiveStatus = getEffectiveLobbyStatus(lobby, serverNow.getTime());
+  let effectiveStatus = getEffectiveLobbyStatus(lobby, serverNow.getTime());
+  let awards: AwardsSnapshot | null = lobby.awards_snapshot ?? null;
+  let playbackStartAt = lobby.playback_start_at;
+  let playbackElapsedMs = lobby.playback_elapsed_ms ?? 0;
+  let selectedYoutubeVideoId = lobby.selected_youtube_video_id;
 
   if (
     effectiveStatus === "playing" &&
@@ -60,24 +70,14 @@ Deno.serve(async (req) => {
       .eq("id", lobby.id);
   }
 
-  const { data: players, error: playersError } = await supabase
-    .from("players")
-    .select("id, display_name, is_host, is_connected, score, phrases_completed")
-    .eq("lobby_id", lobby.id)
-    .order("joined_at", { ascending: true });
-
-  if (playersError) {
-    return jsonResponse({ error: "Failed to load lobby players" }, 500, req);
-  }
-
   let song = null;
-  if (lobby.selected_youtube_video_id) {
+  if (selectedYoutubeVideoId) {
     const { data: songRow } = await supabase
       .from("songs")
       .select(
         "youtube_video_id, title, channel, thumbnail_url, duration_sec, lyrics_phrases, lyrics_source",
       )
-      .eq("youtube_video_id", lobby.selected_youtube_video_id)
+      .eq("youtube_video_id", selectedYoutubeVideoId)
       .maybeSingle();
 
     if (songRow) {
@@ -90,7 +90,65 @@ Deno.serve(async (req) => {
         lyrics_phrases: songRow.lyrics_phrases,
         lyrics_source: songRow.lyrics_source,
       };
+
+      const durationSec = songDurationSecFromPhrases(
+        songRow.duration_sec,
+        (songRow.lyrics_phrases ?? []) as LyricPhrase[],
+      );
+
+      if (
+        shouldAutoFinishRace(
+          effectiveStatus,
+          playbackStartAt,
+          playbackElapsedMs,
+          durationSec,
+          serverNow.getTime(),
+        )
+      ) {
+        try {
+          const finishResult = await finishRace(supabase, {
+            id: lobby.id,
+            code: lobby.code,
+            status: lobby.status === "countdown" ? "playing" : lobby.status,
+            selected_youtube_video_id: selectedYoutubeVideoId,
+            playback_start_at: playbackStartAt,
+            playback_elapsed_ms: playbackElapsedMs,
+            awards_snapshot: awards,
+          }, serverNow);
+
+          effectiveStatus = "finished";
+          awards = finishResult.awards;
+          playbackStartAt = null;
+          playbackElapsedMs = durationSec ? durationSec * 1000 : playbackElapsedMs;
+        } catch {
+          // Keep serving current playing state if finish races fail; next poll retries.
+        }
+      }
     }
+  }
+
+  if (effectiveStatus === "finished" && !awards) {
+    const { data: lobbyRow } = await supabase
+      .from("lobbies")
+      .select("awards_snapshot, playback_start_at, playback_elapsed_ms")
+      .eq("id", lobby.id)
+      .maybeSingle();
+
+    awards = (lobbyRow?.awards_snapshot as AwardsSnapshot | null) ?? null;
+    playbackStartAt = lobbyRow?.playback_start_at ?? null;
+    playbackElapsedMs = lobbyRow?.playback_elapsed_ms ?? 0;
+  }
+
+  const { data: players, error: playersError } = await supabase
+    .from("players")
+    .select(
+      "id, display_name, is_host, is_connected, score, phrases_completed, correct_chars, attempted_chars, typing_ms, wpm, accuracy",
+    )
+    .eq("lobby_id", lobby.id)
+    .order("joined_at", { ascending: true });
+
+  if (playersError) {
+    return jsonResponse({ error: "Failed to load lobby players" }, 500, req);
   }
 
   return jsonResponse({
@@ -99,12 +157,13 @@ Deno.serve(async (req) => {
     status: effectiveStatus,
     max_players: lobby.max_players,
     song_selection_started: lobby.song_selection_started,
-    selected_youtube_video_id: lobby.selected_youtube_video_id,
+    selected_youtube_video_id: selectedYoutubeVideoId,
     countdown_start_at: lobby.countdown_start_at,
-    playback_start_at: lobby.playback_start_at,
-    playback_elapsed_ms: lobby.playback_elapsed_ms ?? 0,
+    playback_start_at: playbackStartAt,
+    playback_elapsed_ms: playbackElapsedMs,
     server_now: serverNow.toISOString(),
     song,
+    awards,
     players: (players ?? []).map((row) => ({
       player_id: row.id,
       display_name: row.display_name,
@@ -112,6 +171,11 @@ Deno.serve(async (req) => {
       is_connected: row.is_connected,
       score: row.score,
       phrases_completed: row.phrases_completed,
+      correct_chars: row.correct_chars,
+      attempted_chars: row.attempted_chars,
+      typing_ms: row.typing_ms,
+      wpm: row.wpm,
+      accuracy: row.accuracy,
     })),
   }, 200, req);
 });

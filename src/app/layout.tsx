@@ -18,6 +18,25 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "kar-no-key",
   description: "race your frens, one lyric at a time :)",
+  icons: {
+    icon: [
+      {
+        url: "/favicons/typewriter-16.svg",
+        type: "image/svg+xml",
+        sizes: "16x13",
+      },
+      {
+        url: "/favicons/typewriter-32.svg",
+        type: "image/svg+xml",
+        sizes: "32x26",
+      },
+      {
+        url: "/favicons/typewriter-64.svg",
+        type: "image/svg+xml",
+        sizes: "64x51",
+      },
+    ],
+  },
 };
 
 export default function RootLayout({

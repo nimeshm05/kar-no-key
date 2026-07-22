@@ -81,7 +81,7 @@ export default function Navbar({
 
         <div className="navbar__section navbar__section--end">
           <Dropdown
-            label="players joined"
+            label="players"
             countBadge={countBadge}
             disabled={isRosterLoading && playerCount === 0}
             isOpen={openMenu === "players"}

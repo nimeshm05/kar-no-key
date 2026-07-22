@@ -166,7 +166,7 @@ export default function LobbyRoster({
       ) : (
         <>
           <div className="lobby-roster__header text-body">
-            <span>players joined</span>
+            <span>players</span>
             <span>
               {playerCount}/{LOBBY_MAX_PLAYERS}
             </span>

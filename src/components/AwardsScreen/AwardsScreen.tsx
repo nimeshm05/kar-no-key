@@ -65,9 +65,12 @@ export default function AwardsScreen({
         <div className="awards-screen__container">
           <div className="awards-screen__main">
             <header className="awards-screen__heading">
-              <h1 className="awards-screen__title text-heading-1">
-                End of Race Awards
-              </h1>
+              <div className="awards-screen__title-row">
+                <span className="awards-screen__gutter" aria-hidden="true" />
+                <h1 className="awards-screen__title text-heading-2">
+                  Results
+                </h1>
+              </div>
             </header>
 
             {restartError ? (

@@ -1,7 +1,7 @@
 .award-section {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 40px;
   width: 100%;
 }
 
@@ -11,48 +11,62 @@
   gap: 4px;
 }
 
+.award-section__title-row,
+.award-section__description-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
 .award-section__title {
   margin: 0;
   color: var(--color-text-primary);
+  font-weight: var(--weight-semibold);
 }
 
 .award-section__description {
   margin: 0;
   color: var(--color-text-muted);
+  font-weight: var(--weight-medium) !important;
 }
 
 .award-section__table {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 20px;
   width: 100%;
 }
 
 .award-section__table-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 12px;
   width: 100%;
+  font-family: var(--family-mono);
+  font-size: var(--size-20);
+  font-weight: var(--weight-semibold);
+  line-height: var(--line-16);
   color: var(--color-accent-green);
 }
 
 .award-section__col-players {
-  display: flex;
-  align-items: center;
-  padding-left: 36px;
+  flex: 1;
+  min-width: 0;
+  font-size: var(--size-14) !important;
 }
 
 .award-section__col-score {
   flex-shrink: 0;
   text-align: right;
   min-width: 60px;
+  font-size: var(--size-14) !important;
 }
 
 .award-section__rows {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -61,7 +75,6 @@
 .award-section__row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 12px;
   width: 100%;
   min-height: 24px;
@@ -69,21 +82,14 @@
 
 .award-section__row--top {
   color: var(--color-text-primary);
-  font-weight: var(--weight-semibold);
 }
 
 .award-section__row--muted {
   color: var(--color-text-muted);
 }
 
-.award-section__player {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-width: 0;
-}
-
 .award-section__rank-slot {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -94,12 +100,16 @@
 }
 
 .award-section__star {
-  width: 24px;
-  height: 24px;
+  position: absolute;
+  inset: 9.32% 11.1% 16.27% 11.1%;
+  width: auto;
+  height: auto;
   display: block;
 }
 
 .award-section__name {
+  flex: 1;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -110,4 +120,5 @@
   text-align: right;
   min-width: 60px;
   font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
 }

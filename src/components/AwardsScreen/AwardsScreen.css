@@ -15,8 +15,8 @@
 .awards-screen__container {
   display: flex;
   align-items: flex-start;
-  width: var(--layout-content-width);
-  max-width: 100%;
+  width: 100%;
+  max-width: 600px;
 }
 
 .awards-screen__main {
@@ -33,6 +33,20 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
+  width: 100%;
+}
+
+.awards-screen__title-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+}
+
+.awards-screen__gutter {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
 }
 
 .awards-screen__title {
@@ -66,7 +80,6 @@
 
 @media (max-width: 720px) {
   .awards-screen__container {
-    width: 100%;
     padding: 0 var(--size-20);
   }
 

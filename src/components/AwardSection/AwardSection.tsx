@@ -23,14 +23,21 @@ export default function AwardSection({
   return (
     <section className="award-section">
       <header className="award-section__header">
-        <h2 className="award-section__title text-heading-2">{title}</h2>
-        <p className="award-section__description text-body">{description}</p>
+        <div className="award-section__title-row">
+          <span className="award-section__rank-slot" aria-hidden="true" />
+          <h2 className="award-section__title text-heading-3">{title}</h2>
+        </div>
+        <div className="award-section__description-row">
+          <span className="award-section__rank-slot" aria-hidden="true" />
+          <p className="award-section__description text-body">{description}</p>
+        </div>
       </header>
 
       <div className="award-section__table">
         <div className="award-section__table-header">
-          <span className="award-section__col-players text-body">Players</span>
-          <span className="award-section__col-score text-body">Score</span>
+          <span className="award-section__rank-slot" aria-hidden="true" />
+          <span className="award-section__col-players">Players</span>
+          <span className="award-section__col-score">Score</span>
         </div>
 
         <ul className="award-section__rows">
@@ -39,7 +46,7 @@ export default function AwardSection({
             const starSrc = STAR_BY_RANK[entry.rank];
             const rowClass = [
               "award-section__row",
-              "text-body-regular",
+              "text-button-label",
               isTopThree
                 ? "award-section__row--top"
                 : "award-section__row--muted",
@@ -47,21 +54,17 @@ export default function AwardSection({
 
             return (
               <li key={`${title}-${entry.player_id}`} className={rowClass}>
-                <span className="award-section__player">
-                  <span className="award-section__rank-slot" aria-hidden="true">
-                    {starSrc ? (
-                      <img
-                        className="award-section__star"
-                        src={starSrc}
-                        alt=""
-                        width={24}
-                        height={24}
-                      />
-                    ) : null}
-                  </span>
-                  <span className="award-section__name">
-                    {entry.display_name.toLowerCase()}
-                  </span>
+                <span className="award-section__rank-slot" aria-hidden="true">
+                  {starSrc ? (
+                    <img
+                      className="award-section__star"
+                      src={starSrc}
+                      alt=""
+                    />
+                  ) : null}
+                </span>
+                <span className="award-section__name">
+                  {entry.display_name.toLowerCase()}
                 </span>
                 <span className="award-section__metric">
                   {formatMetric(entry.metric)}

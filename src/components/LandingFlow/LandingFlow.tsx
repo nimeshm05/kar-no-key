@@ -1,13 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import AnimatedEllipsis from "@/components/AnimatedEllipsis/AnimatedEllipsis";
 import TypewriterIllustration from "@/components/TypewriterIllustration/TypewriterIllustration";
 import Button from "@/components/Button/Button";
 import InputField from "@/components/InputField/InputField";
 import LobbyScreen from "@/components/LobbyScreen/LobbyScreen";
+import PageLoader from "@/components/PageLoader/PageLoader";
 import type { JoinModalPhase } from "@/components/JoinCodeModal/JoinCodeModal";
 import {
   identifyPlayer,
@@ -34,6 +34,7 @@ import {
   startSongSelection,
   type LobbyPlayer,
 } from "@/lib/supabase/functions";
+import { useTimedPageLoader } from "@/lib/ui/useTimedPageLoader";
 import "./LandingFlow.css";
 
 type Step = "landing" | "lobby";
@@ -70,22 +71,33 @@ export default function LandingFlow() {
   const [startGameError, setStartGameError] = useState<string | null>(null);
   const [joinModalPhase, setJoinModalPhase] = useState<JoinModalPhase>("enter-code");
   const [playerId, setPlayerId] = useState<string | null>(null);
+  const isNavigatingAwayRef = useRef(false);
+  const {
+    isLoading: isPageLoading,
+    start: startPageLoader,
+    finish: finishPageLoader,
+    cancel: cancelPageLoader,
+  } = useTimedPageLoader();
 
   const navigateToLobbyRoute = useCallback(
     (status: string, songSelectionStarted: boolean) => {
       const route = getRouteForLobbyStatus(status, songSelectionStarted);
       if (route) {
+        isNavigatingAwayRef.current = true;
+        startPageLoader();
         router.push(route);
         return true;
       }
       return false;
     },
-    [router],
+    [router, startPageLoader],
   );
 
   const navigateToSearch = useCallback(() => {
+    isNavigatingAwayRef.current = true;
+    startPageLoader();
     router.push("/search");
-  }, [router]);
+  }, [router, startPageLoader]);
 
   const applyRosterData = useCallback(
     (data: {
@@ -200,14 +212,27 @@ export default function LandingFlow() {
       return;
     }
 
+    startPageLoader();
     setDisplayName(session.displayName);
     setLobbyCode(session.lobbyCode);
     setLobbyId(session.lobbyId);
     setIsHost(session.isHost);
     setStep("lobby");
 
-    void fetchLobbyRoster(id, true);
-  }, [fetchLobbyRoster]);
+    void fetchLobbyRoster(id, true).then((success) => {
+      if (isNavigatingAwayRef.current) {
+        return;
+      }
+
+      if (success) {
+        finishPageLoader();
+        return;
+      }
+
+      // Stay on lobby with error UI rather than an infinite loader.
+      cancelPageLoader();
+    });
+  }, [cancelPageLoader, fetchLobbyRoster, finishPageLoader, startPageLoader]);
 
   const transition = prefersReducedMotion
     ? { duration: 0 }
@@ -231,6 +256,7 @@ export default function LandingFlow() {
     identifyPlayer(playerId, { has_display_name: true });
 
     setIsLoading(true);
+    startPageLoader();
     setError(null);
 
     try {
@@ -242,6 +268,7 @@ export default function LandingFlow() {
           source_screen: "landing",
         });
         setError(getErrorMessage(invokeError, data));
+        cancelPageLoader();
         return;
       }
 
@@ -251,6 +278,7 @@ export default function LandingFlow() {
           source_screen: "landing",
         });
         setError("Server did not return a session token");
+        cancelPageLoader();
         return;
       }
 
@@ -278,13 +306,23 @@ export default function LandingFlow() {
         source_screen: "landing",
       });
       setStep("lobby");
-      await fetchLobbyRoster(playerId, true);
+      const success = await fetchLobbyRoster(playerId, true);
+      if (isNavigatingAwayRef.current) {
+        return;
+      }
+
+      if (success) {
+        finishPageLoader();
+      } else {
+        cancelPageLoader();
+      }
     } catch (caughtError) {
       trackEvent(AnalyticsEvent.LobbyCreateFailed, {
         error_message: sanitizeErrorMessage(caughtError, null),
         source_screen: "landing",
       });
       setError(getErrorMessage(caughtError, null));
+      cancelPageLoader();
     } finally {
       setIsLoading(false);
     }
@@ -331,11 +369,12 @@ export default function LandingFlow() {
   }
 
   async function handleStartGame() {
-    if (!playerId || !isHost || isLoading || isRosterLoading) {
+    if (!playerId || !isHost || isLoading || isRosterLoading || isPageLoading) {
       return;
     }
 
     setIsLoading(true);
+    startPageLoader();
     setStartGameError(null);
 
     try {
@@ -343,6 +382,7 @@ export default function LandingFlow() {
 
       if (invokeError || !data || "error" in data) {
         setStartGameError(getErrorMessage(invokeError, data));
+        cancelPageLoader();
         return;
       }
 
@@ -356,6 +396,7 @@ export default function LandingFlow() {
       navigateToSearch();
     } catch (caughtError) {
       setStartGameError(getErrorMessage(caughtError, null));
+      cancelPageLoader();
     } finally {
       setIsLoading(false);
     }
@@ -457,6 +498,10 @@ export default function LandingFlow() {
     }
   }
 
+  if (isPageLoading) {
+    return <PageLoader label="Loading" />;
+  }
+
   return (
     <div className="landing-flow">
       <AnimatePresence mode="wait">
@@ -501,7 +546,7 @@ export default function LandingFlow() {
                 type="submit"
                 disabled={isLoading || !displayName.trim()}
               >
-                {isLoading ? <AnimatedEllipsis label="creating" /> : "get started"}
+                get started
               </Button>
               {error ? (
                 <p className="landing-form__error text-body" role="alert">

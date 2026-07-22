@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import PageLoader from "@/components/PageLoader/PageLoader";
 import SearchScreen from "@/components/SearchScreen/SearchScreen";
 import {
   identifyPlayer,
@@ -29,6 +30,7 @@ import {
   selectSong,
   type LobbyPlayer,
 } from "@/lib/supabase/functions";
+import { useTimedPageLoader } from "@/lib/ui/useTimedPageLoader";
 
 const PAGE_SIZE = 6;
 
@@ -56,6 +58,13 @@ export default function SearchFlow() {
   const [playerId, setPlayerId] = useState<string | null>(null);
   const [isReady, setIsReady] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
+  const isNavigatingAwayRef = useRef(false);
+  const {
+    isLoading: isPageLoading,
+    start: startPageLoader,
+    finish: finishPageLoader,
+    cancel: cancelPageLoader,
+  } = useTimedPageLoader();
   const [confirmError, setConfirmError] = useState<string | null>(null);
   const [lyricsStatusBySongId, setLyricsStatusBySongId] = useState<
     Record<string, "available" | "unavailable">
@@ -77,23 +86,32 @@ export default function SearchFlow() {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [loadMoreError, setLoadMoreError] = useState<string | null>(null);
 
+  const navigateTo = useCallback(
+    (route: string) => {
+      isNavigatingAwayRef.current = true;
+      startPageLoader();
+      router.replace(route);
+    },
+    [router, startPageLoader],
+  );
+
   const handleRouteFromStatus = useCallback(
     (status: string, songSelectionStarted: boolean) => {
       const route = getRouteForLobbyStatus(status, songSelectionStarted);
 
       if (route === "/game" || route === "/results") {
-        router.replace(route);
+        navigateTo(route);
         return true;
       }
 
       if (!songSelectionStarted && status === "waiting") {
-        router.replace("/");
+        navigateTo("/");
         return true;
       }
 
       return false;
     },
-    [router],
+    [navigateTo],
   );
 
   const applyLobbyState = useCallback(
@@ -168,20 +186,31 @@ export default function SearchFlow() {
     const session = loadLobbySession();
 
     if (!session) {
-      router.replace("/");
+      navigateTo("/");
       return;
     }
 
     setPlayerId(id);
     setDisplayName(session.displayName);
     setIsHost(session.isHost);
+    startPageLoader();
 
     void fetchLobbyState(id).then((success) => {
+      if (isNavigatingAwayRef.current) {
+        return;
+      }
+
       if (success) {
         setIsReady(true);
+        finishPageLoader();
+        return;
       }
+
+      // Stay on search with error UI rather than an infinite loader.
+      setIsReady(true);
+      cancelPageLoader();
     });
-  }, [fetchLobbyState, router]);
+  }, [cancelPageLoader, fetchLobbyState, finishPageLoader, navigateTo, startPageLoader]);
 
   useEffect(() => {
     if (!isReady || !isHost || !playerId) {
@@ -257,7 +286,7 @@ export default function SearchFlow() {
     }
 
     clearLobbySession();
-    router.replace("/");
+    navigateTo("/");
   }
 
   async function handleSearch(query: string) {
@@ -374,6 +403,7 @@ export default function SearchFlow() {
     }
 
     setIsConfirming(true);
+    startPageLoader();
     setConfirmError(null);
 
     try {
@@ -400,6 +430,7 @@ export default function SearchFlow() {
           player_count: players.length,
         });
         setConfirmError(getErrorMessage(invokeError, data));
+        cancelPageLoader();
         return;
       }
 
@@ -418,7 +449,7 @@ export default function SearchFlow() {
         source_screen: "search",
         player_count: players.length,
       });
-      router.replace("/game");
+      navigateTo("/game");
     } catch (caughtError) {
       trackEvent(AnalyticsEvent.SongSelectionFailed, {
         song_id: song.id,
@@ -427,13 +458,14 @@ export default function SearchFlow() {
         player_count: players.length,
       });
       setConfirmError(getErrorMessage(caughtError, null));
+      cancelPageLoader();
     } finally {
       setIsConfirming(false);
     }
   }
 
-  if (!isReady) {
-    return null;
+  if (!isReady || isPageLoading) {
+    return <PageLoader label="Loading search" />;
   }
 
   return (

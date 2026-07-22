@@ -90,6 +90,18 @@
   color: var(--color-text-muted);
 }
 
+.design-system-page-loader-frame {
+  position: relative;
+  height: 280px;
+  overflow: hidden;
+  border: 1px solid var(--neutral-200);
+  background: var(--color-background);
+}
+
+.design-system-page-loader-frame .page-loader {
+  min-height: 100%;
+}
+
 .design-system-swatches {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));

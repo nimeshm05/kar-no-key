@@ -9,6 +9,10 @@ import IconButton from "@/components/IconButton/IconButton";
 import InputField from "@/components/InputField/InputField";
 import Loader from "@/components/Loader/Loader";
 import Navbar from "@/components/Navbar/Navbar";
+import PageLoader, {
+  PAGE_LOADER_BOX_SIZE,
+  PAGE_LOADER_GAP,
+} from "@/components/PageLoader/PageLoader";
 import PhraseTypingArea from "@/components/PhraseTypingArea/PhraseTypingArea";
 import SongCard from "@/components/SongCard/SongCard";
 import type { LobbyPlayer, SongResult } from "@/lib/supabase/functions";
@@ -293,6 +297,12 @@ export default function DesignSystemGallery() {
           </div>
           <div className="design-system-loader-demo">
             <span className="design-system-loader-demo__label text-body">
+              page transition (120px)
+            </span>
+            <Loader boxSize={PAGE_LOADER_BOX_SIZE} gap={PAGE_LOADER_GAP} />
+          </div>
+          <div className="design-system-loader-demo">
+            <span className="design-system-loader-demo__label text-body">
               80px (boxSize=80)
             </span>
             <Loader boxSize={80} />
@@ -315,6 +325,19 @@ export default function DesignSystemGallery() {
             </span>
             <Loader paused />
           </div>
+        </div>
+      </section>
+
+      <section className="design-system-section">
+        <h2 className="design-system-section__title text-heading-2">
+          PageLoader
+        </h2>
+        <p className="design-system-section__hint text-body">
+          Full-viewport centered loader for screen transitions (Figma
+          2247:2076).
+        </p>
+        <div className="design-system-page-loader-frame">
+          <PageLoader label="Loading page" />
         </div>
       </section>
 

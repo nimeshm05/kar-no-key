@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import GameScreen from "@/components/GameScreen/GameScreen";
+import PageLoader from "@/components/PageLoader/PageLoader";
 import {
   identifyPlayer,
   setLobbyGroup,
@@ -30,6 +31,7 @@ import {
   type LobbyPlayer,
   type LobbySong,
 } from "@/lib/supabase/functions";
+import { useTimedPageLoader } from "@/lib/ui/useTimedPageLoader";
 
 export default function GameFlow() {
   const router = useRouter();
@@ -49,6 +51,22 @@ export default function GameFlow() {
   const [playerId, setPlayerId] = useState<string | null>(null);
   const [lobbyId, setLobbyId] = useState<string | null>(null);
   const [isReady, setIsReady] = useState(false);
+  const isNavigatingAwayRef = useRef(false);
+  const {
+    isLoading: isPageLoading,
+    start: startPageLoader,
+    finish: finishPageLoader,
+    cancel: cancelPageLoader,
+  } = useTimedPageLoader();
+
+  const navigateTo = useCallback(
+    (route: string) => {
+      isNavigatingAwayRef.current = true;
+      startPageLoader();
+      router.replace(route);
+    },
+    [router, startPageLoader],
+  );
 
   const handleRouteFromStatus = useCallback(
     (status: string, songSelectionStarted: boolean) => {
@@ -56,23 +74,23 @@ export default function GameFlow() {
 
       // Prefer results over search so a finish never loses to a stale waiting poll.
       if (route === "/results") {
-        router.replace("/results");
+        navigateTo("/results");
         return true;
       }
 
       if (route === "/search") {
-        router.replace("/search");
+        navigateTo("/search");
         return true;
       }
 
       if (!songSelectionStarted && status === "waiting") {
-        router.replace("/");
+        navigateTo("/");
         return true;
       }
 
       return false;
     },
-    [router],
+    [navigateTo],
   );
 
   const applyLobbyState = useCallback(
@@ -229,20 +247,30 @@ export default function GameFlow() {
     const session = loadLobbySession();
 
     if (!session) {
-      router.replace("/");
+      navigateTo("/");
       return;
     }
 
     setPlayerId(id);
     setDisplayName(session.displayName);
     setIsHost(session.isHost);
+    startPageLoader();
 
     void fetchLobbyState(id).then((success) => {
+      if (isNavigatingAwayRef.current) {
+        return;
+      }
+
       if (success) {
         setIsReady(true);
+        finishPageLoader();
+        return;
       }
+
+      // Game data missing / wrong status — recover to search instead of spinning forever.
+      navigateTo("/search");
     });
-  }, [fetchLobbyState, router]);
+  }, [fetchLobbyState, finishPageLoader, navigateTo, startPageLoader]);
 
   async function handleExitLobby() {
     if (playerId) {
@@ -271,7 +299,7 @@ export default function GameFlow() {
     }
 
     clearLobbySession();
-    router.replace("/");
+    navigateTo("/");
   }
 
   async function handlePlay() {
@@ -352,6 +380,7 @@ export default function GameFlow() {
     }
 
     setIsControlPending(true);
+    startPageLoader();
     setControlError(null);
 
     const currentPlayer = players.find((player) => player.player_id === playerId);
@@ -361,11 +390,13 @@ export default function GameFlow() {
 
       if (invokeError || !data || "error" in data) {
         setControlError(getErrorMessage(invokeError, data));
+        cancelPageLoader();
         return;
       }
 
       if (data.status !== "finished") {
         setControlError("Race did not finish correctly. Please try ending the song again.");
+        cancelPageLoader();
         return;
       }
 
@@ -378,16 +409,17 @@ export default function GameFlow() {
         is_host: true,
         source_screen: "game",
       });
-      router.replace("/results");
+      navigateTo("/results");
     } catch (caughtError) {
       setControlError(getErrorMessage(caughtError, null));
+      cancelPageLoader();
     } finally {
       setIsControlPending(false);
     }
   }
 
-  if (!isReady || !song) {
-    return null;
+  if (!isReady || !song || isPageLoading) {
+    return <PageLoader label="Loading game" />;
   }
 
   return (

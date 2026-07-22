@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import AwardsScreen from "@/components/AwardsScreen/AwardsScreen";
+import PageLoader from "@/components/PageLoader/PageLoader";
 import {
   identifyPlayer,
   setLobbyGroup,
@@ -27,6 +28,7 @@ import {
   type AwardsSnapshot,
   type LobbyPlayer,
 } from "@/lib/supabase/functions";
+import { useTimedPageLoader } from "@/lib/ui/useTimedPageLoader";
 
 export default function ResultsFlow() {
   const router = useRouter();
@@ -41,6 +43,22 @@ export default function ResultsFlow() {
   const [playerId, setPlayerId] = useState<string | null>(null);
   const [lobbyId, setLobbyId] = useState<string | null>(null);
   const [isReady, setIsReady] = useState(false);
+  const isNavigatingAwayRef = useRef(false);
+  const {
+    isLoading: isPageLoading,
+    start: startPageLoader,
+    finish: finishPageLoader,
+    cancel: cancelPageLoader,
+  } = useTimedPageLoader();
+
+  const navigateTo = useCallback(
+    (route: string) => {
+      isNavigatingAwayRef.current = true;
+      startPageLoader();
+      router.replace(route);
+    },
+    [router, startPageLoader],
+  );
 
   const handleRouteFromStatus = useCallback(
     (status: string, songSelectionStarted: boolean) => {
@@ -50,19 +68,19 @@ export default function ResultsFlow() {
       }
 
       if (status === "waiting" && songSelectionStarted) {
-        router.replace("/search");
+        navigateTo("/search");
         return true;
       }
 
       if (status === "waiting" && !songSelectionStarted) {
-        router.replace("/");
+        navigateTo("/");
         return true;
       }
 
       // Ignore stale playing/ready/countdown polls — do not bounce off results.
       return false;
     },
-    [router],
+    [navigateTo],
   );
 
   const applyLobbyState = useCallback(
@@ -113,7 +131,7 @@ export default function ResultsFlow() {
     const activePlayerId = getPlayerId();
 
     if (!session || !activePlayerId) {
-      router.replace("/");
+      navigateTo("/");
       return;
     }
 
@@ -128,9 +146,16 @@ export default function ResultsFlow() {
       last_lobby_id: session.lobbyId,
     });
     setLobbyGroup(session.lobbyId);
-    setIsReady(true);
-    void fetchLobbyState(activePlayerId);
-  }, [fetchLobbyState, router]);
+    startPageLoader();
+
+    void fetchLobbyState(activePlayerId).then(() => {
+      if (isNavigatingAwayRef.current) {
+        return;
+      }
+      setIsReady(true);
+      finishPageLoader();
+    });
+  }, [fetchLobbyState, finishPageLoader, navigateTo, startPageLoader]);
 
   useLobbyStatePolling({
     playerId,
@@ -157,7 +182,7 @@ export default function ResultsFlow() {
     }
 
     clearLobbySession();
-    router.replace("/");
+    navigateTo("/");
   }
 
   async function handleRestartGame() {
@@ -166,6 +191,7 @@ export default function ResultsFlow() {
     }
 
     setIsRestartPending(true);
+    startPageLoader();
     setRestartError(null);
 
     try {
@@ -173,19 +199,21 @@ export default function ResultsFlow() {
 
       if (invokeError || !data || "error" in data) {
         setRestartError(getErrorMessage(invokeError, data));
+        cancelPageLoader();
         return;
       }
 
-      router.replace("/search");
+      navigateTo("/search");
     } catch (caughtError) {
       setRestartError(getErrorMessage(caughtError, null));
+      cancelPageLoader();
     } finally {
       setIsRestartPending(false);
     }
   }
 
-  if (!isReady) {
-    return null;
+  if (!isReady || isPageLoading) {
+    return <PageLoader label="Loading results" />;
   }
 
   return (

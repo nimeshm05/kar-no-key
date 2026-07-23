@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react"
 import Button from "@/components/Button/Button";
 import IconButton from "@/components/IconButton/IconButton";
 import LobbyRoster from "@/components/LobbyRoster/LobbyRoster";
+import MusicNoteDecorations from "@/components/MusicNoteDecorations/MusicNoteDecorations";
 import Navbar from "@/components/Navbar/Navbar";
 import YouTubePlayer from "@/components/YouTubePlayer/YouTubePlayer";
 import PhraseTypingArea from "@/components/PhraseTypingArea/PhraseTypingArea";
@@ -303,6 +304,8 @@ export default function GameScreen({
 
   return (
     <main className="game-screen">
+      <MusicNoteDecorations variant="game" isAnimating={isPlaying} />
+
       <Navbar
         displayName={displayName}
         players={players}

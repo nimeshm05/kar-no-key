@@ -24,3 +24,32 @@
   fill: none;
   stroke-linecap: round;
 }
+
+@keyframes music-note-stroke-pulse {
+  0%,
+  100% {
+    stroke: var(--neutral-400);
+  }
+
+  50% {
+    stroke: var(--neutral-200);
+  }
+}
+
+.music-note-decoration-path--pulse {
+  stroke: var(--solid-black);
+  animation: music-note-stroke-pulse 3s ease-in-out infinite;
+  animation-delay: var(--note-pulse-delay, 0s);
+  animation-play-state: paused;
+}
+
+.music-note-decorations--animating .music-note-decoration-path--pulse {
+  animation-play-state: running;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .music-note-decoration-path--pulse {
+    animation: none;
+    stroke: var(--neutral-400);
+  }
+}

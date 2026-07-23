@@ -1,7 +1,14 @@
 .game-screen {
+  position: relative;
   min-height: 100svh;
   display: flex;
   flex-direction: column;
+}
+
+.game-screen > .navbar,
+.game-screen__body {
+  position: relative;
+  z-index: 1;
 }
 
 .game-screen__body {

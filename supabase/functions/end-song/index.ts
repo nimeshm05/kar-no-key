@@ -56,10 +56,12 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: "No song is currently selected" }, 400, req);
   }
 
+  // `ready` is the paused-after-start state (see pause-playback). Hosts can still end.
   if (
     effectiveStatus !== "playing" &&
     lobby.status !== "playing" &&
     lobby.status !== "countdown" &&
+    lobby.status !== "ready" &&
     lobby.status !== "finished"
   ) {
     return jsonResponse({ error: "No active race to finish" }, 400, req);
@@ -69,6 +71,7 @@ Deno.serve(async (req) => {
     const result = await finishRace(supabase, {
       id: lobby.id,
       code: lobby.code,
+      // Keep paused (`ready`) as non-playing so finishRace uses stored elapsed ms.
       status: lobby.status === "countdown" ? "playing" : lobby.status,
       selected_youtube_video_id: lobby.selected_youtube_video_id,
       playback_start_at: lobby.playback_start_at,

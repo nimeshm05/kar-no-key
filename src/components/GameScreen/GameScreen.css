@@ -5,13 +5,14 @@
   flex-direction: column;
 }
 
-.game-screen > .navbar,
-.game-screen__body {
+.game-screen > .navbar {
   position: relative;
-  z-index: 1;
+  z-index: 20;
 }
 
 .game-screen__body {
+  position: relative;
+  z-index: 1;
   flex: 1;
   display: flex;
   justify-content: center;

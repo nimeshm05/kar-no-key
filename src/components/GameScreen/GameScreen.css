@@ -1,13 +1,10 @@
 .game-screen {
   position: relative;
-  min-height: 100svh;
+  height: 100svh;
+  max-height: 100svh;
   display: flex;
   flex-direction: column;
-}
-
-.game-screen > .navbar {
-  position: relative;
-  z-index: 20;
+  overflow: hidden;
 }
 
 .game-screen__body {
@@ -16,31 +13,64 @@
   flex: 1;
   display: flex;
   justify-content: center;
+  min-height: 0;
   width: 100%;
   padding: 0;
+  padding-top: var(--navbar-height);
+  overflow: hidden;
 }
 
 .game-screen__container {
   display: flex;
-  width: var(--layout-content-width);
-  max-width: 100%;
+  justify-content: center;
+  align-items: stretch;
+  min-height: 0;
+  height: 100%;
 }
 
 .game-screen__main {
   display: flex;
   flex: 1;
   flex-direction: column;
-  gap: 40px;
   min-width: 0;
-  padding: 60px 0;
+  min-height: 0;
+  height: 100%;
+  padding: 40px 0;
+  width: var(--layout-content-width);
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.game-screen__shell {
+  display: flex;
+  flex: 1;
+  align-items: stretch;
+  min-height: 0;
   width: 100%;
+  border: 1px solid var(--neutral-200);
+  overflow: hidden;
+  background: var(--color-background);
+}
+
+.game-screen__left {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  border-right: 1px solid var(--neutral-200);
 }
 
 .game-screen__control-bar {
   display: flex;
-  gap: 10px;
+  flex-shrink: 0;
+  gap: 12px;
   align-items: center;
   width: 100%;
+  padding: 12px;
+  border-bottom: 1px solid var(--neutral-200);
+  box-sizing: border-box;
 }
 
 .game-screen__song-card {
@@ -52,8 +82,8 @@
 
 .game-screen__thumbnail,
 .game-screen__thumbnail-placeholder {
-  width: 56px;
-  height: 56px;
+  width: 80px;
+  height: 80px;
   flex-shrink: 0;
   object-fit: cover;
 }
@@ -66,9 +96,10 @@
   display: flex;
   flex: 1;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
   min-width: 0;
-  padding: 0 var(--size-14);
+  padding: 12px 16px;
+  box-sizing: border-box;
 }
 
 .game-screen__song-title {
@@ -93,13 +124,15 @@
   max-width: none;
   overflow: visible;
   text-overflow: clip;
-  animation: game-screen-song-title-marquee var(--marquee-duration, 10s) linear infinite;
+  animation: game-screen-song-title-marquee var(--marquee-duration, 10s) linear
+    infinite;
 }
 
 .game-screen__song-title-text {
   display: inline-block;
   flex-shrink: 0;
   max-width: none;
+  font-weight: var(--weight-semibold);
 }
 
 .game-screen__song-title-gap {
@@ -138,7 +171,6 @@
 
 .game-screen__host-controls {
   display: flex;
-  gap: 12px;
   align-items: center;
   flex-shrink: 0;
 }
@@ -148,17 +180,11 @@
 }
 
 .game-screen__control-error {
+  flex-shrink: 0;
   margin: 0;
+  padding: 8px 12px;
   color: var(--color-text-error);
-}
-
-.game-screen__content {
-  display: flex;
-  flex: 1;
-  gap: 120px;
-  align-items: stretch;
-  min-height: 0;
-  width: 100%;
+  border-bottom: 1px solid var(--neutral-200);
 }
 
 .game-screen__panel {
@@ -170,6 +196,7 @@
   min-height: 0;
   padding: 40px;
   background: var(--neutral-100);
+  overflow: hidden;
 }
 
 .game-screen__panel-textarea {
@@ -207,22 +234,31 @@
 
 .game-screen__roster {
   flex-shrink: 0;
-  width: 248px;
+  width: 288px;
   align-self: stretch;
+  min-height: 0;
 }
 
 @media (max-width: 720px) {
   .game-screen__body {
-    padding: calc(var(--navbar-height) + 40px) var(--size-20) 40px;
-  }
-
-  .game-screen__container {
-    width: 100%;
+    padding-top: var(--navbar-height);
   }
 
   .game-screen__main {
-    min-height: auto;
-    padding: 0;
+    width: 100%;
+    max-width: 100%;
+    padding: 24px var(--size-20);
+  }
+
+  .game-screen__shell {
+    flex-direction: column;
+    overflow: auto;
+  }
+
+  .game-screen__left {
+    border-right: none;
+    border-bottom: 1px solid var(--neutral-200);
+    min-height: 360px;
   }
 
   .game-screen__control-bar {
@@ -231,16 +267,16 @@
   }
 
   .game-screen__host-controls {
+    display: flex;
     width: 100%;
+  }
+
+  .game-screen__host-controls .icon-button {
+    flex-shrink: 0;
   }
 
   .game-screen__end-song-button {
     flex: 1;
-  }
-
-  .game-screen__content {
-    flex-direction: column;
-    gap: 40px;
   }
 
   .game-screen__roster {

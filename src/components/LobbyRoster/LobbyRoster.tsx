@@ -108,7 +108,9 @@ export default function LobbyRoster({
     <aside className={rosterClasses}>
       {isGameVariant ? (
         <>
-          <p className="lobby-roster__title text-body">Score Card</p>
+          <div className="lobby-roster__score-header">
+            <p className="lobby-roster__title text-button-label">Score Card</p>
+          </div>
           <div className="lobby-roster__game-table">
             <div className="lobby-roster__header lobby-roster__header--game text-body">
               <span>players</span>

@@ -1,36 +1,77 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# kar-no-key
 
-## Getting Started
+Multiplayer lyric-typing race. Create or join a lobby, pick a song, and type phrases in sync with the track — race your frens, one lyric at a time.
 
-First, run the development server:
+## How it works
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+1. **Landing** — enter a display name; create a lobby or join with a code
+2. **Lobby** — wait for players; host starts song selection
+3. **Search** — host picks a YouTube result (or recommendation) with timed lyrics
+4. **Game** — countdown, synced playback, type each phrase as it lands
+5. **Results** — scores and awards; host can restart
+
+## Stack
+
+- **Frontend:** Next.js (App Router), React, plain CSS
+- **Backend:** Supabase Postgres + Edge Functions
+- **Media / lyrics:** YouTube (search + playback), LRCLIB (timed lyrics)
+- **Analytics:** Amplitude, Vercel Analytics
+
+## Architecture
+
+```text
+Browser (Next.js)
+  └── Edge Functions (lobby, songs, playback, scoring)
+        ├── Postgres (lobbies, players, songs, scores)
+        ├── YouTube API
+        └── LRCLIB API
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Client state is driven by polling lobby/roster endpoints (deny-all RLS; server is authoritative).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Modules
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### App routes (`src/app`)
 
-## Learn More
+| Route | Purpose |
+|-------|---------|
+| `/` | Landing / create or join lobby |
+| `/search` | Song selection (host) / waiting (players) |
+| `/game` | Countdown + race |
+| `/results` | Results and awards |
+| `/design-system` | Internal component gallery |
 
-To learn more about Next.js, take a look at the following resources:
+### Flows & screens (`src/components`)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **Lobby** — `LandingFlow`, `LobbyScreen`, `JoinCodeModal`, `LobbyRoster`, `Navbar`
+- **Search** — `SearchFlow`, `SearchScreen`, `SongCard`
+- **Game** — `GameFlow`, `GameScreen`, `PhraseTypingArea`, `YouTubePlayer`, `MusicNoteDecorations`
+- **Results** — `ResultsFlow`, `AwardsScreen`, `AwardSection`
+- **Shared UI** — `Button`, `Dialog`, `Dropdown`, `InputField`, `IconButton`, `Loader`, `PageLoader`, `FeedbackDialog`, …
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Client libs (`src/lib`)
 
-## Deploy on Vercel
+- `lobby/` — roster/state polling, route helpers, lobby code formatting
+- `game/` — phrase scoring, playback sync, countdown
+- `songs/` — search and recommended songs wrappers
+- `player/` — local identity and session
+- `supabase/` — Edge Function invoke clients
+- `analytics/` — Amplitude event helpers
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Backend (`supabase/functions`)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Lobby** — `create-lobby`, `join-lobby`, `leave-lobby`, `generate-lobby-code`, `validate-lobby-code`, `get-lobby-players`, `get-lobby-state`, `start-song-selection`
+- **Songs** — `search-songs`, `get-recommended-songs`, `select-song` (YouTube metadata + LRCLIB lyrics cache)
+- **Playback** — `start-countdown`, `pause-playback`, `end-song`, `restart-game`
+- **Scoring** — `submit-phrase-progress` (plus shared awards / finish-race logic)
+- **Feedback** — `submit-feedback`
+- **Shared** (`_shared/`) — lyrics (LRCLIB), song providers, scoring, lobby auth, CORS
+
+### Design system (`src/styles`)
+
+Token and semantic CSS (colors, typography, spacing). Components use dedicated `.css` files — no Tailwind.
+
+## Known limitations
+
+- Lyrics come from **LRCLIB only**. If a video has no usable lyrics, selection is rejected — pick another result.
+- No alternate lyrics provider or curated fallback catalog yet.

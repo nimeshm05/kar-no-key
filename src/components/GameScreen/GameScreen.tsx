@@ -322,127 +322,145 @@ export default function GameScreen({
       <div className="game-screen__body">
         <div className="game-screen__container">
           <section className="game-screen__main">
-            <div className="game-screen__control-bar">
-              <div className="game-screen__song-card">
-                {song.thumbnail_url ? (
-                  <img
-                    className="game-screen__thumbnail"
-                    src={song.thumbnail_url}
-                    alt=""
-                  />
-                ) : (
-                  <div className="game-screen__thumbnail-placeholder" aria-hidden="true" />
-                )}
-                <div className="game-screen__song-info">
-                  <div
-                    ref={titleContainerRef}
-                    className="game-screen__song-title"
-                    title={song.title}
-                  >
-                    <div
-                      ref={titleTrackRef}
-                      className={[
-                        "game-screen__song-title-track",
-                        isMarqueeActive ? "game-screen__song-title-track--marquee" : "",
-                      ]
-                        .filter(Boolean)
-                        .join(" ")}
-                      style={marqueeStyle}
-                    >
-                      <span
-                        ref={titleTextRef}
-                        className="game-screen__song-title-text text-heading-3"
+            <div className="game-screen__shell">
+              <div className="game-screen__left">
+                <div className="game-screen__control-bar">
+                  <div className="game-screen__song-card">
+                    {song.thumbnail_url ? (
+                      <img
+                        className="game-screen__thumbnail"
+                        src={song.thumbnail_url}
+                        alt=""
+                      />
+                    ) : (
+                      <div
+                        className="game-screen__thumbnail-placeholder"
+                        aria-hidden="true"
+                      />
+                    )}
+                    <div className="game-screen__song-info">
+                      <div
+                        ref={titleContainerRef}
+                        className="game-screen__song-title"
+                        title={song.title}
                       >
-                        {song.title}
-                      </span>
-                      {isMarqueeActive ? (
-                        <>
+                        <div
+                          ref={titleTrackRef}
+                          className={[
+                            "game-screen__song-title-track",
+                            isMarqueeActive
+                              ? "game-screen__song-title-track--marquee"
+                              : "",
+                          ]
+                            .filter(Boolean)
+                            .join(" ")}
+                          style={marqueeStyle}
+                        >
                           <span
-                            className="game-screen__song-title-gap"
-                            aria-hidden="true"
-                          />
-                          <span
+                            ref={titleTextRef}
                             className="game-screen__song-title-text text-heading-3"
-                            aria-hidden="true"
                           >
                             {song.title}
                           </span>
-                        </>
-                      ) : null}
+                          {isMarqueeActive ? (
+                            <>
+                              <span
+                                className="game-screen__song-title-gap"
+                                aria-hidden="true"
+                              />
+                              <span
+                                className="game-screen__song-title-text text-heading-3"
+                                aria-hidden="true"
+                              >
+                                {song.title}
+                              </span>
+                            </>
+                          ) : null}
+                        </div>
+                      </div>
+                      <p className="game-screen__timer text-button-label">
+                        {formatTime(elapsedSeconds)} /{" "}
+                        {formatTime(durationSeconds)}
+                      </p>
                     </div>
                   </div>
-                  <p className="game-screen__timer text-button-label">
-                    {formatTime(elapsedSeconds)} / {formatTime(durationSeconds)}
-                  </p>
-                </div>
-              </div>
 
-              {isHost ? (
-                <div className="game-screen__host-controls">
-                  <IconButton
-                    variant="secondary"
-                    type="button"
-                    iconSrc={isPlaying ? "/icons/pause.svg" : "/icons/play_arrow.svg"}
-                    iconAlt={isPlaying ? "pause" : "play"}
-                    onClick={handleTransportClick}
-                    disabled={isControlPending || isCountdown}
-                  />
-                  <Button
-                    variant="primary"
-                    type="button"
-                    className="game-screen__end-song-button"
-                    onClick={onEndSong}
-                    disabled={isControlPending}
+                  {isHost ? (
+                    <div className="game-screen__host-controls">
+                      <IconButton
+                        variant="secondary"
+                        type="button"
+                        iconSrc={
+                          isPlaying
+                            ? "/icons/pause.svg"
+                            : "/icons/play_arrow.svg"
+                        }
+                        iconAlt={isPlaying ? "pause" : "play"}
+                        onClick={handleTransportClick}
+                        disabled={isControlPending || isCountdown}
+                      />
+                      <Button
+                        variant="primary"
+                        type="button"
+                        className="game-screen__end-song-button"
+                        onClick={onEndSong}
+                        disabled={isControlPending}
+                      >
+                        end song
+                      </Button>
+                    </div>
+                  ) : null}
+                </div>
+
+                {controlError ? (
+                  <p
+                    className="game-screen__control-error text-body"
+                    role="alert"
                   >
-                    end song
-                  </Button>
-                </div>
-              ) : null}
-            </div>
-
-            {controlError ? (
-              <p className="game-screen__control-error text-body" role="alert">
-                {controlError}
-              </p>
-            ) : null}
-
-            <div className="game-screen__content">
-              <div className="game-screen__panel">
-                {showCountdown ? (
-                  <p className="game-screen__countdown text-heading-1" aria-live="polite">
-                    {countdownValue}
+                    {controlError}
                   </p>
-                ) : isPlaying && activePhrase ? (
-                  <PhraseTypingArea
-                    phraseText={activePhrase.text}
-                    typedText={typedText}
-                    onTypedTextChange={setTypedText}
-                    isLocked={isPhraseLocked}
-                  />
-                ) : (
-                  <textarea
-                    className="game-screen__panel-textarea"
-                    value=""
-                    placeholder={
-                      isHost
-                        ? "click play to start the race"
-                        : "get ready..."
-                    }
-                    aria-label={
-                      isHost
-                        ? "click play to start the race"
-                        : "get ready..."
-                    }
-                    onChange={() => {}}
-                    onKeyDown={(event) => {
-                      event.preventDefault();
-                    }}
-                    autoComplete="off"
-                    spellCheck={false}
-                    rows={1}
-                    autoFocus
-                  />
-                )}
+                ) : null}
+
+                <div className="game-screen__panel">
+                  {showCountdown ? (
+                    <p
+                      className="game-screen__countdown text-heading-1"
+                      aria-live="polite"
+                    >
+                      {countdownValue}
+                    </p>
+                  ) : isPlaying && activePhrase ? (
+                    <PhraseTypingArea
+                      phraseText={activePhrase.text}
+                      typedText={typedText}
+                      onTypedTextChange={setTypedText}
+                      isLocked={isPhraseLocked}
+                    />
+                  ) : (
+                    <textarea
+                      className="game-screen__panel-textarea"
+                      value=""
+                      placeholder={
+                        isHost
+                          ? "click play to start the race"
+                          : "get ready..."
+                      }
+                      aria-label={
+                        isHost
+                          ? "click play to start the race"
+                          : "get ready..."
+                      }
+                      onChange={() => {}}
+                      onKeyDown={(event) => {
+                        event.preventDefault();
+                      }}
+                      autoComplete="off"
+                      spellCheck={false}
+                      rows={1}
+                      autoFocus
+                    />
+                  )}
+                </div>
               </div>
 
               <LobbyRoster

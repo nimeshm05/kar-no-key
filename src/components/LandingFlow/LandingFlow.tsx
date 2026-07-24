@@ -32,6 +32,7 @@ import {
   joinLobby,
   leaveLobby,
   startSongSelection,
+  validateLobbyCode,
   type LobbyPlayer,
 } from "@/lib/supabase/functions";
 import { useTimedPageLoader } from "@/lib/ui/useTimedPageLoader";
@@ -402,6 +403,44 @@ export default function LandingFlow() {
     }
   }
 
+  async function restoreOwnLobbyAfterFailedJoin(
+    activePlayerId: string,
+    name: string,
+  ): Promise<void> {
+    const { data, error: invokeError } = await createLobby(activePlayerId, name);
+
+    if (invokeError || !data || "error" in data || !data.session_token) {
+      clearLobbySession();
+      setLobbyCode("");
+      setLobbyId("");
+      setPlayers([]);
+      setIsHost(true);
+      identifyPlayer(activePlayerId, { has_active_lobby: false, is_host: false });
+      setLobbyGroup(null);
+      return;
+    }
+
+    setDisplayName(data.display_name);
+    setLobbyCode(data.code);
+    setLobbyId(data.lobby_id);
+    setIsHost(true);
+    saveLobbySession({
+      displayName: data.display_name,
+      lobbyCode: data.code,
+      lobbyId: data.lobby_id,
+      isHost: true,
+      sessionToken: data.session_token,
+    });
+    identifyPlayer(activePlayerId, {
+      is_host: true,
+      has_active_lobby: true,
+      last_lobby_id: data.lobby_id,
+      has_display_name: true,
+    });
+    setLobbyGroup(data.lobby_id);
+    await fetchLobbyRoster(activePlayerId, false);
+  }
+
   async function handleJoinLobby(): Promise<boolean> {
     if (!playerId) {
       return false;
@@ -409,12 +448,35 @@ export default function LandingFlow() {
 
     const normalizedJoinCode = normalizeLobbyCodeInput(joinCode);
     const normalizedCurrentCode = normalizeLobbyCodeInput(lobbyCode);
+    const needsLobbySwitch =
+      Boolean(lobbyId) && normalizedCurrentCode !== normalizedJoinCode;
+    let leftCurrentLobby = false;
 
     setIsLoading(true);
     setError(null);
 
     try {
-      if (lobbyId && normalizedCurrentCode !== normalizedJoinCode) {
+      if (!lobbyId || normalizedCurrentCode !== normalizedJoinCode) {
+        const { data: validation, error: validationError } =
+          await validateLobbyCode(normalizedJoinCode);
+
+        if (
+          validationError ||
+          !validation ||
+          "error" in validation ||
+          !validation.valid ||
+          !validation.exists ||
+          validation.status !== "waiting"
+        ) {
+          trackEvent(AnalyticsEvent.LobbyJoinFailed, {
+            error_message: sanitizeErrorMessage(validationError, validation),
+            source_screen: "lobby",
+          });
+          return false;
+        }
+      }
+
+      if (needsLobbySwitch) {
         const { data: leaveData, error: leaveError } = await leaveLobby(playerId);
 
         if (leaveError || !leaveData || "error" in leaveData) {
@@ -424,6 +486,8 @@ export default function LandingFlow() {
           });
           return false;
         }
+
+        leftCurrentLobby = true;
       }
 
       if (!lobbyId || normalizedCurrentCode !== normalizedJoinCode) {
@@ -438,6 +502,9 @@ export default function LandingFlow() {
             error_message: sanitizeErrorMessage(joinInvokeError, joinData),
             source_screen: "lobby",
           });
+          if (leftCurrentLobby) {
+            await restoreOwnLobbyAfterFailedJoin(playerId, displayName);
+          }
           return false;
         }
 
@@ -446,6 +513,9 @@ export default function LandingFlow() {
             error_message: "Server did not return a session token",
             source_screen: "lobby",
           });
+          if (leftCurrentLobby) {
+            await restoreOwnLobbyAfterFailedJoin(playerId, displayName);
+          }
           return false;
         }
 
@@ -486,12 +556,18 @@ export default function LandingFlow() {
         error_message: "Failed to load lobby roster",
         source_screen: "lobby",
       });
+      if (leftCurrentLobby) {
+        await restoreOwnLobbyAfterFailedJoin(playerId, displayName);
+      }
       return false;
     } catch (caughtError) {
       trackEvent(AnalyticsEvent.LobbyJoinFailed, {
         error_message: sanitizeErrorMessage(caughtError, null),
         source_screen: "lobby",
       });
+      if (leftCurrentLobby) {
+        await restoreOwnLobbyAfterFailedJoin(playerId, displayName);
+      }
       return false;
     } finally {
       setIsLoading(false);

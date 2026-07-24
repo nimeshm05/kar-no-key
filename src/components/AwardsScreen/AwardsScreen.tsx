@@ -63,14 +63,18 @@ export default function AwardsScreen({
 
       <main className="awards-screen__body">
         <div className="awards-screen__container">
-          <div className="awards-screen__main">
+          <div className="awards-screen__panel">
             <header className="awards-screen__heading">
-              <div className="awards-screen__title-row">
-                <span className="awards-screen__gutter" aria-hidden="true" />
-                <h1 className="awards-screen__title text-heading-2">
-                  Results
-                </h1>
-              </div>
+              <h1 className="awards-screen__title text-heading-3">
+                Race Leaderboard
+              </h1>
+              <img
+                className="awards-screen__trophy"
+                src="/icons/trophies.svg"
+                alt=""
+                width={24}
+                height={24}
+              />
             </header>
 
             {restartError ? (
@@ -91,14 +95,12 @@ export default function AwardsScreen({
                   entries={awards.champions}
                   formatMetric={formatPoints}
                 />
-                <hr className="awards-screen__divider" />
                 <AwardSection
                   title="Sharpshooters"
                   description="Players who completed most phrases correctly"
                   entries={awards.sharpshooters}
                   formatMetric={formatPhrases}
                 />
-                <hr className="awards-screen__divider" />
                 <AwardSection
                   title="Speed Demons"
                   description="The fastest typers"

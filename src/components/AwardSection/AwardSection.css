@@ -1,34 +1,33 @@
 .award-section {
   display: flex;
   flex-direction: column;
-  gap: 40px;
+  gap: 20px;
   width: 100%;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--neutral-200);
+  box-sizing: border-box;
 }
 
 .award-section__header {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-}
-
-.award-section__title-row,
-.award-section__description-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
+  padding: 0 20px;
+  box-sizing: border-box;
 }
 
 .award-section__title {
   margin: 0;
-  color: var(--color-text-primary);
+  font-family: var(--family-mono);
+  font-size: 16px;
   font-weight: var(--weight-semibold);
+  line-height: var(--line-16);
+  color: var(--color-text-primary);
 }
 
 .award-section__description {
   margin: 0;
   color: var(--color-text-muted);
-  font-weight: var(--weight-medium) !important;
+  font-weight: var(--weight-medium);
 }
 
 .award-section__table {
@@ -43,8 +42,10 @@
   align-items: center;
   gap: 12px;
   width: 100%;
+  padding: 0 20px;
+  box-sizing: border-box;
   font-family: var(--family-mono);
-  font-size: var(--size-20);
+  font-size: 14px;
   font-weight: var(--weight-semibold);
   line-height: var(--line-16);
   color: var(--color-accent-green);
@@ -53,14 +54,11 @@
 .award-section__col-players {
   flex: 1;
   min-width: 0;
-  font-size: var(--size-14) !important;
 }
 
 .award-section__col-score {
   flex-shrink: 0;
   text-align: right;
-  min-width: 60px;
-  font-size: var(--size-14) !important;
 }
 
 .award-section__rows {
@@ -78,6 +76,8 @@
   gap: 12px;
   width: 100%;
   min-height: 24px;
+  padding: 0 20px;
+  box-sizing: border-box;
 }
 
 .award-section__row--top {
@@ -88,7 +88,23 @@
   color: var(--color-text-muted);
 }
 
-.award-section__rank-slot {
+.award-section__player {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.award-section__name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.award-section__star-slot {
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -107,18 +123,9 @@
   display: block;
 }
 
-.award-section__name {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .award-section__metric {
   flex-shrink: 0;
   text-align: right;
-  min-width: 60px;
   font-variant-numeric: tabular-nums;
-  color: var(--color-text-muted);
+  color: inherit;
 }

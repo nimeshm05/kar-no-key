@@ -21,7 +21,7 @@ export default function SongCard({
   if (isLoading) {
     return (
       <div className="song-card song-card--loading" aria-hidden="true">
-        <div className="song-card__thumbnail song-card__thumbnail--skeleton" />
+        <div className="song-card__thumbnail" />
         <div className="song-card__info">
           <div className="song-card__details">
             <div className="song-card__skeleton-title" />

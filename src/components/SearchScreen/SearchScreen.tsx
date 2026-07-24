@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import AnimatedEllipsis from "@/components/AnimatedEllipsis/AnimatedEllipsis";
 import Button from "@/components/Button/Button";
 import InputField from "@/components/InputField/InputField";
@@ -17,6 +17,7 @@ const SEARCH_TABS = [
 ] as const;
 
 const SKELETON_COUNT = 4;
+const SKELETON_STEP_MS = 1000;
 
 type SearchTab = "recommended" | "youtube";
 
@@ -56,6 +57,57 @@ function formatDuration(seconds?: number): string | null {
   const minutes = Math.floor(seconds / 60);
   const remainingSeconds = seconds % 60;
   return `${minutes.toString().padStart(2, "0")}:${remainingSeconds.toString().padStart(2, "0")}`;
+}
+
+function SongListSkeleton({
+  count = SKELETON_COUNT,
+  stepMs = SKELETON_STEP_MS,
+}: {
+  count?: number;
+  stepMs?: number;
+}) {
+  const [visibleCount, setVisibleCount] = useState(1);
+
+  useEffect(() => {
+    const reducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+
+    if (reducedMotion || count <= 1) {
+      setVisibleCount(count);
+      return;
+    }
+
+    setVisibleCount(1);
+
+    let revealed = 1;
+    const intervalId = window.setInterval(() => {
+      revealed += 1;
+      setVisibleCount(revealed);
+
+      if (revealed >= count) {
+        window.clearInterval(intervalId);
+      }
+    }, stepMs);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [count, stepMs]);
+
+  return (
+    <div
+      className="search-screen__results-section"
+      role="status"
+      aria-label="Loading songs"
+    >
+      <div className="search-screen__results">
+        {Array.from({ length: visibleCount }, (_, index) => (
+          <SongCard key={index} isLoading />
+        ))}
+      </div>
+    </div>
+  );
 }
 
 export default function SearchScreen({
@@ -152,7 +204,7 @@ export default function SearchScreen({
         <div className="search-screen__container">
           {isHost ? (
             <section className="search-screen__main">
-              <h1 className="search-screen__title text-heading-1">Song?</h1>
+              <h1 className="search-screen__title text-heading-2">Song?</h1>
 
               <div className="search-screen__panel">
                 <Tabs
@@ -175,15 +227,7 @@ export default function SearchScreen({
                       </p>
                     ) : null}
 
-                    {showRecommendedSkeletons ? (
-                      <div className="search-screen__results-section">
-                        <div className="search-screen__results">
-                          {Array.from({ length: SKELETON_COUNT }, (_, index) => (
-                            <SongCard key={`rec-skeleton-${index}`} isLoading />
-                          ))}
-                        </div>
-                      </div>
-                    ) : null}
+                    {showRecommendedSkeletons ? <SongListSkeleton /> : null}
 
                     {showRecommendedList ? (
                       <div className="search-screen__results-section">
@@ -282,18 +326,7 @@ export default function SearchScreen({
                       <div className="search-screen__empty" aria-hidden="true" />
                     ) : null}
 
-                    {showSearchSkeletons ? (
-                      <div className="search-screen__results-section">
-                        <div className="search-screen__results">
-                          {Array.from({ length: SKELETON_COUNT }, (_, index) => (
-                            <SongCard
-                              key={`search-skeleton-${index}`}
-                              isLoading
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    ) : null}
+                    {showSearchSkeletons ? <SongListSkeleton /> : null}
 
                     {showSearchNoResults ? (
                       <p className="search-screen__message text-body">

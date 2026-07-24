@@ -151,9 +151,11 @@
 }
 
 .design-system-song-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 16px;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 720px;
+  border: 1px solid var(--neutral-200);
 }
 
 .design-system-navbar-frame {

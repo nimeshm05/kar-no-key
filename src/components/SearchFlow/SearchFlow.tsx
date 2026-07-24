@@ -69,17 +69,23 @@ export default function SearchFlow() {
   const [lyricsStatusBySongId, setLyricsStatusBySongId] = useState<
     Record<string, "available" | "unavailable">
   >({});
-  const [displaySongs, setDisplaySongs] = useState<SongResult[]>([]);
+  const [activeTab, setActiveTab] = useState<"recommended" | "youtube">(
+    "recommended",
+  );
+  const [recommendedSongs, setRecommendedSongs] = useState<SongResult[]>([]);
   const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(false);
   const [recommendationsError, setRecommendationsError] = useState<string | null>(
     null,
   );
+  const [hasMoreRecommended, setHasMoreRecommended] = useState(false);
+  const [recommendedOffset, setRecommendedOffset] = useState(0);
+  const [searchResults, setSearchResults] = useState<SongResult[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
-  const [hasMoreSongs, setHasMoreSongs] = useState(false);
-  const [paginationOffset, setPaginationOffset] = useState(0);
+  const [hasMoreSearch, setHasMoreSearch] = useState(false);
+  const [searchOffset, setSearchOffset] = useState(0);
   const [searchNextPageToken, setSearchNextPageToken] = useState<
     string | undefined
   >(undefined);
@@ -224,11 +230,7 @@ export default function SearchFlow() {
     async function fetchRecommendations() {
       setIsLoadingRecommendations(true);
       setRecommendationsError(null);
-      setHasSearched(false);
-      setSearchQuery("");
-      setSearchError(null);
       setLoadMoreError(null);
-      setSearchNextPageToken(undefined);
 
       const result = await getRecommendedSongs(activePlayerId, {
         offset: 0,
@@ -243,15 +245,15 @@ export default function SearchFlow() {
 
       if ("error" in result) {
         setRecommendationsError(result.error);
-        setDisplaySongs([]);
-        setHasMoreSongs(false);
-        setPaginationOffset(0);
+        setRecommendedSongs([]);
+        setHasMoreRecommended(false);
+        setRecommendedOffset(0);
         return;
       }
 
-      setDisplaySongs(result.songs);
-      setHasMoreSongs(result.hasMore);
-      setPaginationOffset(result.songs.length);
+      setRecommendedSongs(result.songs);
+      setHasMoreRecommended(result.hasMore);
+      setRecommendedOffset(result.songs.length);
     }
 
     void fetchRecommendations();
@@ -294,6 +296,7 @@ export default function SearchFlow() {
       return;
     }
 
+    setActiveTab("youtube");
     setIsSearching(true);
     setSearchError(null);
     setLoadMoreError(null);
@@ -301,7 +304,7 @@ export default function SearchFlow() {
     setHasSearched(true);
     setSearchQuery(query);
     setSearchNextPageToken(undefined);
-    setPaginationOffset(0);
+    setSearchOffset(0);
 
     const result = await searchSongs(playerId, query, {
       limit: PAGE_SIZE,
@@ -318,8 +321,8 @@ export default function SearchFlow() {
         player_count: players.length,
       });
       setSearchError(result.error);
-      setDisplaySongs([]);
-      setHasMoreSongs(false);
+      setSearchResults([]);
+      setHasMoreSearch(false);
       return;
     }
 
@@ -331,24 +334,32 @@ export default function SearchFlow() {
       source_screen: "search",
       player_count: players.length,
     });
-    setDisplaySongs(result.songs);
-    setHasMoreSongs(result.hasMore);
+    setSearchResults(result.songs);
+    setHasMoreSearch(result.hasMore);
     setSearchNextPageToken(result.nextPageToken);
-    setPaginationOffset(result.songs.length);
+    setSearchOffset(result.songs.length);
   }
 
   async function handleLoadMore() {
-    if (!playerId || !isHost || isLoadingMore || !hasMoreSongs) {
+    if (!playerId || !isHost || isLoadingMore) {
+      return;
+    }
+
+    const loadingRecommended =
+      activeTab === "recommended" && hasMoreRecommended;
+    const loadingSearch = activeTab === "youtube" && hasMoreSearch;
+
+    if (!loadingRecommended && !loadingSearch) {
       return;
     }
 
     setIsLoadingMore(true);
     setLoadMoreError(null);
 
-    if (hasSearched) {
+    if (loadingSearch) {
       const result = await searchSongs(playerId, searchQuery, {
         limit: PAGE_SIZE,
-        offset: searchNextPageToken ? undefined : paginationOffset,
+        offset: searchNextPageToken ? undefined : searchOffset,
         pageToken: searchNextPageToken,
       });
 
@@ -366,15 +377,15 @@ export default function SearchFlow() {
         source_screen: "search",
         player_count: players.length,
       });
-      setDisplaySongs((current) => appendSongs(current, result.songs));
-      setHasMoreSongs(result.hasMore);
+      setSearchResults((current) => appendSongs(current, result.songs));
+      setHasMoreSearch(result.hasMore);
       setSearchNextPageToken(result.nextPageToken);
-      setPaginationOffset((current) => current + result.songs.length);
+      setSearchOffset((current) => current + result.songs.length);
       return;
     }
 
     const result = await getRecommendedSongs(playerId, {
-      offset: paginationOffset,
+      offset: recommendedOffset,
       limit: PAGE_SIZE,
     });
 
@@ -392,9 +403,9 @@ export default function SearchFlow() {
       source_screen: "search",
       player_count: players.length,
     });
-    setDisplaySongs((current) => appendSongs(current, result.songs));
-    setHasMoreSongs(result.hasMore);
-    setPaginationOffset((current) => current + result.songs.length);
+    setRecommendedSongs((current) => appendSongs(current, result.songs));
+    setHasMoreRecommended(result.hasMore);
+    setRecommendedOffset((current) => current + result.songs.length);
   }
 
   async function handleConfirmSelection(song: SongResult) {
@@ -475,13 +486,17 @@ export default function SearchFlow() {
       players={players}
       isRosterLoading={isRosterLoading}
       rosterError={rosterError}
-      displaySongs={displaySongs}
+      activeTab={activeTab}
+      onTabChange={setActiveTab}
+      recommendedSongs={recommendedSongs}
+      searchResults={searchResults}
       hasSearched={hasSearched}
       isSearching={isSearching}
       searchError={searchError}
       isLoadingRecommendations={isLoadingRecommendations}
       recommendationsError={recommendationsError}
-      hasMoreSongs={hasMoreSongs}
+      hasMoreRecommended={hasMoreRecommended}
+      hasMoreSearch={hasMoreSearch}
       isLoadingMore={isLoadingMore}
       loadMoreError={loadMoreError}
       isConfirming={isConfirming}

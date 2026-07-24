@@ -2,11 +2,12 @@ import type { SongResult } from "@/lib/songs/searchSongs";
 import "./SongCard.css";
 
 type SongCardProps = {
-  song: SongResult;
+  song?: SongResult;
   isSelected?: boolean;
   onSelect?: (song: SongResult) => void;
   durationLabel?: string | null;
   lyricsStatus?: "available" | "unavailable" | null;
+  isLoading?: boolean;
 };
 
 export default function SongCard({
@@ -15,7 +16,31 @@ export default function SongCard({
   onSelect,
   durationLabel,
   lyricsStatus = null,
+  isLoading = false,
 }: SongCardProps) {
+  if (isLoading) {
+    return (
+      <div className="song-card song-card--loading" aria-hidden="true">
+        <div className="song-card__thumbnail song-card__thumbnail--skeleton" />
+        <div className="song-card__info">
+          <div className="song-card__details">
+            <div className="song-card__skeleton-title" />
+          </div>
+          <div className="song-card__meta">
+            <div className="song-card__skeleton-meta" />
+            <div className="song-card__skeleton-meta" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!song) {
+    return null;
+  }
+
+  const selected = song;
+
   const cardClasses = [
     "song-card",
     isSelected && "song-card--selected",
@@ -25,7 +50,7 @@ export default function SongCard({
     .join(" ");
 
   function handleClick() {
-    onSelect?.(song);
+    onSelect?.(selected);
   }
 
   function handleKeyDown(event: React.KeyboardEvent) {
@@ -35,11 +60,11 @@ export default function SongCard({
 
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
-      onSelect(song);
+      onSelect(selected);
     }
   }
 
-  const subtitle = song.channel ?? song.artist;
+  const subtitle = selected.channel ?? selected.artist;
 
   return (
     <div
@@ -51,10 +76,10 @@ export default function SongCard({
       aria-pressed={onSelect ? isSelected : undefined}
     >
       <div className="song-card__thumbnail">
-        {song.thumbnail_url ? (
+        {selected.thumbnail_url ? (
           <img
             className="song-card__image"
-            src={song.thumbnail_url}
+            src={selected.thumbnail_url}
             alt=""
           />
         ) : (
@@ -63,14 +88,18 @@ export default function SongCard({
       </div>
       <div className="song-card__info">
         <div className="song-card__details">
-          <p className="song-card__title text-button-label">{song.title}</p>
-          {subtitle ? (
-            <p className="song-card__subtitle text-button-label">{subtitle}</p>
-          ) : null}
+          <p className="song-card__title text-button-label">{selected.title}</p>
         </div>
         <div className="song-card__meta">
+          {subtitle ? (
+            <span className="song-card__subtitle text-button-label">
+              {subtitle}
+            </span>
+          ) : null}
           {durationLabel ? (
-            <span className="song-card__duration text-button-label">{durationLabel}</span>
+            <span className="song-card__duration text-button-label">
+              {durationLabel}
+            </span>
           ) : null}
           {lyricsStatus ? (
             <span
@@ -86,12 +115,6 @@ export default function SongCard({
             </span>
           ) : null}
         </div>
-        {onSelect ? (
-          <div className="song-card__hover-action" aria-hidden="true">
-            <span className="song-card__hover-label text-button-label">select song</span>
-            <span className="song-card__hover-icon" aria-hidden="true" />
-          </div>
-        ) : null}
       </div>
     </div>
   );

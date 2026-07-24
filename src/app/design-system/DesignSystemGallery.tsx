@@ -15,6 +15,7 @@ import PageLoader, {
 } from "@/components/PageLoader/PageLoader";
 import PhraseTypingArea from "@/components/PhraseTypingArea/PhraseTypingArea";
 import SongCard from "@/components/SongCard/SongCard";
+import Tabs from "@/components/Tabs/Tabs";
 import type { LobbyPlayer, SongResult } from "@/lib/supabase/functions";
 
 const SAMPLE_SONG: SongResult = {
@@ -90,6 +91,7 @@ export default function DesignSystemGallery() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedSong, setSelectedSong] = useState(false);
   const [typedPhrase, setTypedPhrase] = useState("race your");
+  const [activeTab, setActiveTab] = useState("recommended");
 
   return (
     <div className="design-system-gallery">
@@ -248,13 +250,26 @@ export default function DesignSystemGallery() {
       </section>
 
       <section className="design-system-section">
+        <h2 className="design-system-section__title text-heading-2">Tabs</h2>
+        <Tabs
+          aria-label="Song source"
+          value={activeTab}
+          onChange={setActiveTab}
+          items={[
+            { id: "recommended", label: "Recommended Songs" },
+            { id: "youtube", label: "Search Youtube" },
+          ]}
+        />
+      </section>
+
+      <section className="design-system-section">
         <h2 className="design-system-section__title text-heading-2">SongCard</h2>
         <div className="design-system-song-cards">
           <SongCard
             song={SAMPLE_SONG}
             isSelected={selectedSong}
             onSelect={() => setSelectedSong((current) => !current)}
-            durationLabel="3:34"
+            durationLabel="03:34"
             lyricsStatus="available"
           />
           <SongCard
@@ -264,9 +279,10 @@ export default function DesignSystemGallery() {
               title: "Another Track",
               has_lyrics: false,
             }}
-            durationLabel="2:10"
+            durationLabel="02:10"
             lyricsStatus="unavailable"
           />
+          <SongCard isLoading />
         </div>
       </section>
 

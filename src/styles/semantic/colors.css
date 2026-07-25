@@ -26,4 +26,7 @@
   --color-input-text-disabled: var(--neutral-250);
   --color-text-error: var(--red-500);
   --color-accent-green: var(--accent-green);
+  --color-heading-border: var(--emerald-400);
+  --color-heading-shadow: var(--emerald-400);
+  --color-heading-text: var(--emerald-600);
 }

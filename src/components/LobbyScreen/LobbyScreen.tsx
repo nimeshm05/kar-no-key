@@ -3,6 +3,7 @@
 import { useState } from "react";
 import AnimatedEllipsis from "@/components/AnimatedEllipsis/AnimatedEllipsis";
 import Button from "@/components/Button/Button";
+import Heading from "@/components/Heading/Heading";
 import JoinCodeModal from "@/components/JoinCodeModal/JoinCodeModal";
 import type { JoinModalPhase } from "@/components/JoinCodeModal/JoinCodeModal";
 import Navbar from "@/components/Navbar/Navbar";
@@ -110,9 +111,9 @@ export default function LobbyScreen({
           <div className="lobby-screen__content">
             <section className="lobby-screen__main">
               <div className="lobby-screen__hero">
-                <h1 className="lobby-screen__code text-heading-1">
-                  {lobbyCode.toUpperCase()}
-                </h1>
+                <Heading as="h1" size="1">
+                  {lobbyCode}
+                </Heading>
                 <p className="lobby-screen__instructions text-body">
                   {isRosterLoading && playerCount === 0 ? (
                     <AnimatedEllipsis label="loading lobby" live />

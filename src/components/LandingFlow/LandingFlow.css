@@ -36,10 +36,6 @@
   text-align: center;
 }
 
-.landing-title {
-  color: var(--color-text-primary);
-}
-
 .landing-tagline {
   color: var(--color-text-muted);
 }

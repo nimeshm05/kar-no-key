@@ -1,6 +1,7 @@
 "use client";
 
 import AwardSection from "@/components/AwardSection/AwardSection";
+import Heading from "@/components/Heading/Heading";
 import Navbar from "@/components/Navbar/Navbar";
 import type { AwardsSnapshot, LobbyPlayer } from "@/lib/supabase/functions";
 import "./AwardsScreen.css";
@@ -63,20 +64,11 @@ export default function AwardsScreen({
 
       <main className="awards-screen__body">
         <div className="awards-screen__container">
-          <div className="awards-screen__panel">
-            <header className="awards-screen__heading">
-              <h1 className="awards-screen__title text-heading-3">
-                Race Leaderboard
-              </h1>
-              <img
-                className="awards-screen__trophy"
-                src="/icons/trophies.svg"
-                alt=""
-                width={24}
-                height={24}
-              />
-            </header>
+          <Heading as="h1" size="2" className="awards-screen__title">
+            Leaderboard
+          </Heading>
 
+          <div className="awards-screen__panel">
             {restartError ? (
               <p className="awards-screen__error text-body" role="alert">
                 {restartError}

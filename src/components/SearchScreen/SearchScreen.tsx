@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import AnimatedEllipsis from "@/components/AnimatedEllipsis/AnimatedEllipsis";
 import Button from "@/components/Button/Button";
+import Heading from "@/components/Heading/Heading";
 import InputField from "@/components/InputField/InputField";
 import Navbar from "@/components/Navbar/Navbar";
 import SongCard from "@/components/SongCard/SongCard";
@@ -204,7 +205,9 @@ export default function SearchScreen({
         <div className="search-screen__container">
           {isHost ? (
             <section className="search-screen__main">
-              <h1 className="search-screen__title text-heading-2">Song?</h1>
+              <Heading as="h1" size="2" className="search-screen__title">
+                Song?
+              </Heading>
 
               <div className="search-screen__panel">
                 <Tabs

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import Button from "@/components/Button/Button";
+import Heading from "@/components/Heading/Heading";
 import IconButton from "@/components/IconButton/IconButton";
 import LobbyRoster from "@/components/LobbyRoster/LobbyRoster";
 import MusicNoteDecorations from "@/components/MusicNoteDecorations/MusicNoteDecorations";
@@ -322,6 +323,10 @@ export default function GameScreen({
       <div className="game-screen__body">
         <div className="game-screen__container">
           <section className="game-screen__main">
+            <Heading as="h1" size="2" className="game-screen__title">
+              Game!!!
+            </Heading>
+
             <div className="game-screen__shell">
               <div className="game-screen__left">
                 <div className="game-screen__control-bar">

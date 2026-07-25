@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Button from "@/components/Button/Button";
+import Heading from "@/components/Heading/Heading";
 import InputField from "@/components/InputField/InputField";
 
 export default function DesignSystemUnlock() {
@@ -41,9 +42,9 @@ export default function DesignSystemUnlock() {
 
   return (
     <div className="design-system-unlock">
-      <h1 className="design-system-unlock__title text-heading-2">
+      <Heading as="h1" size="2">
         design system
-      </h1>
+      </Heading>
       <p className="design-system-unlock__hint text-body-regular">
         Enter the access password to view the component gallery.
       </p>

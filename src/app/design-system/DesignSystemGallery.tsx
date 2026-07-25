@@ -5,6 +5,7 @@ import AnimatedEllipsis from "@/components/AnimatedEllipsis/AnimatedEllipsis";
 import Button from "@/components/Button/Button";
 import Dialog from "@/components/Dialog/Dialog";
 import Dropdown from "@/components/Dropdown/Dropdown";
+import Heading from "@/components/Heading/Heading";
 import IconButton from "@/components/IconButton/IconButton";
 import InputField from "@/components/InputField/InputField";
 import Loader from "@/components/Loader/Loader";
@@ -68,12 +69,17 @@ const COLOR_SWATCHES = [
   { name: "--color-input-border-error", variable: "var(--color-input-border-error)" },
   { name: "--color-text-error", variable: "var(--color-text-error)" },
   { name: "--color-accent-green", variable: "var(--color-accent-green)" },
+  { name: "--color-heading-border", variable: "var(--color-heading-border)" },
+  { name: "--color-heading-shadow", variable: "var(--color-heading-shadow)" },
+  { name: "--color-heading-text", variable: "var(--color-heading-text)" },
   { name: "--neutral-100", variable: "var(--neutral-100)" },
   { name: "--neutral-300", variable: "var(--neutral-300)" },
   { name: "--neutral-400", variable: "var(--neutral-400)" },
   { name: "--neutral-700", variable: "var(--neutral-700)" },
   { name: "--blue-500", variable: "var(--blue-500)" },
   { name: "--red-500", variable: "var(--red-500)" },
+  { name: "--emerald-400", variable: "var(--emerald-400)" },
+  { name: "--emerald-600", variable: "var(--emerald-600)" },
 ];
 
 const TYPE_SAMPLES = [
@@ -96,9 +102,9 @@ export default function DesignSystemGallery() {
   return (
     <div className="design-system-gallery">
       <header className="design-system-gallery__header">
-        <h1 className="design-system-gallery__title text-heading-1">
+        <Heading as="h1" size="1">
           design system
-        </h1>
+        </Heading>
         <p className="design-system-gallery__subtitle text-body-regular">
           Private component gallery. Edit locally with npm run dev to preview
           changes.
@@ -106,8 +112,12 @@ export default function DesignSystemGallery() {
       </header>
 
       <section className="design-system-section">
-        <h2 className="design-system-section__title text-heading-2">Tokens</h2>
-        <h3 className="design-system-section__subtitle text-heading-3">Colors</h3>
+        <Heading as="h2" size="2">
+          Tokens
+        </Heading>
+        <Heading as="h3" size="3" className="design-system-section__subtitle">
+          Colors
+        </Heading>
         <div className="design-system-swatches">
           {COLOR_SWATCHES.map((swatch) => (
             <div key={swatch.name} className="design-system-swatch">
@@ -122,9 +132,9 @@ export default function DesignSystemGallery() {
             </div>
           ))}
         </div>
-        <h3 className="design-system-section__subtitle text-heading-3">
+        <Heading as="h3" size="3" className="design-system-section__subtitle">
           Typography
-        </h3>
+        </Heading>
         <div className="design-system-type-samples">
           {TYPE_SAMPLES.map((sample) => (
             <p key={sample.label} className={sample.className}>
@@ -135,7 +145,26 @@ export default function DesignSystemGallery() {
       </section>
 
       <section className="design-system-section">
-        <h2 className="design-system-section__title text-heading-2">Button</h2>
+        <Heading as="h2" size="2">
+          Heading
+        </Heading>
+        <div className="design-system-row">
+          <Heading as="h1" size="1">
+            heading 1
+          </Heading>
+          <Heading as="h2" size="2">
+            heading 2
+          </Heading>
+          <Heading as="h3" size="3">
+            heading 3
+          </Heading>
+        </div>
+      </section>
+
+      <section className="design-system-section">
+        <Heading as="h2" size="2">
+          Button
+        </Heading>
         <div className="design-system-row">
           <Button variant="primary">primary</Button>
           <Button variant="secondary">secondary</Button>
@@ -149,7 +178,9 @@ export default function DesignSystemGallery() {
       </section>
 
       <section className="design-system-section">
-        <h2 className="design-system-section__title text-heading-2">IconButton</h2>
+        <Heading as="h2" size="2">
+          IconButton
+        </Heading>
         <div className="design-system-row">
           <IconButton
             iconSrc="/icons/play_arrow.svg"
@@ -171,7 +202,9 @@ export default function DesignSystemGallery() {
       </section>
 
       <section className="design-system-section">
-        <h2 className="design-system-section__title text-heading-2">InputField</h2>
+        <Heading as="h2" size="2">
+          InputField
+        </Heading>
         <div className="design-system-stack">
           <InputField
             value={inputValue}
@@ -203,7 +236,9 @@ export default function DesignSystemGallery() {
       </section>
 
       <section className="design-system-section">
-        <h2 className="design-system-section__title text-heading-2">Dropdown</h2>
+        <Heading as="h2" size="2">
+          Dropdown
+        </Heading>
         <div className="design-system-row design-system-row--dropdown">
           <Dropdown
             label="players"
@@ -226,7 +261,9 @@ export default function DesignSystemGallery() {
       </section>
 
       <section className="design-system-section">
-        <h2 className="design-system-section__title text-heading-2">Dialog</h2>
+        <Heading as="h2" size="2">
+          Dialog
+        </Heading>
         <div className="design-system-row">
           <Button type="button" onClick={() => setIsDialogOpen(true)}>
             open dialog
@@ -250,7 +287,9 @@ export default function DesignSystemGallery() {
       </section>
 
       <section className="design-system-section">
-        <h2 className="design-system-section__title text-heading-2">Tabs</h2>
+        <Heading as="h2" size="2">
+          Tabs
+        </Heading>
         <Tabs
           aria-label="Song source"
           value={activeTab}
@@ -263,7 +302,9 @@ export default function DesignSystemGallery() {
       </section>
 
       <section className="design-system-section">
-        <h2 className="design-system-section__title text-heading-2">SongCard</h2>
+        <Heading as="h2" size="2">
+          SongCard
+        </Heading>
         <div className="design-system-song-cards">
           <SongCard
             song={SAMPLE_SONG}
@@ -287,9 +328,9 @@ export default function DesignSystemGallery() {
       </section>
 
       <section className="design-system-section">
-        <h2 className="design-system-section__title text-heading-2">
+        <Heading as="h2" size="2">
           AnimatedEllipsis
-        </h2>
+        </Heading>
         <AnimatedEllipsis
           label="waiting for the host"
           className="text-body"
@@ -299,7 +340,9 @@ export default function DesignSystemGallery() {
       </section>
 
       <section className="design-system-section">
-        <h2 className="design-system-section__title text-heading-2">Loader</h2>
+        <Heading as="h2" size="2">
+          Loader
+        </Heading>
         <p className="design-system-section__hint text-body">
           4×4 pixel grid (Figma 2246:2075). Opacity-only pulse; pauses when
           offscreen.
@@ -345,9 +388,9 @@ export default function DesignSystemGallery() {
       </section>
 
       <section className="design-system-section">
-        <h2 className="design-system-section__title text-heading-2">
+        <Heading as="h2" size="2">
           PageLoader
-        </h2>
+        </Heading>
         <p className="design-system-section__hint text-body">
           Full-viewport centered loader for screen transitions (Figma
           2247:2076).
@@ -358,7 +401,9 @@ export default function DesignSystemGallery() {
       </section>
 
       <section className="design-system-section">
-        <h2 className="design-system-section__title text-heading-2">Navbar</h2>
+        <Heading as="h2" size="2">
+          Navbar
+        </Heading>
         <div className="design-system-navbar-frame">
           <Navbar
             displayName="nimesh"
@@ -369,9 +414,9 @@ export default function DesignSystemGallery() {
       </section>
 
       <section className="design-system-section">
-        <h2 className="design-system-section__title text-heading-2">
+        <Heading as="h2" size="2">
           PhraseTypingArea
-        </h2>
+        </Heading>
         <div className="design-system-phrase-frame">
           <PhraseTypingArea
             phraseText="race your frens"

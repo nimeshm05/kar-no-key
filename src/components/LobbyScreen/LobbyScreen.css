@@ -45,12 +45,6 @@
   text-align: center;
 }
 
-.lobby-screen__code {
-  color: var(--color-accent-green);
-  margin: 0;
-  width: 100%;
-}
-
 .lobby-screen__instructions {
   color: var(--color-text-muted);
   margin: 0;

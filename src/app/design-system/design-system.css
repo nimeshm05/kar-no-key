@@ -11,10 +11,6 @@
   margin: 80px auto 0;
 }
 
-.design-system-unlock__title {
-  color: var(--color-text-primary);
-}
-
 .design-system-unlock__hint {
   color: var(--color-text-muted);
 }
@@ -44,10 +40,6 @@
   gap: 8px;
 }
 
-.design-system-gallery__title {
-  color: var(--color-text-primary);
-}
-
 .design-system-gallery__subtitle {
   color: var(--color-text-muted);
 }
@@ -58,13 +50,8 @@
   gap: 16px;
 }
 
-.design-system-section__title {
-  color: var(--color-text-primary);
-}
-
 .design-system-section__subtitle {
   margin-top: 8px;
-  color: var(--color-text-primary);
 }
 
 .design-system-section__hint {

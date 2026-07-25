@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import TypewriterIllustration from "@/components/TypewriterIllustration/TypewriterIllustration";
 import Button from "@/components/Button/Button";
+import Heading from "@/components/Heading/Heading";
 import InputField from "@/components/InputField/InputField";
 import LobbyScreen from "@/components/LobbyScreen/LobbyScreen";
 import PageLoader from "@/components/PageLoader/PageLoader";
@@ -597,7 +598,9 @@ export default function LandingFlow() {
                 aria-label="Illustration of a typewriter surrounded by music notes"
               />
               <div className="text-container">
-                <h1 className="landing-title text-heading-1">kar-no-key</h1>
+                <Heading as="h1" size="1">
+                  kar-no-key
+                </Heading>
                 <p className="landing-tagline text-body">
                   race your frens, one lyric at a time :)
                 </p>

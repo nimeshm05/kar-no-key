@@ -1,7 +1,7 @@
 .loader {
   --loader-cell: 8px;
   --loader-gap: 2px;
-  --loader-duration: 1.4s;
+  --loader-duration: 2s;
   --loader-idle: var(--neutral-100);
   --loader-active: var(--solid-black);
 
@@ -31,8 +31,20 @@
   animation: loader-corner-pulse var(--loader-duration) ease-in-out infinite;
 }
 
-.loader__cell[data-role="inner"]::after {
-  animation: loader-inner-pulse var(--loader-duration) ease-in-out infinite;
+.loader__cell[data-role="inner"][data-inner-step="0"]::after {
+  animation: loader-inner-0 var(--loader-duration) linear infinite;
+}
+
+.loader__cell[data-role="inner"][data-inner-step="1"]::after {
+  animation: loader-inner-1 var(--loader-duration) linear infinite;
+}
+
+.loader__cell[data-role="inner"][data-inner-step="2"]::after {
+  animation: loader-inner-2 var(--loader-duration) linear infinite;
+}
+
+.loader__cell[data-role="inner"][data-inner-step="3"]::after {
+  animation: loader-inner-3 var(--loader-duration) linear infinite;
 }
 
 .loader[data-paused="true"] .loader__cell::after {
@@ -56,18 +68,109 @@
   }
 }
 
-@keyframes loader-inner-pulse {
+/* 8-beat ping-pong: 5 → 6 → 10 → 9 → 9 → 10 → 6 → 5 */
+@keyframes loader-inner-0 {
   0%,
-  20% {
+  1% {
     opacity: 0;
   }
 
-  34%,
-  58% {
+  3%,
+  9% {
     opacity: 1;
   }
 
-  72%,
+  12.5%,
+  87.5% {
+    opacity: 0;
+  }
+
+  91%,
+  97% {
+    opacity: 1;
+  }
+
+  99%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes loader-inner-1 {
+  0%,
+  12.5% {
+    opacity: 0;
+  }
+
+  15.5%,
+  21.5% {
+    opacity: 1;
+  }
+
+  25%,
+  75% {
+    opacity: 0;
+  }
+
+  78.5%,
+  84.5% {
+    opacity: 1;
+  }
+
+  87.5%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes loader-inner-2 {
+  0%,
+  25% {
+    opacity: 0;
+  }
+
+  28%,
+  34% {
+    opacity: 1;
+  }
+
+  37.5%,
+  62.5% {
+    opacity: 0;
+  }
+
+  65.5%,
+  71.5% {
+    opacity: 1;
+  }
+
+  75%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes loader-inner-3 {
+  0%,
+  37.5% {
+    opacity: 0;
+  }
+
+  40.5%,
+  46.5% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0;
+  }
+
+  53%,
+  59% {
+    opacity: 1;
+  }
+
+  62.5%,
   100% {
     opacity: 0;
   }

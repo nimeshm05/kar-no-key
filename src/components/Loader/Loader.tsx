@@ -8,7 +8,14 @@ const COLS = 4;
 
 /** Indices that light up for the Frame 15 X pattern (row-major). */
 const CORNER_INDICES = new Set([0, 3, 12, 15]);
-const INNER_INDICES = new Set([5, 6, 9, 10]);
+
+/** Clockwise center 2×2: TL → TR → BR → BL (then reverse in CSS). */
+const INNER_STEP_BY_INDEX: Record<number, number> = {
+  5: 0,
+  6: 1,
+  10: 2,
+  9: 3,
+};
 
 type LoaderProps = {
   className?: string;
@@ -30,7 +37,7 @@ type LoaderStyle = CSSProperties & {
 
 function cellRole(index: number): "idle" | "corner" | "inner" {
   if (CORNER_INDICES.has(index)) return "corner";
-  if (INNER_INDICES.has(index)) return "inner";
+  if (index in INNER_STEP_BY_INDEX) return "inner";
   return "idle";
 }
 
@@ -45,7 +52,8 @@ export default function Loader({
 }: LoaderProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const safeSpeed = speed > 0 ? speed : 1;
-  const durationSec = 1.4 / safeSpeed;
+  /** Full forward+reverse cycle for the center 2×2 sequence. */
+  const durationSec = 2 / safeSpeed;
   const cellSize =
     boxSize != null
       ? Math.max(1, (boxSize - gap * (COLS - 1)) / COLS)
@@ -89,14 +97,22 @@ export default function Loader({
       data-paused={paused ? "true" : "false"}
       style={style}
     >
-      {Array.from({ length: CELL_COUNT }, (_, index) => (
-        <span
-          key={index}
-          className="loader__cell"
-          data-role={cellRole(index)}
-          aria-hidden="true"
-        />
-      ))}
+      {Array.from({ length: CELL_COUNT }, (_, index) => {
+        const role = cellRole(index);
+        const innerStep = INNER_STEP_BY_INDEX[index];
+
+        return (
+          <span
+            key={index}
+            className="loader__cell"
+            data-role={role}
+            data-inner-step={
+              role === "inner" && innerStep != null ? String(innerStep) : undefined
+            }
+            aria-hidden="true"
+          />
+        );
+      })}
     </div>
   );
 }

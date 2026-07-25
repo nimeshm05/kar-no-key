@@ -344,8 +344,8 @@ export default function DesignSystemGallery() {
           Loader
         </Heading>
         <p className="design-system-section__hint text-body">
-          4×4 pixel grid (Figma 2246:2075). Opacity-only pulse; pauses when
-          offscreen.
+          4×4 pixel grid (Figma 2246:2075). Center 2×2 blinks clockwise then
+          reverses; corners pulse together. Pauses when offscreen.
         </p>
         <div className="design-system-loader-row">
           <div className="design-system-loader-demo">

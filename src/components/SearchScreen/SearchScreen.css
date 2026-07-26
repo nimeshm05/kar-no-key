@@ -148,6 +148,8 @@
 .search-screen__waiting-message {
   color: var(--neutral-400);
   margin: 0;
+  max-width: 336px;
+  text-align: center;
   font-weight: var(--weight-medium);
   line-height: var(--line-18);
 }

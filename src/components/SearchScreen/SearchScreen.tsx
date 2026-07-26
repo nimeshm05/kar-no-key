@@ -397,9 +397,12 @@ export default function SearchScreen({
             </section>
           ) : (
             <section className="search-screen__main search-screen__main--player-waiting">
+              <Heading as="h1" size="2" className="search-screen__title">
+                Please Wait
+              </Heading>
               <div className="search-screen__waiting-panel">
                 <p className="search-screen__waiting-message text-body">
-                  WAITING FOR THE HOST TO SELECT A SONG...
+                  WE'RE WAITING FOR THE HOST TO SELECT A SONG...
                 </p>
               </div>
             </section>

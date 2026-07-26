@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { playClickSound } from "@/lib/ui/playClickSound";
 import "./Button.css";
 
 type ButtonProps = {
@@ -24,16 +27,29 @@ export default function Button({
     .filter(Boolean)
     .join(" ");
 
+  function handleClick() {
+    if (disabled) {
+      return;
+    }
+    playClickSound();
+    onClick?.();
+  }
+
   if (href) {
     return (
-      <Link href={href} className={classes}>
+      <Link href={href} className={classes} onClick={handleClick}>
         {children}
       </Link>
     );
   }
 
   return (
-    <button type={type} className={classes} onClick={onClick} disabled={disabled}>
+    <button
+      type={type}
+      className={classes}
+      onClick={handleClick}
+      disabled={disabled}
+    >
       {children}
     </button>
   );

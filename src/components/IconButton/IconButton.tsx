@@ -1,3 +1,6 @@
+"use client";
+
+import { playClickSound } from "@/lib/ui/playClickSound";
 import "./IconButton.css";
 
 type IconButtonProps = {
@@ -27,11 +30,19 @@ export default function IconButton({
     .filter(Boolean)
     .join(" ");
 
+  function handleClick() {
+    if (disabled) {
+      return;
+    }
+    playClickSound();
+    onClick?.();
+  }
+
   return (
     <button
       type={type}
       className={classes}
-      onClick={onClick}
+      onClick={handleClick}
       disabled={disabled}
       aria-label={iconAlt}
     >

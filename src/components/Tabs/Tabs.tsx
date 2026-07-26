@@ -1,5 +1,6 @@
 "use client";
 
+import { playClickSound } from "@/lib/ui/playClickSound";
 import "./Tabs.css";
 
 export type TabItem = {
@@ -45,7 +46,10 @@ export default function Tabs({
             className={tabClasses}
             aria-selected={isSelected}
             tabIndex={isSelected ? 0 : -1}
-            onClick={() => onChange(item.id)}
+            onClick={() => {
+              playClickSound();
+              onChange(item.id);
+            }}
           >
             {item.label}
           </button>

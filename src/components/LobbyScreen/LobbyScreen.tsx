@@ -55,6 +55,10 @@ export default function LobbyScreen({
     : "share this code with your frens to begin the race.";
 
   function handleCloseModal() {
+    if (joinModalPhase === "joining" || joinModalPhase === "waiting-for-host") {
+      return;
+    }
+
     setIsJoinModalOpen(false);
     onJoinModalPhaseChange("enter-code");
   }
@@ -93,10 +97,12 @@ export default function LobbyScreen({
     joinModalPhase === "error" ||
     joinModalPhase === "waiting-for-host" ||
     joinModalPhase === "own-code";
+  const isPlayerWaiting = !isHost;
+  const shouldBlockLobby = isModalOpen || isPlayerWaiting;
 
   return (
     <main
-      className={`lobby-screen${isModalOpen ? " lobby-screen--modal-open" : ""}`}
+      className={`lobby-screen${shouldBlockLobby ? " lobby-screen--modal-open" : ""}`}
     >
       <Navbar
         displayName={displayName}

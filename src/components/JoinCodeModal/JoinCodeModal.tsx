@@ -152,6 +152,7 @@ export default function JoinCodeModal({
       title={getDialogTitle(phase)}
       onClose={onClose}
       ariaBusy={isBusy || undefined}
+      dismissible={!isBusy}
       footer={footer}
     >
       {body}

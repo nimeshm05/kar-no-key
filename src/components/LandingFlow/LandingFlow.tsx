@@ -221,6 +221,10 @@ export default function LandingFlow() {
     setIsHost(session.isHost);
     setStep("lobby");
 
+    if (!session.isHost) {
+      setJoinModalPhase("waiting-for-host");
+    }
+
     void fetchLobbyRoster(id, true).then((success) => {
       if (isNavigatingAwayRef.current) {
         return;

@@ -187,6 +187,15 @@ export type SubmitFeedbackResult =
   | { ok: true }
   | { error: string };
 
+export type RegisterVisitResult =
+  | {
+      player_id: string;
+      visit_count: number;
+      first_seen_at: string;
+      is_new_visitor: boolean;
+    }
+  | { error: string };
+
 export type GetLobbyStateResult =
   | {
       lobby_id: string;
@@ -416,4 +425,14 @@ export async function submitFeedback(
     message,
     rating,
   });
+}
+
+export async function registerVisit(
+  playerId: string,
+): Promise<FunctionInvokeResult<RegisterVisitResult>> {
+  return invokeFunction<RegisterVisitResult>(
+    "register-visit",
+    { player_id: playerId },
+    { includeSessionToken: false },
+  );
 }

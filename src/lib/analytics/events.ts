@@ -1,4 +1,5 @@
 export const AnalyticsEvent = {
+  AppVisitRegistered: "App Visit Registered",
   NameEntered: "Name Entered",
   LobbyCreated: "Lobby Created",
   LobbyJoined: "Lobby Joined",
@@ -31,6 +32,11 @@ export type SharedEventProps = {
 };
 
 export type EventPropertiesMap = {
+  [AnalyticsEvent.AppVisitRegistered]: {
+    visit_count: number;
+    is_new_visitor: boolean;
+    is_returning_visitor: boolean;
+  };
   [AnalyticsEvent.NameEntered]: SharedEventProps & {
     name_length: number;
   };

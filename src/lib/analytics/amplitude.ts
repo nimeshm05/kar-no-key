@@ -65,6 +65,8 @@ export function identifyPlayer(
     has_active_lobby?: boolean;
     last_lobby_id?: string;
     has_display_name?: boolean;
+    visit_count?: number;
+    is_new_visitor?: boolean;
   },
 ): void {
   if (typeof window === "undefined" || !getApiKey()) {
@@ -89,6 +91,12 @@ export function identifyPlayer(
   }
   if (properties.has_display_name !== undefined) {
     identify.set("has_display_name", properties.has_display_name);
+  }
+  if (properties.visit_count !== undefined) {
+    identify.set("visit_count", properties.visit_count);
+  }
+  if (properties.is_new_visitor !== undefined) {
+    identify.set("is_new_visitor", properties.is_new_visitor);
   }
   amplitude.identify(identify);
 }

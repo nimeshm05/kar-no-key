@@ -15,7 +15,6 @@
 
 .button--primary:hover:not(:disabled) {
   background: var(--color-button-background-hover);
-  border-color: var(--color-button-background-hover);
   color: var(--color-button-foreground);
 }
 

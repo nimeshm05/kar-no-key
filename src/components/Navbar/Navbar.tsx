@@ -113,88 +113,90 @@ export default function Navbar({
               </Button>
             ) : null}
 
-            <Dropdown
-              label="players"
-              countBadge={countBadge}
-              disabled={isRosterLoading && playerCount === 0}
-              isOpen={openMenu === "players"}
-              onOpenChange={handlePlayersOpenChange}
-            >
-              {rosterError ? (
-                <p className="dropdown__error text-button-label" role="alert">
-                  {rosterError}
-                </p>
-              ) : null}
+            <div className="navbar__menu-block">
+              <Dropdown
+                label="players"
+                countBadge={countBadge}
+                disabled={isRosterLoading && playerCount === 0}
+                isOpen={openMenu === "players"}
+                onOpenChange={handlePlayersOpenChange}
+              >
+                {rosterError ? (
+                  <p className="dropdown__error text-button-label" role="alert">
+                    {rosterError}
+                  </p>
+                ) : null}
 
-              {isRosterLoading && playerCount === 0 ? (
-                <p className="dropdown__message text-button-label">loading...</p>
-              ) : null}
+                {isRosterLoading && playerCount === 0 ? (
+                  <p className="dropdown__message text-button-label">loading...</p>
+                ) : null}
 
-              {sortedPlayers.map((player) => (
-                <div
-                  key={player.player_id}
-                  className="dropdown__row text-button-label"
-                  role="none"
-                >
-                  <span className="dropdown__row-name">
-                    {player.display_name.toLowerCase()}
-                  </span>
-                  <span className="dropdown__row-meta">
-                    {player.is_host ? "host" : "player"}
-                  </span>
-                </div>
-              ))}
-            </Dropdown>
-
-            <div className="navbar__more-menu" ref={moreMenuRef}>
-              <IconButton
-                variant="secondary"
-                type="button"
-                iconSrc="/icons/ellipsis-vertical.svg"
-                iconAlt="more options"
-                className={
-                  openMenu === "more" ? "navbar__more-button--open" : undefined
-                }
-                onClick={() =>
-                  handleMoreOpenChange(openMenu !== "more")
-                }
-              />
-
-              {openMenu === "more" ? (
-                <div
-                  className="navbar__more-panel dropdown__panel dropdown__panel--menu"
-                  role="menu"
-                >
-                  <button
-                    type="button"
-                    className="dropdown__menu-item text-button-label"
-                    role="menuitem"
-                    onClick={handleLeaveLobby}
+                {sortedPlayers.map((player) => (
+                  <div
+                    key={player.player_id}
+                    className="dropdown__row text-button-label"
+                    role="none"
                   >
-                    <img
-                      className="dropdown__menu-icon"
-                      src="/icons/log-out.svg"
-                      alt=""
-                      aria-hidden="true"
-                    />
-                    <span className="dropdown__menu-label">Leave Game</span>
-                  </button>
-                  <button
-                    type="button"
-                    className="dropdown__menu-item text-button-label"
-                    role="menuitem"
-                    onClick={handleOpenFeedback}
+                    <span className="dropdown__row-name">
+                      {player.display_name.toLowerCase()}
+                    </span>
+                    <span className="dropdown__row-meta">
+                      {player.is_host ? "host" : "player"}
+                    </span>
+                  </div>
+                ))}
+              </Dropdown>
+
+              <div className="navbar__more-menu" ref={moreMenuRef}>
+                <IconButton
+                  variant="secondary"
+                  type="button"
+                  iconSrc="/icons/ellipsis-vertical.svg"
+                  iconAlt="more options"
+                  className={
+                    openMenu === "more" ? "navbar__more-button--open" : undefined
+                  }
+                  onClick={() =>
+                    handleMoreOpenChange(openMenu !== "more")
+                  }
+                />
+
+                {openMenu === "more" ? (
+                  <div
+                    className="navbar__more-panel dropdown__panel dropdown__panel--menu"
+                    role="menu"
                   >
-                    <img
-                      className="dropdown__menu-icon"
-                      src="/icons/message-square-quote.svg"
-                      alt=""
-                      aria-hidden="true"
-                    />
-                    <span className="dropdown__menu-label">Feedback</span>
-                  </button>
-                </div>
-              ) : null}
+                    <button
+                      type="button"
+                      className="dropdown__menu-item text-button-label"
+                      role="menuitem"
+                      onClick={handleLeaveLobby}
+                    >
+                      <img
+                        className="dropdown__menu-icon"
+                        src="/icons/log-out.svg"
+                        alt=""
+                        aria-hidden="true"
+                      />
+                      <span className="dropdown__menu-label">Leave Game</span>
+                    </button>
+                    <button
+                      type="button"
+                      className="dropdown__menu-item text-button-label"
+                      role="menuitem"
+                      onClick={handleOpenFeedback}
+                    >
+                      <img
+                        className="dropdown__menu-icon"
+                        src="/icons/message-square-quote.svg"
+                        alt=""
+                        aria-hidden="true"
+                      />
+                      <span className="dropdown__menu-label">Feedback</span>
+                    </button>
+                  </div>
+                ) : null}
+              </div>
             </div>
           </div>
         </div>

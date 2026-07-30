@@ -8,6 +8,7 @@ import { isValidPlayerId } from "../_shared/player-id.ts";
 import { mintPlayerSessionToken } from "../_shared/player-session.ts";
 import { checkRateLimit, getClientIp } from "../_shared/rate-limit.ts";
 import { createSupabaseAdmin } from "../_shared/supabase-admin.ts";
+import { recordVisitorDisplayName } from "../_shared/visitor-display-name.ts";
 
 type CreateLobbyRequest = {
   player_id?: string;
@@ -154,6 +155,8 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Failed to create host player" }, 500, req);
     }
   }
+
+  await recordVisitorDisplayName(supabase, body.player_id, nameResult.name);
 
   const { error: updateLobbyError } = await supabase
     .from("lobbies")

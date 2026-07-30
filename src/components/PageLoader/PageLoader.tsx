@@ -1,4 +1,5 @@
 import Loader from "@/components/Loader/Loader";
+import { PAGE_LOADER_LABELS } from "@/lib/ui/pageLoaderLabels";
 import "./PageLoader.css";
 
 /** Figma page-transition loader (node 2247:2215): 120px grid. */
@@ -11,7 +12,7 @@ type PageLoaderProps = {
 };
 
 export default function PageLoader({
-  label = "Loading",
+  label = PAGE_LOADER_LABELS.loadingLobby,
   className,
 }: PageLoaderProps) {
   const classes = ["page-loader", className].filter(Boolean).join(" ");
@@ -23,6 +24,9 @@ export default function PageLoader({
         gap={PAGE_LOADER_GAP}
         label={label}
       />
+      <p className="page-loader__label text-body" aria-hidden="true">
+        {label}
+      </p>
     </div>
   );
 }

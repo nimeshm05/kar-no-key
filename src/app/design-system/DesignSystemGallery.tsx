@@ -396,7 +396,7 @@ export default function DesignSystemGallery() {
           2247:2076).
         </p>
         <div className="design-system-page-loader-frame">
-          <PageLoader label="Loading page" />
+          <PageLoader label="loading search" />
         </div>
       </section>
 

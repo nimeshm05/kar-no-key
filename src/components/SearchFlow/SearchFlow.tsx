@@ -30,6 +30,10 @@ import {
   selectSong,
   type LobbyPlayer,
 } from "@/lib/supabase/functions";
+import {
+  PAGE_LOADER_LABELS,
+  pageLoaderLabelForRoute,
+} from "@/lib/ui/pageLoaderLabels";
 import { useTimedPageLoader } from "@/lib/ui/useTimedPageLoader";
 
 const PAGE_SIZE = 6;
@@ -61,6 +65,7 @@ export default function SearchFlow() {
   const isNavigatingAwayRef = useRef(false);
   const {
     isLoading: isPageLoading,
+    label: pageLoaderLabel,
     start: startPageLoader,
     finish: finishPageLoader,
     cancel: cancelPageLoader,
@@ -95,7 +100,7 @@ export default function SearchFlow() {
   const navigateTo = useCallback(
     (route: string) => {
       isNavigatingAwayRef.current = true;
-      startPageLoader();
+      startPageLoader(pageLoaderLabelForRoute(route));
       router.replace(route);
     },
     [router, startPageLoader],
@@ -199,7 +204,7 @@ export default function SearchFlow() {
     setPlayerId(id);
     setDisplayName(session.displayName);
     setIsHost(session.isHost);
-    startPageLoader();
+    startPageLoader(PAGE_LOADER_LABELS.loadingSearch);
 
     void fetchLobbyState(id).then((success) => {
       if (isNavigatingAwayRef.current) {
@@ -414,7 +419,7 @@ export default function SearchFlow() {
     }
 
     setIsConfirming(true);
-    startPageLoader();
+    startPageLoader(PAGE_LOADER_LABELS.loadingGame);
     setConfirmError(null);
 
     try {
@@ -476,7 +481,7 @@ export default function SearchFlow() {
   }
 
   if (!isReady || isPageLoading) {
-    return <PageLoader label="Loading search" />;
+    return <PageLoader label={pageLoaderLabel} />;
   }
 
   return (

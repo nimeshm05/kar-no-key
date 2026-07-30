@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { PAGE_LOADER_LABELS } from "@/lib/ui/pageLoaderLabels";
 
 export const PAGE_LOADER_MIN_MS = 2500;
 
@@ -17,6 +18,7 @@ type UseTimedPageLoaderOptions = {
 export function useTimedPageLoader(options: UseTimedPageLoaderOptions = {}) {
   const minMs = options.minMs ?? PAGE_LOADER_MIN_MS;
   const [isLoading, setIsLoading] = useState(false);
+  const [label, setLabel] = useState<string>(PAGE_LOADER_LABELS.loadingLobby);
   const startedAtRef = useRef<number | null>(null);
   const workDoneRef = useRef(false);
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -53,12 +55,18 @@ export function useTimedPageLoader(options: UseTimedPageLoaderOptions = {}) {
     }, remaining);
   }, [clearHideTimer, minMs]);
 
-  const start = useCallback(() => {
-    clearHideTimer();
-    workDoneRef.current = false;
-    startedAtRef.current = Date.now();
-    setIsLoading(true);
-  }, [clearHideTimer]);
+  const start = useCallback(
+    (nextLabel?: string) => {
+      if (nextLabel !== undefined) {
+        setLabel(nextLabel);
+      }
+      clearHideTimer();
+      workDoneRef.current = false;
+      startedAtRef.current = Date.now();
+      setIsLoading(true);
+    },
+    [clearHideTimer],
+  );
 
   const finish = useCallback(() => {
     if (startedAtRef.current === null) {
@@ -79,5 +87,5 @@ export function useTimedPageLoader(options: UseTimedPageLoaderOptions = {}) {
 
   useEffect(() => () => clearHideTimer(), [clearHideTimer]);
 
-  return { isLoading, start, finish, cancel };
+  return { isLoading, label, start, finish, cancel };
 }

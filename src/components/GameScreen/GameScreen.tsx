@@ -363,7 +363,7 @@ export default function GameScreen({
                         >
                           <span
                             ref={titleTextRef}
-                            className="game-screen__song-title-text text-heading-3"
+                            className="game-screen__song-title-text text-title"
                           >
                             {song.title}
                           </span>
@@ -374,7 +374,7 @@ export default function GameScreen({
                                 aria-hidden="true"
                               />
                               <span
-                                className="game-screen__song-title-text text-heading-3"
+                                className="game-screen__song-title-text text-title"
                                 aria-hidden="true"
                               >
                                 {song.title}
@@ -394,6 +394,7 @@ export default function GameScreen({
                     <div className="game-screen__host-controls">
                       <IconButton
                         variant="secondary"
+                        size="sm"
                         type="button"
                         iconSrc={
                           isPlaying
@@ -406,6 +407,7 @@ export default function GameScreen({
                       />
                       <Button
                         variant="primary"
+                        size="sm"
                         type="button"
                         className="game-screen__end-song-button"
                         onClick={onEndSong}

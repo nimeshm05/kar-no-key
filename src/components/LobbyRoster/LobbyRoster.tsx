@@ -109,7 +109,7 @@ export default function LobbyRoster({
       {isGameVariant ? (
         <>
           <div className="lobby-roster__score-header">
-            <p className="lobby-roster__title text-button-label">Score Card</p>
+            <p className="lobby-roster__title text-title">Score Card</p>
           </div>
           <div className="lobby-roster__game-table">
             <div className="lobby-roster__header lobby-roster__header--game text-body">

@@ -47,3 +47,9 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+.icon-button--sm {
+  box-sizing: border-box;
+  width: var(--control-size-sm);
+  height: var(--control-size-sm);
+}

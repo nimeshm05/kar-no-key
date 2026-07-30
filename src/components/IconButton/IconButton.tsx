@@ -9,6 +9,7 @@ type IconButtonProps = {
   onClick?: () => void;
   type?: "button" | "submit" | "reset";
   variant?: "primary" | "secondary";
+  size?: "default" | "sm";
   className?: string;
   disabled?: boolean;
 };
@@ -19,12 +20,14 @@ export default function IconButton({
   onClick,
   type = "button",
   variant = "primary",
+  size = "default",
   className,
   disabled = false,
 }: IconButtonProps) {
   const classes = [
     "icon-button",
     `icon-button--${variant}`,
+    size === "sm" ? "icon-button--sm" : null,
     className,
   ]
     .filter(Boolean)

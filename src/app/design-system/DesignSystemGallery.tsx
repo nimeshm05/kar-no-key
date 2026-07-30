@@ -86,6 +86,7 @@ const TYPE_SAMPLES = [
   { className: "text-heading-1", label: "text-heading-1" },
   { className: "text-heading-2", label: "text-heading-2" },
   { className: "text-heading-3", label: "text-heading-3" },
+  { className: "text-title", label: "text-title" },
   { className: "text-body", label: "text-body" },
   { className: "text-body-regular", label: "text-body-regular" },
   { className: "text-button-label", label: "text-button-label" },

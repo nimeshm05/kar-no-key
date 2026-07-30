@@ -33,6 +33,13 @@
   line-height: var(--line-16);
 }
 
+.text-title {
+  font-family: var(--family-mono);
+  font-size: var(--size-16);
+  font-weight: var(--weight-semibold);
+  line-height: var(--line-16);
+}
+
 .text-button-label {
   font-family: var(--family-mono);
   font-size: var(--size-14);

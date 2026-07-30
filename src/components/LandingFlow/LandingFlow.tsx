@@ -36,6 +36,10 @@ import {
   validateLobbyCode,
   type LobbyPlayer,
 } from "@/lib/supabase/functions";
+import {
+  PAGE_LOADER_LABELS,
+  pageLoaderLabelForRoute,
+} from "@/lib/ui/pageLoaderLabels";
 import { useTimedPageLoader } from "@/lib/ui/useTimedPageLoader";
 import "./LandingFlow.css";
 
@@ -76,6 +80,7 @@ export default function LandingFlow() {
   const isNavigatingAwayRef = useRef(false);
   const {
     isLoading: isPageLoading,
+    label: pageLoaderLabel,
     start: startPageLoader,
     finish: finishPageLoader,
     cancel: cancelPageLoader,
@@ -86,7 +91,7 @@ export default function LandingFlow() {
       const route = getRouteForLobbyStatus(status, songSelectionStarted);
       if (route) {
         isNavigatingAwayRef.current = true;
-        startPageLoader();
+        startPageLoader(pageLoaderLabelForRoute(route));
         router.push(route);
         return true;
       }
@@ -97,7 +102,7 @@ export default function LandingFlow() {
 
   const navigateToSearch = useCallback(() => {
     isNavigatingAwayRef.current = true;
-    startPageLoader();
+    startPageLoader(PAGE_LOADER_LABELS.loadingSearch);
     router.push("/search");
   }, [router, startPageLoader]);
 
@@ -214,7 +219,7 @@ export default function LandingFlow() {
       return;
     }
 
-    startPageLoader();
+    startPageLoader(PAGE_LOADER_LABELS.loadingLobby);
     setDisplayName(session.displayName);
     setLobbyCode(session.lobbyCode);
     setLobbyId(session.lobbyId);
@@ -262,7 +267,7 @@ export default function LandingFlow() {
     identifyPlayer(playerId, { has_display_name: true });
 
     setIsLoading(true);
-    startPageLoader();
+    startPageLoader(PAGE_LOADER_LABELS.creatingLobby);
     setError(null);
 
     try {
@@ -380,7 +385,7 @@ export default function LandingFlow() {
     }
 
     setIsLoading(true);
-    startPageLoader();
+    startPageLoader(PAGE_LOADER_LABELS.loadingSearch);
     setStartGameError(null);
 
     try {
@@ -580,7 +585,7 @@ export default function LandingFlow() {
   }
 
   if (isPageLoading) {
-    return <PageLoader label="Loading" />;
+    return <PageLoader label={pageLoaderLabel} />;
   }
 
   return (

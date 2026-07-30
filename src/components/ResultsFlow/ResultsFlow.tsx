@@ -28,6 +28,10 @@ import {
   type AwardsSnapshot,
   type LobbyPlayer,
 } from "@/lib/supabase/functions";
+import {
+  PAGE_LOADER_LABELS,
+  pageLoaderLabelForRoute,
+} from "@/lib/ui/pageLoaderLabels";
 import { useTimedPageLoader } from "@/lib/ui/useTimedPageLoader";
 
 export default function ResultsFlow() {
@@ -46,6 +50,7 @@ export default function ResultsFlow() {
   const isNavigatingAwayRef = useRef(false);
   const {
     isLoading: isPageLoading,
+    label: pageLoaderLabel,
     start: startPageLoader,
     finish: finishPageLoader,
     cancel: cancelPageLoader,
@@ -54,7 +59,7 @@ export default function ResultsFlow() {
   const navigateTo = useCallback(
     (route: string) => {
       isNavigatingAwayRef.current = true;
-      startPageLoader();
+      startPageLoader(pageLoaderLabelForRoute(route));
       router.replace(route);
     },
     [router, startPageLoader],
@@ -146,7 +151,7 @@ export default function ResultsFlow() {
       last_lobby_id: session.lobbyId,
     });
     setLobbyGroup(session.lobbyId);
-    startPageLoader();
+    startPageLoader(PAGE_LOADER_LABELS.loadingResults);
 
     void fetchLobbyState(activePlayerId).then(() => {
       if (isNavigatingAwayRef.current) {
@@ -191,7 +196,7 @@ export default function ResultsFlow() {
     }
 
     setIsRestartPending(true);
-    startPageLoader();
+    startPageLoader(PAGE_LOADER_LABELS.loadingSearch);
     setRestartError(null);
 
     try {
@@ -213,7 +218,7 @@ export default function ResultsFlow() {
   }
 
   if (!isReady || isPageLoading) {
-    return <PageLoader label="Loading results" />;
+    return <PageLoader label={pageLoaderLabel} />;
   }
 
   return (

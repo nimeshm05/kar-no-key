@@ -31,6 +31,10 @@ import {
   type LobbyPlayer,
   type LobbySong,
 } from "@/lib/supabase/functions";
+import {
+  PAGE_LOADER_LABELS,
+  pageLoaderLabelForRoute,
+} from "@/lib/ui/pageLoaderLabels";
 import { useTimedPageLoader } from "@/lib/ui/useTimedPageLoader";
 
 export default function GameFlow() {
@@ -54,6 +58,7 @@ export default function GameFlow() {
   const isNavigatingAwayRef = useRef(false);
   const {
     isLoading: isPageLoading,
+    label: pageLoaderLabel,
     start: startPageLoader,
     finish: finishPageLoader,
     cancel: cancelPageLoader,
@@ -62,7 +67,7 @@ export default function GameFlow() {
   const navigateTo = useCallback(
     (route: string) => {
       isNavigatingAwayRef.current = true;
-      startPageLoader();
+      startPageLoader(pageLoaderLabelForRoute(route));
       router.replace(route);
     },
     [router, startPageLoader],
@@ -254,7 +259,7 @@ export default function GameFlow() {
     setPlayerId(id);
     setDisplayName(session.displayName);
     setIsHost(session.isHost);
-    startPageLoader();
+    startPageLoader(PAGE_LOADER_LABELS.loadingGame);
 
     void fetchLobbyState(id).then((success) => {
       if (isNavigatingAwayRef.current) {
@@ -380,7 +385,7 @@ export default function GameFlow() {
     }
 
     setIsControlPending(true);
-    startPageLoader();
+    startPageLoader(PAGE_LOADER_LABELS.loadingResults);
     setControlError(null);
 
     const currentPlayer = players.find((player) => player.player_id === playerId);
@@ -419,7 +424,7 @@ export default function GameFlow() {
   }
 
   if (!isReady || !song || isPageLoading) {
-    return <PageLoader label="Loading game" />;
+    return <PageLoader label={pageLoaderLabel} />;
   }
 
   return (

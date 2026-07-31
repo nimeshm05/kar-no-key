@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { PAGE_LOADER_LABELS } from "@/lib/ui/pageLoaderLabels";
 
-export const PAGE_LOADER_MIN_MS = 2500;
+export const PAGE_LOADER_MIN_MS = 1500;
 
 type UseTimedPageLoaderOptions = {
   /** Minimum time the loader stays visible. Default 2500ms. */

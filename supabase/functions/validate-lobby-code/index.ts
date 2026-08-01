@@ -76,7 +76,7 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: "Failed to validate lobby code" }, 500, req);
   }
 
-  if (!data) {
+  if (!data || data.status === "closed") {
     return jsonResponse({ valid: true, exists: false }, 200, req);
   }
 

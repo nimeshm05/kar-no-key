@@ -57,7 +57,7 @@ Deno.serve(async (req) => {
   const serverNow = new Date();
 
   await touchPlayerPresence(supabase, body.player_id, serverNow);
-  await pruneStalePlayers(supabase, lobby.id, serverNow);
+  await pruneStalePlayers(supabase, lobby.id, serverNow, lobby.status);
 
   let effectiveStatus = getEffectiveLobbyStatus(lobby, serverNow.getTime());
   let awards: AwardsSnapshot | null = lobby.awards_snapshot ?? null;

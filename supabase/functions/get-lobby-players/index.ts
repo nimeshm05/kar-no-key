@@ -51,7 +51,7 @@ Deno.serve(async (req) => {
   const now = new Date();
 
   await touchPlayerPresence(supabase, body.player_id, now);
-  await pruneStalePlayers(supabase, lobby.id, now);
+  await pruneStalePlayers(supabase, lobby.id, now, lobby.status);
 
   const { data: players, error: playersError } = await supabase
     .from("players")

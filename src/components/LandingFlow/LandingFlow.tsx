@@ -330,29 +330,32 @@ export default function LandingFlow() {
         return;
       }
 
+      const resumedHost = data.is_host ?? true;
       setDisplayName(data.display_name);
       setLobbyCode(data.code);
       setLobbyId(data.lobby_id);
-      setIsHost(true);
+      setIsHost(resumedHost);
       saveLobbySession({
         displayName: data.display_name,
         lobbyCode: data.code,
         lobbyId: data.lobby_id,
-        isHost: true,
+        isHost: resumedHost,
         sessionToken: data.session_token,
       });
       identifyPlayer(playerId, {
-        is_host: true,
+        is_host: resumedHost,
         has_active_lobby: true,
         last_lobby_id: data.lobby_id,
         has_display_name: true,
       });
       setLobbyGroup(data.lobby_id);
-      trackEvent(AnalyticsEvent.LobbyCreated, {
-        lobby_id: data.lobby_id,
-        is_host: true,
-        source_screen: "landing",
-      });
+      if (!data.resumed) {
+        trackEvent(AnalyticsEvent.LobbyCreated, {
+          lobby_id: data.lobby_id,
+          is_host: resumedHost,
+          source_screen: "landing",
+        });
+      }
       setStep("lobby");
       const success = await fetchLobbyRoster(playerId, true);
       if (isNavigatingAwayRef.current) {

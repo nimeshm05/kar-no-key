@@ -8,6 +8,7 @@ import { isValidPlayerId } from "../_shared/player-id.ts";
 import {
   isPresenceStale,
   removePlayerFromLobby,
+  staleMsForLobbyStatus,
 } from "../_shared/player-leave.ts";
 import { mintPlayerSessionToken } from "../_shared/player-session.ts";
 import { checkRateLimit, getClientIp } from "../_shared/rate-limit.ts";
@@ -139,7 +140,13 @@ Deno.serve(async (req) => {
         }, 200, req);
       }
 
-      if (!isPresenceStale(existingPlayer.last_seen_at)) {
+      if (
+        !isPresenceStale(
+          existingPlayer.last_seen_at,
+          new Date(),
+          staleMsForLobbyStatus(existingLobby.status),
+        )
+      ) {
         return jsonResponse(
           { error: "Player is already in an active lobby" },
           409,
@@ -171,8 +178,12 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: "Failed to find lobby" }, 500, req);
   }
 
-  if (!lobby) {
-    return jsonResponse({ error: "Lobby not found" }, 404, req);
+  if (!lobby || lobby.status === "closed") {
+    return jsonResponse(
+      { error: "Lobby not found or has closed" },
+      404,
+      req,
+    );
   }
 
   if (lobby.status !== "waiting") {

@@ -98,10 +98,57 @@ Each decision below uses this shape:
 - **Tuning:** Progress submits are validated on the server, characters count once, and a phrase stops accepting work once the lyric moves on.
 - **Effect:** Points reflect racing the current line, not grinding history.
 
-### Presence is server-owned (not tab teardown)
+### Closing a tab is not leaving the party (hybrid presence)
 
-- **Tradeoff:** We could call `leaveLobby` on tab close/unload, or we could treat presence as a server TTL with a reconnect grace window.
-- **Assessment:** `pagehide` / unload also fires on refresh, so an immediate leave would eject players who are only reloading. Clearing `sessionStorage` also does not delete the Postgres player row, so ghosts linger if nothing else removes them. `last_seen_at` / `is_connected` already existed but were unused after join.
-- **Stance:** A short disconnect must not eject someone; a closed tab must not ghost forever when other players remain.
-- **Tuning:** Lobby polls stamp the caller's `last_seen_at`, prune players older than 15 seconds, and reuse the same leave/host-transfer path. We do not leave on unload. Empty lobbies left by a sole closer still need expiration cleanup (NIM-42).
-- **Effect:** Refresh reconnects cleanly; closed tabs drop out of the roster after the grace window when anyone else is still polling.
+- **Tradeoff:** We walked through several ways to handle “host closed the tab instead of Leave game”:
+  1. **Leave on unload** — call `leaveLobby` from `pagehide` / `beforeunload` when the tab dies.
+  2. **Always delete the lobby after grace if the host is gone** (Option A) — simple cleanup, room vanishes for everyone.
+  3. **Never delete; only promote** (Option B) — friends keep playing, but empty rooms linger.
+  4. **Browser “exit game?” dialog** — try to force an intentional leave on close.
+  5. **What we shipped (Option C — hybrid)** — server-owned presence with a short grace: resume if they come back in time; promote if friends remain; delete when the room is empty/all-stale (poll prune + cron). Within grace, get started resumes the same code; after grace, create starts a new lobby.
+- **Assessment:** Most people will close the tab, not click Leave. The first instinct — leave on unload — is the worst UX for this product: refresh, accidental close, and “I meant to come right back” all look like abandon, so you eject someone mid-setup or mid-race and burn the invite code. Hard-deleting whenever the host goes stale (Option A) punishes friends already in the room. Promote-only (Option B) is kind to the party but leaves alone-host ghost lobbies forever until something else cleans them. A custom close popup is unreliable (especially on mobile) and is not a real leave path. We also hit a practical trap after poll presence alone: if the host was alone, nobody left polls, so prune never ran — and create returned **409 already in an active lobby**, blocking get started even though they had clearly abandoned.
+- **Stance:** A short disconnect must not feel like punishment; a closed tab must not ghost forever; friends already in the room outrank an empty code. Presence belongs on the server, not in browser teardown.
+- **Tuning:** Lobby polls stamp `last_seen_at` and prune with status-aware grace (**15s** waiting / song selection, **45s** in race states). Prune re-checks presence before remove so a reconnect at the boundary wins. Within grace, create **resumes** the same lobby (same code, still host if still host). After grace, stale membership is **reclaimed** and create makes a new lobby. Friends remaining → keep lobby and **promote**. Empty / all-stale → delete via `cleanup-stale-lobbies` (cron). Old host after promote may rejoin with the code as a normal player. No unload leave; no custom close dialog.
+- **Effect:** Refresh and brief blinks feel safe; friends keep the party when the host drops; alone-host abandons clear on reclaim or cron; get started is never permanently stuck on a ghost seat; mid-race backgrounding is less harsh.
+
+---
+
+## Case study: host closes the tab
+
+### 1. Problem
+
+Most players do not click **Leave game**. They close the browser tab or the window.
+
+When that happens, the server can still think they are in the lobby. Friends may keep seeing a ghost host. Empty lobbies can sit in the database for a long time. If the host was alone and comes back later, create lobby can fail with “already in an active lobby,” even though they clearly left.
+
+Refresh makes this harder. Closing a tab and reloading the page look similar to the browser, so a harsh leave rule can punish people who only meant to reload.
+
+### 2. Alternative approaches we thought about
+
+**Leave on unload.** Call leave lobby as soon as the tab closes. The rationale was simple: if the tab is gone, remove the player right away. We rejected this from a UX point of view. Refresh also fires unload events, so a reload would kick someone out of their own lobby and burn the invite code. Accidental closes and “I will be right back” would feel the same as quitting.
+
+**Always delete the lobby after a short wait if the host is gone (Option A).** The rationale was cleanup: after about fifteen seconds, the room disappears so ghost lobbies do not linger. We rejected this because it is harsh on friends. If someone already joined and the host accidentally closed the tab, the whole party would get kicked.
+
+**Never delete; only promote another player (Option B).** The rationale was to protect the party. Friends stay in the room, and someone else becomes host. We liked this for multiplayer, but it does not solve the alone-host case. If the host was alone, nobody is left to clean up, so empty lobbies and stale player rows can linger forever.
+
+**Browser “Do you want to exit the game?” dialog.** The rationale was to force an intentional choice before close. We rejected this because browsers do not let us control that dialog reliably, especially on phones. It is not a solid leave path.
+
+**Poll presence only, without reclaim or cron.** We did ship heartbeat and prune first. Friends who stay in the lobby can remove a stale host and promote someone else. That helped the multiplayer case. The remaining UX problem was the alone host: with nobody left polling, prune never ran, and get started could stay blocked on a ghost membership.
+
+### 3. The final solution we chose
+
+We chose a **hybrid** model (Option C).
+
+Presence lives on the server. Lobby polls stamp `last_seen_at`. After a grace window, stale players are pruned. The grace is about **fifteen seconds** while waiting or picking a song, and about **forty-five seconds** during an active race so a short background or sleep is less harsh.
+
+If the host comes back **within grace** and hits get started, they **resume the same lobby and the same code**. They stay host if they are still host.
+
+If they come back **after grace**, we reclaim the stale seat and create a **new lobby with a new code**. The old invite should fail with a clear “lobby not found or has closed” message.
+
+If **friends are still there** after grace, we keep the lobby and promote the earliest remaining player. The old host may later join again with the code as a normal player, not as host automatically.
+
+If the lobby is **empty or everyone is stale**, we delete it. Poll prune handles this when someone is still online. A scheduled cleanup job handles the alone-host case when nobody is left to poll.
+
+We do not leave on unload, and we do not rely on a custom close popup.
+
+**Rationale.** A short disconnect should not feel like punishment. Friends already in the room matter more than keeping an empty invite code alive. Closing a tab should not ghost forever, and get started should not stay stuck on an abandoned seat. Hybrid presence gives reconnect safety, protects the party, and still cleans up empty rooms.

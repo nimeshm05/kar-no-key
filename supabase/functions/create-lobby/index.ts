@@ -8,6 +8,8 @@ import { isValidPlayerId } from "../_shared/player-id.ts";
 import {
   isPresenceStale,
   removePlayerFromLobby,
+  staleMsForLobbyStatus,
+  touchPlayerPresence,
 } from "../_shared/player-leave.ts";
 import { mintPlayerSessionToken } from "../_shared/player-session.ts";
 import { checkRateLimit, getClientIp } from "../_shared/rate-limit.ts";
@@ -80,7 +82,7 @@ Deno.serve(async (req) => {
 
   const { data: existingPlayerRow, error: existingPlayerError } = await supabase
     .from("players")
-    .select("id, lobby_id, last_seen_at")
+    .select("id, lobby_id, last_seen_at, is_host, display_name")
     .eq("id", body.player_id)
     .maybeSingle();
 
@@ -93,7 +95,7 @@ Deno.serve(async (req) => {
   if (existingPlayer) {
     const { data: existingLobby, error: existingLobbyError } = await supabase
       .from("lobbies")
-      .select("status")
+      .select("id, code, status")
       .eq("id", existingPlayer.lobby_id)
       .maybeSingle();
 
@@ -102,12 +104,43 @@ Deno.serve(async (req) => {
     }
 
     if (existingLobby && existingLobby.status !== "closed") {
-      if (!isPresenceStale(existingPlayer.last_seen_at)) {
-        return jsonResponse(
-          { error: "Player is already in an active lobby" },
-          409,
-          req,
-        );
+      const staleMs = staleMsForLobbyStatus(existingLobby.status);
+      const now = new Date();
+
+      // Still checking in — resume the same lobby instead of 409 / create-new.
+      if (!isPresenceStale(existingPlayer.last_seen_at, now, staleMs)) {
+        await touchPlayerPresence(supabase, existingPlayer.id, now);
+
+        const { error: nameUpdateError } = await supabase
+          .from("players")
+          .update({ display_name: nameResult.name })
+          .eq("id", existingPlayer.id);
+
+        if (nameUpdateError) {
+          return jsonResponse({ error: "Failed to update display name" }, 500, req);
+        }
+
+        await recordVisitorDisplayName(supabase, body.player_id, nameResult.name);
+
+        let sessionToken: string;
+        try {
+          sessionToken = await mintPlayerSessionToken(
+            body.player_id,
+            existingLobby.id,
+          );
+        } catch {
+          return jsonResponse({ error: "Server configuration error" }, 500, req);
+        }
+
+        return jsonResponse({
+          code: existingLobby.code,
+          lobby_id: existingLobby.id,
+          player_id: body.player_id,
+          display_name: nameResult.name,
+          is_host: existingPlayer.is_host,
+          session_token: sessionToken,
+          resumed: true,
+        }, 200, req);
       }
 
       const reclaim = await removePlayerFromLobby(
@@ -199,6 +232,8 @@ Deno.serve(async (req) => {
     lobby_id: lobby.id,
     player_id: body.player_id,
     display_name: nameResult.name,
+    is_host: true,
     session_token: sessionToken,
+    resumed: false,
   }, 200, req);
 });

@@ -17,6 +17,8 @@ export type CreateLobbyResult =
       player_id: string;
       display_name: string;
       session_token: string;
+      is_host?: boolean;
+      resumed?: boolean;
     }
   | { error: string };
 

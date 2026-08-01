@@ -97,3 +97,11 @@ Each decision below uses this shape:
 - **Stance:** Scoring should follow the music forward.
 - **Tuning:** Progress submits are validated on the server, characters count once, and a phrase stops accepting work once the lyric moves on.
 - **Effect:** Points reflect racing the current line, not grinding history.
+
+### Presence is server-owned (not tab teardown)
+
+- **Tradeoff:** We could call `leaveLobby` on tab close/unload, or we could treat presence as a server TTL with a reconnect grace window.
+- **Assessment:** `pagehide` / unload also fires on refresh, so an immediate leave would eject players who are only reloading. Clearing `sessionStorage` also does not delete the Postgres player row, so ghosts linger if nothing else removes them. `last_seen_at` / `is_connected` already existed but were unused after join.
+- **Stance:** A short disconnect must not eject someone; a closed tab must not ghost forever when other players remain.
+- **Tuning:** Lobby polls stamp the caller's `last_seen_at`, prune players older than 15 seconds, and reuse the same leave/host-transfer path. We do not leave on unload. Empty lobbies left by a sole closer still need expiration cleanup (NIM-42).
+- **Effect:** Refresh reconnects cleanly; closed tabs drop out of the roster after the grace window when anyone else is still polling.

@@ -4,6 +4,10 @@ import {
   requireLobbyPlayer,
 } from "../_shared/lobby-state.ts";
 import { isValidPlayerId } from "../_shared/player-id.ts";
+import {
+  pruneStalePlayers,
+  touchPlayerPresence,
+} from "../_shared/player-leave.ts";
 
 type GetLobbyPlayersRequest = {
   player_id?: string;
@@ -44,6 +48,10 @@ Deno.serve(async (req) => {
   }
 
   const { supabase, lobby } = auth;
+  const now = new Date();
+
+  await touchPlayerPresence(supabase, body.player_id, now);
+  await pruneStalePlayers(supabase, lobby.id, now);
 
   const { data: players, error: playersError } = await supabase
     .from("players")

@@ -6,6 +6,10 @@ import {
   requireLobbyPlayer,
 } from "../_shared/lobby-state.ts";
 import {
+  pruneStalePlayers,
+  touchPlayerPresence,
+} from "../_shared/player-leave.ts";
+import {
   finishRace,
   shouldAutoFinishRace,
   songDurationSecFromPhrases,
@@ -51,6 +55,10 @@ Deno.serve(async (req) => {
 
   const { supabase, lobby } = auth;
   const serverNow = new Date();
+
+  await touchPlayerPresence(supabase, body.player_id, serverNow);
+  await pruneStalePlayers(supabase, lobby.id, serverNow);
+
   let effectiveStatus = getEffectiveLobbyStatus(lobby, serverNow.getTime());
   let awards: AwardsSnapshot | null = lobby.awards_snapshot ?? null;
   let playbackStartAt = lobby.playback_start_at;

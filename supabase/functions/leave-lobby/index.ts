@@ -1,39 +1,16 @@
 import { handleCors, jsonResponse } from "../_shared/cors.ts";
 import { isValidPlayerId } from "../_shared/player-id.ts";
+import { removePlayerFromLobby } from "../_shared/player-leave.ts";
 import {
   readSessionToken,
   verifyPlayerSessionToken,
 } from "../_shared/player-session.ts";
-import { clearPlayerGameData } from "../_shared/scoring/reset.ts";
 import { createSupabaseAdmin } from "../_shared/supabase-admin.ts";
-import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
 
 type LeaveLobbyRequest = {
   player_id?: string;
   session_token?: string;
 };
-
-async function removePlayer(
-  supabase: SupabaseClient,
-  playerId: string,
-): Promise<string | null> {
-  try {
-    await clearPlayerGameData(supabase, playerId);
-  } catch {
-    return "Failed to clear player game data";
-  }
-
-  const { error: deletePlayerError } = await supabase
-    .from("players")
-    .delete()
-    .eq("id", playerId);
-
-  if (deletePlayerError) {
-    return "Failed to leave lobby";
-  }
-
-  return null;
-}
 
 Deno.serve(async (req) => {
   const corsResponse = handleCors(req);
@@ -114,135 +91,21 @@ Deno.serve(async (req) => {
     );
   }
 
-  const { data: lobby, error: lobbyError } = await supabase
-    .from("lobbies")
-    .select("id, status, host_player_id")
-    .eq("id", player.lobby_id)
-    .maybeSingle();
+  const result = await removePlayerFromLobby(
+    supabase,
+    body.player_id,
+    player.lobby_id,
+  );
 
-  if (lobbyError) {
-    return jsonResponse({ error: "Failed to check lobby" }, 500, req);
-  }
-
-  if (!lobby) {
-    const removeError = await removePlayer(supabase, body.player_id);
-    if (removeError) {
-      return jsonResponse({ error: removeError }, 500, req);
-    }
-
-    return jsonResponse({
-      player_id: body.player_id,
-      left: true,
-      lobby_closed: false,
-      new_host_player_id: null,
-    }, 200, req);
-  }
-
-  if (lobby.status === "closed") {
-    const removeError = await removePlayer(supabase, body.player_id);
-    if (removeError) {
-      return jsonResponse({ error: removeError }, 500, req);
-    }
-
-    return jsonResponse({
-      player_id: body.player_id,
-      lobby_id: lobby.id,
-      left: true,
-      lobby_closed: true,
-      new_host_player_id: null,
-    }, 200, req);
-  }
-
-  if (player.is_host) {
-    const { data: otherPlayers, error: otherPlayersError } = await supabase
-      .from("players")
-      .select("id")
-      .eq("lobby_id", lobby.id)
-      .neq("id", body.player_id)
-      .order("joined_at", { ascending: true });
-
-    if (otherPlayersError) {
-      return jsonResponse({ error: "Failed to check lobby players" }, 500, req);
-    }
-
-    if (!otherPlayers || otherPlayers.length === 0) {
-      try {
-        await clearPlayerGameData(supabase, body.player_id);
-      } catch {
-        return jsonResponse({ error: "Failed to clear player game data" }, 500, req);
-      }
-
-      const { error: deleteLobbyError } = await supabase
-        .from("lobbies")
-        .delete()
-        .eq("id", lobby.id);
-
-      if (deleteLobbyError) {
-        return jsonResponse({ error: "Failed to close lobby" }, 500, req);
-      }
-
-      return jsonResponse({
-        player_id: body.player_id,
-        lobby_id: lobby.id,
-        left: true,
-        lobby_closed: true,
-        new_host_player_id: null,
-      }, 200, req);
-    }
-
-    const successor = otherPlayers[0];
-
-    const { error: updateLobbyError } = await supabase
-      .from("lobbies")
-      .update({ host_player_id: successor.id })
-      .eq("id", lobby.id);
-
-    if (updateLobbyError) {
-      return jsonResponse({ error: "Failed to transfer host" }, 500, req);
-    }
-
-    const { error: clearHostFlagsError } = await supabase
-      .from("players")
-      .update({ is_host: false })
-      .eq("lobby_id", lobby.id);
-
-    if (clearHostFlagsError) {
-      return jsonResponse({ error: "Failed to transfer host" }, 500, req);
-    }
-
-    const { error: promoteError } = await supabase
-      .from("players")
-      .update({ is_host: true, is_connected: true })
-      .eq("id", successor.id);
-
-    if (promoteError) {
-      return jsonResponse({ error: "Failed to transfer host" }, 500, req);
-    }
-
-    const removeError = await removePlayer(supabase, body.player_id);
-    if (removeError) {
-      return jsonResponse({ error: removeError }, 500, req);
-    }
-
-    return jsonResponse({
-      player_id: body.player_id,
-      lobby_id: lobby.id,
-      left: true,
-      lobby_closed: false,
-      new_host_player_id: successor.id,
-    }, 200, req);
-  }
-
-  const removeError = await removePlayer(supabase, body.player_id);
-  if (removeError) {
-    return jsonResponse({ error: removeError }, 500, req);
+  if (result.error) {
+    return jsonResponse({ error: result.error }, 500, req);
   }
 
   return jsonResponse({
     player_id: body.player_id,
-    lobby_id: lobby.id,
-    left: true,
-    lobby_closed: false,
-    new_host_player_id: null,
+    lobby_id: player.lobby_id,
+    left: result.left,
+    lobby_closed: result.lobby_closed,
+    new_host_player_id: result.new_host_player_id,
   }, 200, req);
 });

@@ -29,4 +29,7 @@
   --color-heading-border: var(--emerald-400);
   --color-heading-shadow: var(--emerald-400);
   --color-heading-text: var(--emerald-600);
+  --color-heading-error-border: var(--rose-400);
+  --color-heading-error-shadow: var(--rose-400);
+  --color-heading-error-text: var(--rose-600);
 }

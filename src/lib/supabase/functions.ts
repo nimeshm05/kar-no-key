@@ -219,6 +219,35 @@ export type FunctionInvokeResult<T> = {
   error: Error | null;
 };
 
+async function parseFunctionErrorBody(error: unknown): Promise<unknown | null> {
+  if (!error || typeof error !== "object" || !("context" in error)) {
+    return null;
+  }
+
+  const context = (error as { context?: unknown }).context;
+  if (!context || typeof context !== "object") {
+    return null;
+  }
+
+  try {
+    if (context instanceof Response) {
+      const clone = context.clone();
+      return await clone.json();
+    }
+
+    if (
+      "json" in context &&
+      typeof (context as { json?: unknown }).json === "function"
+    ) {
+      return await (context as { json: () => Promise<unknown> }).json();
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+}
+
 async function invokeFunction<T>(
   functionName: string,
   body: Record<string, unknown>,
@@ -237,8 +266,17 @@ async function invokeFunction<T>(
     body: payload,
   });
 
+  let resolvedData = (data as T | null) ?? null;
+
+  if (error && (resolvedData === null || resolvedData === undefined)) {
+    const errorBody = await parseFunctionErrorBody(error);
+    if (errorBody !== null) {
+      resolvedData = errorBody as T;
+    }
+  }
+
   return {
-    data: (data as T | null) ?? null,
+    data: resolvedData,
     error: error ?? null,
   };
 }

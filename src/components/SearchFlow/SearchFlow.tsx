@@ -71,6 +71,7 @@ export default function SearchFlow() {
     cancel: cancelPageLoader,
   } = useTimedPageLoader();
   const [confirmError, setConfirmError] = useState<string | null>(null);
+  const [lyricsTitleError, setLyricsTitleError] = useState<string | null>(null);
   const [lyricsStatusBySongId, setLyricsStatusBySongId] = useState<
     Record<string, "available" | "unavailable">
   >({});
@@ -421,6 +422,7 @@ export default function SearchFlow() {
     setIsConfirming(true);
     startPageLoader(PAGE_LOADER_LABELS.loadingGame);
     setConfirmError(null);
+    setLyricsTitleError(null);
 
     try {
       const { data, error: invokeError } = await selectSong(playerId, song.id);
@@ -430,12 +432,19 @@ export default function SearchFlow() {
           data && typeof data === "object" && "has_lyrics" in data
             ? (data as { has_lyrics?: boolean }).has_lyrics
             : undefined;
+        const errorMessage = getErrorMessage(invokeError, data);
+        const isLyricsUnavailable =
+          hasLyrics === false ||
+          /lyrics unavailable|no synced lyrics/i.test(errorMessage);
 
-        if (hasLyrics === false) {
+        if (isLyricsUnavailable) {
           setLyricsStatusBySongId((current) => ({
             ...current,
             [song.id]: "unavailable",
           }));
+          setLyricsTitleError("No synced lyrics found for this song.");
+        } else {
+          setConfirmError(errorMessage);
         }
 
         trackEvent(AnalyticsEvent.SongSelectionFailed, {
@@ -445,7 +454,6 @@ export default function SearchFlow() {
           source_screen: "search",
           player_count: players.length,
         });
-        setConfirmError(getErrorMessage(invokeError, data));
         cancelPageLoader();
         return;
       }
@@ -473,6 +481,7 @@ export default function SearchFlow() {
         source_screen: "search",
         player_count: players.length,
       });
+      setLyricsTitleError(null);
       setConfirmError(getErrorMessage(caughtError, null));
       cancelPageLoader();
     } finally {
@@ -506,6 +515,7 @@ export default function SearchFlow() {
       loadMoreError={loadMoreError}
       isConfirming={isConfirming}
       confirmError={confirmError}
+      lyricsTitleError={lyricsTitleError}
       lyricsStatusBySongId={lyricsStatusBySongId}
       onSearch={handleSearch}
       onLoadMore={handleLoadMore}

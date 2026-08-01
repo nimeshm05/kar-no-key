@@ -72,6 +72,12 @@ const COLOR_SWATCHES = [
   { name: "--color-heading-border", variable: "var(--color-heading-border)" },
   { name: "--color-heading-shadow", variable: "var(--color-heading-shadow)" },
   { name: "--color-heading-text", variable: "var(--color-heading-text)" },
+  { name: "--rose-400", variable: "var(--rose-400)" },
+  { name: "--rose-600", variable: "var(--rose-600)" },
+  {
+    name: "--color-heading-error-text",
+    variable: "var(--color-heading-error-text)",
+  },
   { name: "--neutral-100", variable: "var(--neutral-100)" },
   { name: "--neutral-300", variable: "var(--neutral-300)" },
   { name: "--neutral-400", variable: "var(--neutral-400)" },
@@ -158,6 +164,9 @@ export default function DesignSystemGallery() {
           </Heading>
           <Heading as="h3" size="3">
             heading 3
+          </Heading>
+          <Heading as="h2" size="2" tone="error">
+            No synced lyrics found for this song.
           </Heading>
         </div>
       </section>

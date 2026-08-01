@@ -43,6 +43,7 @@ type SearchScreenProps = {
   loadMoreError: string | null;
   isConfirming: boolean;
   confirmError: string | null;
+  lyricsTitleError?: string | null;
   lyricsStatusBySongId?: Record<string, "available" | "unavailable">;
   onSearch: (query: string) => void | Promise<void>;
   onLoadMore: () => void | Promise<void>;
@@ -132,6 +133,7 @@ export default function SearchScreen({
   loadMoreError,
   isConfirming,
   confirmError,
+  lyricsTitleError = null,
   lyricsStatusBySongId = {},
   onSearch,
   onLoadMore,
@@ -205,8 +207,13 @@ export default function SearchScreen({
         <div className="search-screen__container">
           {isHost ? (
             <section className="search-screen__main">
-              <Heading as="h1" size="2" className="search-screen__title">
-                Song?
+              <Heading
+                as="h1"
+                size="2"
+                tone={lyricsTitleError ? "error" : "default"}
+                className="search-screen__title"
+              >
+                {lyricsTitleError ?? "Song?"}
               </Heading>
 
               <div className="search-screen__panel">
@@ -251,7 +258,7 @@ export default function SearchScreen({
                           ))}
                         </div>
 
-                        {confirmError && isRecommendedTab ? (
+                        {confirmError && isRecommendedTab && !lyricsTitleError ? (
                           <p
                             className="search-screen__message text-body"
                             role="alert"
@@ -356,7 +363,7 @@ export default function SearchScreen({
                           ))}
                         </div>
 
-                        {confirmError ? (
+                        {confirmError && !lyricsTitleError ? (
                           <p
                             className="search-screen__message text-body"
                             role="alert"

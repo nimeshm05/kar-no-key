@@ -11,6 +11,12 @@
   text-align: center;
 }
 
+.heading--error {
+  border-color: var(--color-heading-error-border);
+  box-shadow: 8px 9px 0 0 var(--color-heading-error-shadow);
+  color: var(--color-heading-error-text);
+}
+
 .heading__label {
   display: block;
 }

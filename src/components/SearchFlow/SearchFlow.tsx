@@ -72,6 +72,9 @@ export default function SearchFlow() {
   } = useTimedPageLoader();
   const [confirmError, setConfirmError] = useState<string | null>(null);
   const [lyricsTitleError, setLyricsTitleError] = useState<string | null>(null);
+  const lyricsTitleDismissTimerRef = useRef<ReturnType<
+    typeof setTimeout
+  > | null>(null);
   const [lyricsStatusBySongId, setLyricsStatusBySongId] = useState<
     Record<string, "available" | "unavailable">
   >({});
@@ -97,6 +100,23 @@ export default function SearchFlow() {
   >(undefined);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [loadMoreError, setLoadMoreError] = useState<string | null>(null);
+
+  const clearLyricsTitleDismissTimer = useCallback(() => {
+    if (lyricsTitleDismissTimerRef.current !== null) {
+      clearTimeout(lyricsTitleDismissTimerRef.current);
+      lyricsTitleDismissTimerRef.current = null;
+    }
+  }, []);
+
+  const handleLyricsTitleErrorSettled = useCallback(() => {
+    clearLyricsTitleDismissTimer();
+    lyricsTitleDismissTimerRef.current = setTimeout(() => {
+      lyricsTitleDismissTimerRef.current = null;
+      setLyricsTitleError(null);
+    }, 2500);
+  }, [clearLyricsTitleDismissTimer]);
+
+  useEffect(() => () => clearLyricsTitleDismissTimer(), [clearLyricsTitleDismissTimer]);
 
   const navigateTo = useCallback(
     (route: string) => {
@@ -422,6 +442,7 @@ export default function SearchFlow() {
     setIsConfirming(true);
     startPageLoader(PAGE_LOADER_LABELS.loadingGame);
     setConfirmError(null);
+    clearLyricsTitleDismissTimer();
     setLyricsTitleError(null);
 
     try {
@@ -442,6 +463,7 @@ export default function SearchFlow() {
             ...current,
             [song.id]: "unavailable",
           }));
+          clearLyricsTitleDismissTimer();
           setLyricsTitleError("No synced lyrics found for this song.");
         } else {
           setConfirmError(errorMessage);
@@ -481,6 +503,7 @@ export default function SearchFlow() {
         source_screen: "search",
         player_count: players.length,
       });
+      clearLyricsTitleDismissTimer();
       setLyricsTitleError(null);
       setConfirmError(getErrorMessage(caughtError, null));
       cancelPageLoader();
@@ -520,6 +543,7 @@ export default function SearchFlow() {
       onSearch={handleSearch}
       onLoadMore={handleLoadMore}
       onConfirmSelection={handleConfirmSelection}
+      onLyricsTitleErrorSettled={handleLyricsTitleErrorSettled}
       onExitLobby={handleExitLobby}
     />
   );

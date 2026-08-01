@@ -10,6 +10,7 @@ import SongCard from "@/components/SongCard/SongCard";
 import Tabs from "@/components/Tabs/Tabs";
 import type { SongResult } from "@/lib/songs/searchSongs";
 import type { LobbyPlayer } from "@/lib/supabase/functions";
+import type { TypewriterPace } from "@/lib/ui/useTypewriterText";
 import "./SearchScreen.css";
 
 const SEARCH_TABS = [
@@ -48,6 +49,7 @@ type SearchScreenProps = {
   onSearch: (query: string) => void | Promise<void>;
   onLoadMore: () => void | Promise<void>;
   onConfirmSelection: (song: SongResult) => void;
+  onLyricsTitleErrorSettled?: () => void;
   onExitLobby: () => void;
 };
 
@@ -138,10 +140,21 @@ export default function SearchScreen({
   onSearch,
   onLoadMore,
   onConfirmSelection,
+  onLyricsTitleErrorSettled,
   onExitLobby,
 }: SearchScreenProps) {
   const [query, setQuery] = useState("");
   const [selectedSong, setSelectedSong] = useState<SongResult | null>(null);
+  // Stay brisk through reverse-type back to "Song?" after the error clears.
+  const [keepBriskTitlePace, setKeepBriskTitlePace] = useState(false);
+  const titlePace: TypewriterPace =
+    lyricsTitleError || keepBriskTitlePace ? "brisk" : "default";
+
+  useEffect(() => {
+    if (lyricsTitleError) {
+      setKeepBriskTitlePace(true);
+    }
+  }, [lyricsTitleError]);
 
   async function handleSearch() {
     if (isSearching || !query.trim()) {
@@ -211,7 +224,16 @@ export default function SearchScreen({
                 as="h1"
                 size="2"
                 tone={lyricsTitleError ? "error" : "default"}
+                pace={titlePace}
                 className="search-screen__title"
+                onSettle={() => {
+                  if (lyricsTitleError) {
+                    onLyricsTitleErrorSettled?.();
+                    return;
+                  }
+
+                  setKeepBriskTitlePace(false);
+                }}
               >
                 {lyricsTitleError ?? "Song?"}
               </Heading>

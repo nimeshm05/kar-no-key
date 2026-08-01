@@ -18,5 +18,55 @@
 }
 
 .heading__label {
-  display: block;
+  display: grid;
+  justify-items: center;
+}
+
+.heading__sizer,
+.heading__typed {
+  grid-area: 1 / 1;
+}
+
+.heading__sizer {
+  visibility: hidden;
+  white-space: pre-wrap;
+}
+
+.heading__typed {
+  white-space: pre-wrap;
+}
+
+.heading__caret {
+  display: inline-block;
+  width: 0.55ch;
+  height: 1em;
+  margin-left: 0.1ch;
+  vertical-align: -0.12em;
+  background: currentColor;
+  animation: heading-caret-blink 0.9s steps(1, end) infinite;
+}
+
+/* Reserves caret width in the sizer without a second blinking bar. */
+.heading__caret--spacer {
+  visibility: hidden;
+  animation: none;
+}
+
+@keyframes heading-caret-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .heading__caret {
+    display: none;
+    animation: none;
+  }
 }

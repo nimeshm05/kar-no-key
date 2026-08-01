@@ -41,6 +41,7 @@ import {
   pageLoaderLabelForRoute,
 } from "@/lib/ui/pageLoaderLabels";
 import { useTimedPageLoader } from "@/lib/ui/useTimedPageLoader";
+import type { TypewriterPace } from "@/lib/ui/useTypewriterText";
 import "./LandingFlow.css";
 
 type Step = "landing" | "lobby";
@@ -78,6 +79,14 @@ export default function LandingFlow() {
   const [joinModalPhase, setJoinModalPhase] = useState<JoinModalPhase>("enter-code");
   const [playerId, setPlayerId] = useState<string | null>(null);
   const isNavigatingAwayRef = useRef(false);
+  const titleErrorDismissTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+  // Stay brisk through reverse-type back to "kar-no-key" after a title error.
+  const [keepBriskTitlePace, setKeepBriskTitlePace] = useState(false);
+  const landingTitleError = step === "landing" ? error : null;
+  const titlePace: TypewriterPace =
+    landingTitleError || keepBriskTitlePace ? "brisk" : "default";
   const {
     isLoading: isPageLoading,
     label: pageLoaderLabel,
@@ -85,6 +94,32 @@ export default function LandingFlow() {
     finish: finishPageLoader,
     cancel: cancelPageLoader,
   } = useTimedPageLoader();
+
+  const clearTitleErrorDismissTimer = useCallback(() => {
+    if (titleErrorDismissTimerRef.current !== null) {
+      clearTimeout(titleErrorDismissTimerRef.current);
+      titleErrorDismissTimerRef.current = null;
+    }
+  }, []);
+
+  const handleLandingTitleErrorSettled = useCallback(() => {
+    clearTitleErrorDismissTimer();
+    titleErrorDismissTimerRef.current = setTimeout(() => {
+      titleErrorDismissTimerRef.current = null;
+      setError(null);
+    }, 2500);
+  }, [clearTitleErrorDismissTimer]);
+
+  useEffect(() => {
+    if (landingTitleError) {
+      setKeepBriskTitlePace(true);
+    }
+  }, [landingTitleError]);
+
+  useEffect(
+    () => () => clearTitleErrorDismissTimer(),
+    [clearTitleErrorDismissTimer],
+  );
 
   const navigateToLobbyRoute = useCallback(
     (status: string, songSelectionStarted: boolean) => {
@@ -256,6 +291,7 @@ export default function LandingFlow() {
 
     const trimmedName = displayName.trim();
     if (!trimmedName) {
+      clearTitleErrorDismissTimer();
       setError("Please enter your name");
       return;
     }
@@ -268,6 +304,7 @@ export default function LandingFlow() {
 
     setIsLoading(true);
     startPageLoader(PAGE_LOADER_LABELS.creatingLobby);
+    clearTitleErrorDismissTimer();
     setError(null);
 
     try {
@@ -607,12 +644,27 @@ export default function LandingFlow() {
                 aria-label="Illustration of a typewriter surrounded by music notes"
               />
               <div className="text-container">
-                <Heading as="h1" size="1">
-                  kar-no-key
+                <Heading
+                  as="h1"
+                  size={landingTitleError ? "2" : "1"}
+                  tone={landingTitleError ? "error" : "default"}
+                  pace={titlePace}
+                  onSettle={() => {
+                    if (landingTitleError) {
+                      handleLandingTitleErrorSettled();
+                      return;
+                    }
+
+                    setKeepBriskTitlePace(false);
+                  }}
+                >
+                  {landingTitleError ?? "kar-no-key"}
                 </Heading>
-                <p className="landing-tagline text-body">
-                  race your frens, one lyric at a time :)
-                </p>
+                {landingTitleError ? null : (
+                  <p className="landing-tagline text-body">
+                    race your frens, one lyric at a time :)
+                  </p>
+                )}
               </div>
             </div>
             <form
@@ -636,11 +688,6 @@ export default function LandingFlow() {
               >
                 get started
               </Button>
-              {error ? (
-                <p className="landing-form__error text-body" role="alert">
-                  {error}
-                </p>
-              ) : null}
             </form>
           </motion.main>
         ) : (

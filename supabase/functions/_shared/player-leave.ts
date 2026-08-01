@@ -4,6 +4,24 @@ import { clearPlayerGameData } from "./scoring/reset.ts";
 /** Missed-poll grace before a player is treated as gone (~5 × 3s polls). */
 export const PLAYER_STALE_MS = 15_000;
 
+/** True when last_seen_at is missing or older than the presence grace window. */
+export function isPresenceStale(
+  lastSeenAt: string | null | undefined,
+  now: Date = new Date(),
+  staleMs: number = PLAYER_STALE_MS,
+): boolean {
+  if (!lastSeenAt) {
+    return true;
+  }
+
+  const seenAt = Date.parse(lastSeenAt);
+  if (Number.isNaN(seenAt)) {
+    return true;
+  }
+
+  return now.getTime() - seenAt > staleMs;
+}
+
 export type RemovePlayerFromLobbyResult = {
   left: true;
   lobby_closed: boolean;

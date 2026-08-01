@@ -5,6 +5,10 @@ import {
   normalizeLobbyCode,
 } from "../_shared/lobby-code.ts";
 import { isValidPlayerId } from "../_shared/player-id.ts";
+import {
+  isPresenceStale,
+  removePlayerFromLobby,
+} from "../_shared/player-leave.ts";
 import { mintPlayerSessionToken } from "../_shared/player-session.ts";
 import { checkRateLimit, getClientIp } from "../_shared/rate-limit.ts";
 import { createSupabaseAdmin } from "../_shared/supabase-admin.ts";
@@ -84,15 +88,17 @@ Deno.serve(async (req) => {
     );
   }
 
-  const { data: existingPlayer, error: existingPlayerError } = await supabase
+  const { data: existingPlayerRow, error: existingPlayerError } = await supabase
     .from("players")
-    .select("id, lobby_id")
+    .select("id, lobby_id, last_seen_at")
     .eq("id", body.player_id)
     .maybeSingle();
 
   if (existingPlayerError) {
     return jsonResponse({ error: "Failed to check player session" }, 500, req);
   }
+
+  let existingPlayer = existingPlayerRow;
 
   if (existingPlayer) {
     const { data: existingLobby, error: existingLobbyError } = await supabase
@@ -133,11 +139,25 @@ Deno.serve(async (req) => {
         }, 200, req);
       }
 
-      return jsonResponse(
-        { error: "Player is already in an active lobby" },
-        409,
-        req,
+      if (!isPresenceStale(existingPlayer.last_seen_at)) {
+        return jsonResponse(
+          { error: "Player is already in an active lobby" },
+          409,
+          req,
+        );
+      }
+
+      const reclaim = await removePlayerFromLobby(
+        supabase,
+        existingPlayer.id,
+        existingPlayer.lobby_id,
       );
+      if (reclaim.error) {
+        return jsonResponse({ error: reclaim.error }, 500, req);
+      }
+
+      // Row deleted by reclaim — use insert path below.
+      existingPlayer = null;
     }
   }
 

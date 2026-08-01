@@ -266,9 +266,9 @@ async function invokeFunction<T>(
     body: payload,
   });
 
-  let resolvedData = (data as T | null) ?? null;
+  let resolvedData: T | null = (data as T | null) ?? null;
 
-  if (error && (resolvedData === null || resolvedData === undefined)) {
+  if (error && resolvedData == null) {
     const errorBody = await parseFunctionErrorBody(error);
     if (errorBody !== null) {
       resolvedData = errorBody as T;

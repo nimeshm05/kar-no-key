@@ -55,7 +55,7 @@
   flex-direction: column;
   width: 100%;
   min-height: 0;
-  border: 1px solid var(--neutral-200);
+  border: var(--border-width) solid var(--neutral-200);
   overflow: hidden;
   background: var(--color-background);
 }
@@ -74,7 +74,7 @@
   flex-shrink: 0;
   align-items: stretch;
   width: 100%;
-  border-bottom: 1px solid var(--neutral-200);
+  border-bottom: var(--border-width) solid var(--neutral-200);
 }
 
 .input-field.search-screen__search-input {
@@ -142,7 +142,7 @@
   justify-content: center;
   width: 100%;
   min-height: 0;
-  border: 1px solid var(--neutral-200);
+  border: var(--border-width) solid var(--neutral-200);
 }
 
 .search-screen__waiting-message {

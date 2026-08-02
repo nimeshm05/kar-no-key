@@ -40,7 +40,7 @@
   flex-direction: column;
   min-height: 0;
   width: 100%;
-  border: 1px solid var(--neutral-200);
+  border: var(--border-width) solid var(--neutral-200);
   overflow-x: hidden;
   overflow-y: auto;
   background: var(--color-background);
@@ -57,7 +57,7 @@
   margin: 0;
   padding: 12px 20px;
   color: var(--color-text-error);
-  border-bottom: 1px solid var(--neutral-200);
+  border-bottom: var(--border-width) solid var(--neutral-200);
 }
 
 .awards-screen__loading {

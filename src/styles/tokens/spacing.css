@@ -6,4 +6,5 @@
   --navbar-height: 92px;
   --layout-content-width: 70vw;
   --layout-content-inset: calc((100vw - var(--layout-content-width)) / 2);
+  --border-width: 0.5px;
 }

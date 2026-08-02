@@ -3,7 +3,7 @@
   align-items: center;
   width: 100%;
   padding: var(--size-14);
-  border: 1px solid var(--color-input-border);
+  border: var(--border-width) solid var(--color-input-border);
   background: var(--color-input-background);
   box-sizing: border-box;
 }

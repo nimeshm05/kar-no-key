@@ -48,11 +48,8 @@ export default function LobbyScreen({
 }: LobbyScreenProps) {
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
   const playerCount = players.length;
-  const isSolo = playerCount <= 1;
-
-  const instructions = isSolo
-    ? "invite your friends by sharing this code, or start the race on your own."
-    : "share this code with your frens to begin the race.";
+  const instructions =
+    "share this room code with your friends, or take the stage solo.";
 
   function handleCloseModal() {
     if (joinModalPhase === "joining" || joinModalPhase === "waiting-for-host") {
@@ -135,7 +132,7 @@ export default function LobbyScreen({
                     onClick={onStartGame}
                     disabled={isLoading || isRosterLoading}
                   >
-                    let&apos;s gooo
+                    take the stage
                   </Button>
                 ) : null}
                 {startGameError ? (
@@ -153,7 +150,7 @@ export default function LobbyScreen({
 
               <div className="lobby-screen__join">
                 <p className="lobby-screen__join-label text-body">
-                  did your fren give you a code?
+                  got a room code?
                 </p>
                 <Button
                   variant="secondary"
@@ -162,7 +159,7 @@ export default function LobbyScreen({
                   onClick={() => setIsJoinModalOpen(true)}
                   disabled={isLoading}
                 >
-                  my fren gave me a code
+                  join the stage
                 </Button>
               </div>
             </section>

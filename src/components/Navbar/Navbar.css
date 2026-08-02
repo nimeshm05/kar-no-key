@@ -10,7 +10,7 @@
   height: var(--navbar-height);
   width: 100%;
   background: transparent;
-  border-bottom: 1px solid var(--neutral-100);
+  border-bottom: var(--border-width) solid var(--neutral-100);
   background: var(--color-background);
 }
 

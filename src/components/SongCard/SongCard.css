@@ -5,7 +5,7 @@
   height: 88px;
   padding: 12px;
   box-sizing: border-box;
-  border-bottom: 1px solid var(--neutral-200);
+  border-bottom: var(--border-width) solid var(--neutral-200);
   background: var(--color-background);
 }
 

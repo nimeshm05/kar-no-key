@@ -17,7 +17,7 @@
 
 .icon-button--primary {
   background: var(--color-button-background);
-  border: 1px solid var(--color-button-background);
+  border: var(--border-width) solid var(--color-button-background);
 }
 
 .icon-button--primary:hover:not(:disabled) {
@@ -32,7 +32,7 @@
 
 .icon-button--secondary {
   background: var(--color-dropdown-background);
-  border: 1px solid var(--color-dropdown-foreground);
+  border: var(--border-width) solid var(--color-dropdown-foreground);
 }
 
 .icon-button--secondary:hover:not(:disabled) {

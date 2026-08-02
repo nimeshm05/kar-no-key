@@ -145,7 +145,7 @@ export default function SearchScreen({
 }: SearchScreenProps) {
   const [query, setQuery] = useState("");
   const [selectedSong, setSelectedSong] = useState<SongResult | null>(null);
-  // Stay brisk through reverse-type back to "Song?" after the error clears.
+  // Stay brisk through reverse-type back to "Choose a song" after the error clears.
   const [keepBriskTitlePace, setKeepBriskTitlePace] = useState(false);
   const titlePace: TypewriterPace =
     lyricsTitleError || keepBriskTitlePace ? "brisk" : "default";
@@ -235,7 +235,7 @@ export default function SearchScreen({
                   setKeepBriskTitlePace(false);
                 }}
               >
-                {lyricsTitleError ?? "Song?"}
+                {lyricsTitleError ?? "Choose a song"}
               </Heading>
 
               <div className="search-screen__panel">

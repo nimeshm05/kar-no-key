@@ -72,7 +72,7 @@
   flex: 1;
   height: 0;
   border: none;
-  border-top: 1px solid var(--neutral-300);
+  border-top: var(--border-width) solid var(--neutral-300);
   margin: 0;
 }
 

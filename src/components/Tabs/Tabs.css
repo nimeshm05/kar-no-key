@@ -3,7 +3,7 @@
   flex-shrink: 0;
   align-items: stretch;
   width: 100%;
-  border-bottom: 1px solid var(--neutral-200);
+  border-bottom: var(--border-width) solid var(--neutral-200);
 }
 
 .tabs__tab {

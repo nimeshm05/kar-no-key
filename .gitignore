@@ -42,3 +42,7 @@ next-env.d.ts
 
 # local design documentation (not for GitHub)
 DESIGN_DECISIONS.md
+
+# local plans (not for GitHub)
+.cursor/plans/
+plan/

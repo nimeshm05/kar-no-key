@@ -30,18 +30,13 @@ export default function AwardSection({
       <div className="award-section__table">
         <ul className="award-section__rows">
           {entries.map((entry) => {
-            const isTopThree = entry.rank <= 3;
             const starSrc = STAR_BY_RANK[entry.rank];
-            const rowClass = [
-              "award-section__row",
-              "text-button-label",
-              isTopThree
-                ? "award-section__row--top"
-                : "award-section__row--muted",
-            ].join(" ");
 
             return (
-              <li key={`${title}-${entry.player_id}`} className={rowClass}>
+              <li
+                key={`${title}-${entry.player_id}`}
+                className="award-section__row text-button-label"
+              >
                 <div className="award-section__player">
                   <span className="award-section__name">
                     {entry.display_name.toLowerCase()}

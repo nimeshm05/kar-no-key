@@ -11,7 +11,6 @@
   flex-direction: column;
   width: 100%;
   padding: 20px;
-  border-bottom: var(--border-width) solid var(--neutral-100);
   box-sizing: border-box;
 }
 
@@ -58,14 +57,6 @@
   box-sizing: border-box;
 }
 
-.award-section__row--top {
-  color: var(--color-text-primary);
-}
-
-.award-section__row--muted {
-  color: var(--color-text-muted);
-}
-
 .award-section__player {
   display: flex;
   flex: 1;
@@ -80,6 +71,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  color: var(--color-text-secondary);
 }
 
 .award-section__star-slot {
@@ -105,5 +97,5 @@
   flex-shrink: 0;
   text-align: right;
   font-variant-numeric: tabular-nums;
-  color: inherit;
+  color: var(--color-text-secondary);
 }

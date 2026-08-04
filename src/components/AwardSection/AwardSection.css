@@ -39,30 +39,6 @@
   box-sizing: border-box;
 }
 
-.award-section__table-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  padding: 0 20px;
-  box-sizing: border-box;
-  font-family: var(--family-mono);
-  font-size: 16px;
-  font-weight: var(--weight-semibold);
-  line-height: var(--line-16);
-  color: var(--color-accent-green);
-}
-
-.award-section__col-players {
-  flex: 1;
-  min-width: 0;
-}
-
-.award-section__col-score {
-  flex-shrink: 0;
-  text-align: right;
-}
-
 .award-section__rows {
   display: flex;
   flex-direction: column;

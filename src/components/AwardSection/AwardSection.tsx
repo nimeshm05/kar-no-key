@@ -28,11 +28,6 @@ export default function AwardSection({
       </header>
 
       <div className="award-section__table">
-        <div className="award-section__table-header">
-          <span className="award-section__col-players">Players</span>
-          <span className="award-section__col-score">Score</span>
-        </div>
-
         <ul className="award-section__rows">
           {entries.map((entry) => {
             const isTopThree = entry.rank <= 3;

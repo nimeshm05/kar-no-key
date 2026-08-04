@@ -36,34 +36,34 @@
 }
 
 .button--secondary {
-  background: var(--color-button-secondary-background);
-  border-color: var(--color-button-secondary-background);
+  background: var(--color-dropdown-background);
+  border-color: var(--color-dropdown-foreground);
   color: var(--color-button-secondary-foreground);
 }
 
 .button--secondary:hover:not(:disabled) {
-  background: var(--color-button-secondary-background-hover);
-  border-color: var(--color-button-secondary-background-hover);
+  background: var(--color-dropdown-background-hover);
+  border-color: var(--color-dropdown-foreground);
   color: var(--color-button-secondary-foreground-hover);
 }
 
 .button--secondary:active:not(:disabled) {
-  background: var(--color-button-secondary-background-hover);
-  border-color: var(--color-button-secondary-background-hover);
+  background: var(--color-dropdown-background-hover);
+  border-color: var(--color-dropdown-foreground);
   color: var(--color-button-secondary-foreground-hover);
 }
 
 .button--secondary:disabled {
-  background: var(--color-button-secondary-background);
-  border-color: var(--color-button-secondary-background);
+  background: var(--color-dropdown-background);
+  border-color: var(--color-dropdown-foreground);
   color: var(--color-button-secondary-foreground-disabled);
   cursor: not-allowed;
 }
 
 .button--secondary:disabled:hover,
 .button--secondary:disabled:active {
-  background: var(--color-button-secondary-background);
-  border-color: var(--color-button-secondary-background);
+  background: var(--color-dropdown-background);
+  border-color: var(--color-dropdown-foreground);
   color: var(--color-button-secondary-foreground-disabled);
 }
 

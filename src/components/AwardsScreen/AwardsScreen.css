@@ -1,4 +1,5 @@
 .awards-screen {
+  position: relative;
   height: 100svh;
   max-height: 100svh;
   display: flex;
@@ -7,6 +8,8 @@
 }
 
 .awards-screen__body {
+  position: relative;
+  z-index: 1;
   flex: 1;
   display: flex;
   justify-content: center;

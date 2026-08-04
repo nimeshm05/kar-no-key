@@ -3,6 +3,7 @@
 import { useState } from "react";
 import AnimatedEllipsis from "@/components/AnimatedEllipsis/AnimatedEllipsis";
 import Button from "@/components/Button/Button";
+import DoodleBackground from "@/components/DoodleBackground/DoodleBackground";
 import Heading from "@/components/Heading/Heading";
 import JoinCodeModal from "@/components/JoinCodeModal/JoinCodeModal";
 import type { JoinModalPhase } from "@/components/JoinCodeModal/JoinCodeModal";
@@ -101,6 +102,8 @@ export default function LobbyScreen({
     <main
       className={`lobby-screen${shouldBlockLobby ? " lobby-screen--modal-open" : ""}`}
     >
+      <DoodleBackground />
+
       <Navbar
         displayName={displayName}
         players={players}

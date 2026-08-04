@@ -1,4 +1,5 @@
 :root {
+  --color-app-background: var(--neutral-100);
   --color-background: var(--solid-white);
   --color-foreground: var(--solid-black);
   --color-text-primary: var(--solid-black);

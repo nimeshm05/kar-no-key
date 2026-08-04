@@ -9,9 +9,8 @@
   justify-content: center;
   height: var(--navbar-height);
   width: 100%;
-  background: transparent;
   border-bottom: var(--border-width) solid var(--neutral-100);
-  background: var(--color-background);
+  background: var(--color-app-background);
 }
 
 .navbar__content {
@@ -39,7 +38,7 @@
 
 .navbar__greeting {
   margin: 0;
-  color: var(--color-text-muted);
+  color: var(--color-text);
   white-space: nowrap;
 }
 

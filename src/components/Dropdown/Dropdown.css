@@ -44,7 +44,7 @@
   width: 24px;
   height: 24px;
   background: var(--color-dropdown-foreground);
-  color: var(--solid-white);
+  color: var(--color-background);
   font-size: var(--size-12);
   line-height: 12px;
 }
@@ -120,7 +120,7 @@
 }
 
 .dropdown__menu-item:hover {
-  background: var(--neutral-100);
+  background: var(--color-surface-muted);
 }
 
 .dropdown__menu-icon {

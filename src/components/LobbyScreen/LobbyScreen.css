@@ -49,7 +49,7 @@
 }
 
 .lobby-screen__instructions {
-  color: var(--color-text);
+  color: var(--color-text-primary);
   margin: 0;
 }
 
@@ -75,7 +75,7 @@
   flex: 1;
   height: 0;
   border: none;
-  border-top: var(--border-width) solid var(--neutral-300);
+  border-top: var(--border-width) solid var(--color-border-strong);
   margin: 0;
 }
 

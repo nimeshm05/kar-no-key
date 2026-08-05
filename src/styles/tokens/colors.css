@@ -2,6 +2,8 @@
   /* Solid */
   --solid-black: #000000;
   --solid-white: #ffffff;
+  --solid-black-60: rgba(0, 0, 0, 0.6);
+  --solid-white-40: rgba(255, 255, 255, 0.4);
 
   /* Neutral */
   --neutral-50: #fafafa;

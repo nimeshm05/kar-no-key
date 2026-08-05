@@ -20,7 +20,7 @@
 }
 
 .music-note-decoration-path {
-  stroke: var(--neutral-300);
+  stroke: var(--color-decoration);
   fill: none;
   stroke-linecap: round;
 }
@@ -28,16 +28,16 @@
 @keyframes music-note-stroke-pulse {
   0%,
   100% {
-    stroke: var(--neutral-400);
+    stroke: var(--color-decoration-strong);
   }
 
   50% {
-    stroke: var(--neutral-200);
+    stroke: var(--color-decoration-soft);
   }
 }
 
 .music-note-decoration-path--pulse {
-  stroke: var(--solid-black);
+  stroke: var(--color-foreground);
   animation: music-note-stroke-pulse 3s ease-in-out infinite;
   animation-delay: var(--note-pulse-delay, 0s);
   animation-play-state: paused;
@@ -50,6 +50,6 @@
 @media (prefers-reduced-motion: reduce) {
   .music-note-decoration-path--pulse {
     animation: none;
-    stroke: var(--neutral-400);
+    stroke: var(--color-decoration-strong);
   }
 }

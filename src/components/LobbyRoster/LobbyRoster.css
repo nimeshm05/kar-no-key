@@ -20,7 +20,7 @@
   width: 100%;
   height: 72.5px;
   padding: 20px;
-  border-bottom: var(--border-width) solid var(--neutral-200);
+  border-bottom: var(--border-width) solid var(--color-border);
   box-sizing: border-box;
 }
 

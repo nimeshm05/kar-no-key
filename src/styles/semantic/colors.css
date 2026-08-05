@@ -1,25 +1,64 @@
 :root {
+  /* App chrome */
   --color-app-background: var(--neutral-50);
-  --color-doodle: var(--neutral-150);
   --color-background: var(--solid-white);
   --color-foreground: var(--solid-black);
+
+  /* Doodles */
+  --color-doodle: var(--neutral-100);
+  --color-doodle-pulse: var(--neutral-200);
+
+  /* Text */
   --color-text-primary: var(--solid-black);
   --color-text-secondary: var(--neutral-600);
   --color-text-muted: var(--neutral-400);
   --color-text-placeholder: var(--neutral-300);
+  --color-text-error: var(--red-500);
+
+  /* Borders / dividers */
+  --color-border: var(--neutral-200);
+  --color-border-muted: var(--neutral-100);
+  --color-border-strong: var(--neutral-300);
+
+  /* Surfaces */
+  --color-surface-muted: var(--neutral-100);
+  --color-surface-raised: var(--solid-white);
+
+  /* Focus */
+  --color-focus-ring: var(--solid-black);
+
+  /* Controls / tracks */
+  --color-control-track: var(--neutral-400);
+
+  /* Decorative (music notes, etc.) */
+  --color-decoration: var(--neutral-300);
+  --color-decoration-strong: var(--neutral-400);
+  --color-decoration-soft: var(--neutral-200);
+
+  /* Overlay */
+  --color-overlay: var(--solid-black-60);
+
+  /* Buttons */
   --color-button-background: var(--solid-black);
   --color-button-foreground: var(--solid-white);
   --color-button-background-hover: var(--neutral-700);
   --color-button-background-active: var(--neutral-700);
+  --color-button-background-disabled: var(--neutral-400);
+  --color-button-foreground-disabled: var(--solid-white-40);
   --color-button-secondary-background: var(--neutral-100);
   --color-button-secondary-foreground: var(--solid-black);
   --color-button-secondary-background-hover: var(--neutral-200);
   --color-button-secondary-foreground-hover: var(--neutral-700);
   --color-button-secondary-background-active: var(--neutral-300);
   --color-button-secondary-foreground-disabled: var(--neutral-400);
+
+  /* Dropdown */
   --color-dropdown-background: var(--solid-white);
   --color-dropdown-foreground: var(--solid-black);
   --color-dropdown-background-hover: var(--neutral-100);
+  --color-dropdown-foreground-hover: var(--neutral-700);
+
+  /* Inputs */
   --color-input-border: var(--neutral-300);
   --color-input-border-focus: var(--solid-black);
   --color-input-border-error: var(--red-500);
@@ -27,7 +66,8 @@
   --color-input-background-disabled: var(--neutral-100);
   --color-input-border-disabled: var(--neutral-200);
   --color-input-text-disabled: var(--neutral-250);
-  --color-text-error: var(--red-500);
+
+  /* Accent / heading */
   --color-accent-green: var(--accent-green);
   --color-heading-border: var(--emerald-400);
   --color-heading-shadow: var(--emerald-400);
@@ -35,4 +75,8 @@
   --color-heading-error-border: var(--rose-400);
   --color-heading-error-shadow: var(--rose-400);
   --color-heading-error-text: var(--rose-600);
+
+  /* Loader */
+  --color-loader-idle: var(--neutral-100);
+  --color-loader-active: var(--solid-black);
 }

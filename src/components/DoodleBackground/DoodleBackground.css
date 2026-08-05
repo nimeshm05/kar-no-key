@@ -43,7 +43,7 @@
 }
 
 .doodle-background__tile path {
-  fill: #ededed; /* --color-doodle / --neutral-150 */
+  fill: var(--color-doodle);
 }
 
 .doodle-background--animating .doodle-background__tile path {
@@ -51,21 +51,20 @@
   animation-delay: var(--doodle-delay, 0s);
 }
 
-/* Literals so browsers actually interpolate fill. */
 @keyframes doodle-path-pulse {
   0%,
   100% {
-    fill: #ededed;
+    fill: var(--color-doodle);
   }
 
   50% {
-    fill: #a3a3a3; /* --neutral-400 */
+    fill: var(--color-doodle-pulse);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .doodle-background--animating .doodle-background__tile path {
     animation: none;
-    fill: #ededed;
+    fill: var(--color-doodle);
   }
 }

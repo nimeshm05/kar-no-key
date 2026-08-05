@@ -23,7 +23,7 @@
 }
 
 .phrase-typing-area__char--pending {
-  color: var(--neutral-300);
+  color: var(--color-text-placeholder);
 }
 
 .phrase-typing-area__char--correct {

@@ -2,8 +2,8 @@
   --loader-cell: 8px;
   --loader-gap: 2px;
   --loader-duration: 2s;
-  --loader-idle: var(--neutral-100);
-  --loader-active: var(--solid-black);
+  --loader-idle: var(--color-loader-idle);
+  --loader-active: var(--color-loader-active);
 
   display: grid;
   grid-template-columns: repeat(4, var(--loader-cell));

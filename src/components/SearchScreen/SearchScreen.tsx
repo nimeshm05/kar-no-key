@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import AnimatedEllipsis from "@/components/AnimatedEllipsis/AnimatedEllipsis";
 import Button from "@/components/Button/Button";
+import DoodleBackground from "@/components/DoodleBackground/DoodleBackground";
 import Heading from "@/components/Heading/Heading";
 import InputField from "@/components/InputField/InputField";
 import Navbar from "@/components/Navbar/Navbar";
@@ -208,6 +209,8 @@ export default function SearchScreen({
 
   return (
     <main className="search-screen">
+      <DoodleBackground />
+
       <Navbar
         displayName={displayName}
         players={players}

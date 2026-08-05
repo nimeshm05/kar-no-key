@@ -1,0 +1,70 @@
+.doodle-background {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* Fallback only while SVG paths are still loading. */
+.doodle-background__base {
+  position: absolute;
+  inset: 0;
+  background-color: var(--color-doodle);
+  -webkit-mask-image: url(/doodle-mask.svg);
+  mask-image: url(/doodle-mask.svg);
+  -webkit-mask-size: auto 100%;
+  mask-size: auto 100%;
+  -webkit-mask-position: center center;
+  mask-position: center center;
+  -webkit-mask-repeat: repeat-x;
+  mask-repeat: repeat-x;
+}
+
+.doodle-background--ready .doodle-background__base {
+  display: none;
+}
+
+/* One layout for idle + playing — only fill animation toggles. */
+.doodle-background__tiles {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.doodle-background__tile {
+  display: block;
+  flex-shrink: 0;
+  height: 100%;
+  aspect-ratio: 1440 / 2960;
+  width: auto;
+}
+
+.doodle-background__tile path {
+  fill: var(--color-doodle);
+}
+
+.doodle-background--animating .doodle-background__tile path {
+  animation: doodle-path-pulse var(--doodle-duration, 2s) ease-in-out infinite;
+  animation-delay: var(--doodle-delay, 0s);
+}
+
+@keyframes doodle-path-pulse {
+  0%,
+  100% {
+    fill: var(--color-doodle);
+  }
+
+  50% {
+    fill: var(--color-doodle-pulse);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .doodle-background--animating .doodle-background__tile path {
+    animation: none;
+    fill: var(--color-doodle);
+  }
+}

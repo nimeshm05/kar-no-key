@@ -1,4 +1,5 @@
 .search-screen {
+  position: relative;
   height: 100svh;
   max-height: 100svh;
   display: flex;
@@ -7,6 +8,8 @@
 }
 
 .search-screen__body {
+  position: relative;
+  z-index: 1;
   flex: 1;
   display: flex;
   justify-content: center;
@@ -55,7 +58,7 @@
   flex-direction: column;
   width: 100%;
   min-height: 0;
-  border: var(--border-width) solid var(--neutral-200);
+  border: var(--border-width) solid var(--color-border);
   overflow: hidden;
   background: var(--color-background);
 }
@@ -74,7 +77,7 @@
   flex-shrink: 0;
   align-items: stretch;
   width: 100%;
-  border-bottom: var(--border-width) solid var(--neutral-200);
+  border-bottom: var(--border-width) solid var(--color-border);
 }
 
 .input-field.search-screen__search-input {
@@ -91,10 +94,19 @@
   border-color: transparent;
 }
 
-.search-screen__search-button {
+.button.search-screen__search-button,
+.button.search-screen__search-button:hover:not(:disabled),
+.button.search-screen__search-button:active:not(:disabled),
+.button.search-screen__search-button:disabled,
+.button.search-screen__search-button:disabled:hover,
+.button.search-screen__search-button:disabled:active {
   flex-shrink: 0;
   width: 160px;
   white-space: nowrap;
+  border-top: none;
+  border-right: none;
+  border-bottom: none;
+  border-left: var(--border-width) solid var(--color-border);
 }
 
 .search-screen__results-section {
@@ -115,12 +127,27 @@
   width: 100%;
   overflow-x: hidden;
   overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
-.search-screen__load-more {
+.search-screen__results::-webkit-scrollbar {
+  display: none;
+}
+
+.button.search-screen__load-more,
+.button.search-screen__load-more:hover:not(:disabled),
+.button.search-screen__load-more:active:not(:disabled),
+.button.search-screen__load-more:disabled,
+.button.search-screen__load-more:disabled:hover,
+.button.search-screen__load-more:disabled:active {
   flex-shrink: 0;
   width: 100%;
   align-self: stretch;
+  border-right: none;
+  border-bottom: none;
+  border-left: none;
+  border-top: var(--border-width) solid var(--color-border);
 }
 
 .search-screen__message {
@@ -142,11 +169,11 @@
   justify-content: center;
   width: 100%;
   min-height: 0;
-  border: var(--border-width) solid var(--neutral-200);
+  border: var(--border-width) solid var(--color-border);
 }
 
 .search-screen__waiting-message {
-  color: var(--neutral-400);
+  color: var(--color-text-muted);
   margin: 0;
   max-width: 336px;
   text-align: center;

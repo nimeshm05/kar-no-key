@@ -15,15 +15,15 @@
 
 .join-code-modal__action--submit:disabled {
   opacity: 1;
-  background: var(--neutral-400);
-  color: rgba(255, 255, 255, 0.4);
+  background: var(--color-button-background-disabled);
+  color: var(--color-button-foreground-disabled);
   cursor: not-allowed;
 }
 
 .join-code-modal__action--submit:disabled:hover,
 .join-code-modal__action--submit:disabled:active {
-  background: var(--neutral-400);
-  color: rgba(255, 255, 255, 0.4);
+  background: var(--color-button-background-disabled);
+  color: var(--color-button-foreground-disabled);
   opacity: 1;
 }
 

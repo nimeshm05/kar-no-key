@@ -3,7 +3,7 @@
   flex-shrink: 0;
   align-items: stretch;
   width: 100%;
-  border-bottom: var(--border-width) solid var(--neutral-200);
+  border-bottom: var(--border-width) solid var(--color-border);
 }
 
 .tabs__tab {
@@ -21,15 +21,15 @@
 }
 
 .tabs__tab:hover:not(.tabs__tab--selected) {
-  background: var(--neutral-100);
+  background: var(--color-surface-muted);
 }
 
 .tabs__tab--selected {
-  background: var(--solid-black);
-  color: var(--solid-white);
+  background: var(--color-foreground);
+  color: var(--color-background);
 }
 
 .tabs__tab:focus-visible {
-  outline: 2px solid var(--solid-black);
+  outline: 2px solid var(--color-focus-ring);
   outline-offset: -2px;
 }

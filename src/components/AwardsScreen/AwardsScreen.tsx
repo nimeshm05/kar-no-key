@@ -1,6 +1,7 @@
 "use client";
 
 import AwardSection from "@/components/AwardSection/AwardSection";
+import DoodleBackground from "@/components/DoodleBackground/DoodleBackground";
 import Heading from "@/components/Heading/Heading";
 import Navbar from "@/components/Navbar/Navbar";
 import type { AwardsSnapshot, LobbyPlayer } from "@/lib/supabase/functions";
@@ -45,6 +46,8 @@ export default function AwardsScreen({
 }: AwardsScreenProps) {
   return (
     <div className="awards-screen">
+      <DoodleBackground />
+
       <Navbar
         displayName={displayName}
         players={players}

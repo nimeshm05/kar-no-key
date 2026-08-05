@@ -1,4 +1,5 @@
 .awards-screen {
+  position: relative;
   height: 100svh;
   max-height: 100svh;
   display: flex;
@@ -7,6 +8,8 @@
 }
 
 .awards-screen__body {
+  position: relative;
+  z-index: 1;
   flex: 1;
   display: flex;
   justify-content: center;
@@ -40,7 +43,7 @@
   flex-direction: column;
   min-height: 0;
   width: 100%;
-  border: var(--border-width) solid var(--neutral-200);
+  border: var(--border-width) solid var(--color-border);
   overflow-x: hidden;
   overflow-y: auto;
   background: var(--color-background);
@@ -57,7 +60,7 @@
   margin: 0;
   padding: 12px 20px;
   color: var(--color-text-error);
-  border-bottom: var(--border-width) solid var(--neutral-200);
+  border-bottom: var(--border-width) solid var(--color-border);
 }
 
 .awards-screen__loading {

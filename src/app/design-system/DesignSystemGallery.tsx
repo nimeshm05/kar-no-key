@@ -55,6 +55,7 @@ const SAMPLE_PLAYERS: LobbyPlayer[] = [
 
 const COLOR_SWATCHES = [
   { name: "--color-app-background", variable: "var(--color-app-background)" },
+  { name: "--color-doodle", variable: "var(--color-doodle)" },
   { name: "--color-background", variable: "var(--color-background)" },
   { name: "--color-foreground", variable: "var(--color-foreground)" },
   { name: "--color-text-primary", variable: "var(--color-text-primary)" },

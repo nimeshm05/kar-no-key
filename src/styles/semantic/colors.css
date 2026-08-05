@@ -1,5 +1,6 @@
 :root {
   --color-app-background: var(--neutral-50);
+  --color-doodle: var(--neutral-150);
   --color-background: var(--solid-white);
   --color-foreground: var(--solid-black);
   --color-text-primary: var(--solid-black);
